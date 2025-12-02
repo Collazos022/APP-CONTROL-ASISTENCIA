@@ -116,7 +116,6 @@ export default function ValidationsPage() {
           <TabsContent value="cargos">
             <Card>
               <CardHeader>
-                 <CardTitle>Asociación de Cargos y Roles</CardTitle>
                  <CardDescription>Asigne un rol a cada cargo para definir sus permisos.</CardDescription>
               </CardHeader>
               <CardContent>
@@ -166,7 +165,6 @@ export default function ValidationsPage() {
           <TabsContent value="frentes">
             <Card>
                  <CardHeader>
-                    <CardTitle>Frentes de Trabajo y Coordenadas</CardTitle>
                     <CardDescription>Defina la ubicación de cada frente para la validación de registros.</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -206,7 +204,6 @@ export default function ValidationsPage() {
           <TabsContent value="roles">
             <Card>
                 <CardHeader>
-                    <CardTitle>Permisos del Sistema por Rol</CardTitle>
                     <CardDescription>Visualice las pestañas a las que cada rol tiene acceso.</CardDescription>
                 </CardHeader>
                 <CardContent>
