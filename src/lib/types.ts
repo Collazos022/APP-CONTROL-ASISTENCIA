@@ -1,0 +1,30 @@
+export type Role = "Administrador" | "Editor" | "Aprobador" | "Empleado";
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: Role;
+  avatar: string;
+}
+
+export type CheckInStatus = "Pendiente" | "Aprobado" | "Rechazado";
+export type CheckInType = "Entrada" | "Salida";
+
+export interface CheckInRecord {
+  id: string;
+  userId: string;
+  userName: string;
+  type: CheckInType;
+  timestamp: Date;
+  location: {
+    latitude: number;
+    longitude: number;
+  };
+  distanceFromPost: number | null;
+  signatureUrl: string;
+  status: CheckInStatus;
+  comments?: string;
+  approvedBy?: string;
+  userAvatar: string;
+}
