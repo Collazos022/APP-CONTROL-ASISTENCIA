@@ -122,8 +122,8 @@ export default function ValidationsPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Cargo</TableHead>
-                      <TableHead className="w-[250px]">Rol Asignado</TableHead>
+                      <TableHead className="font-bold font-headline text-foreground">Cargo</TableHead>
+                      <TableHead className="w-[250px] font-bold font-headline text-foreground">Rol Asignado</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -171,8 +171,8 @@ export default function ValidationsPage() {
                     <Table>
                     <TableHeader>
                         <TableRow>
-                        <TableHead>Frente</TableHead>
-                        <TableHead>Coordenadas (Lat, Lon)</TableHead>
+                        <TableHead className="font-bold font-headline text-foreground">Frente</TableHead>
+                        <TableHead className="font-bold font-headline text-foreground">Coordenadas (Lat, Lon)</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -210,8 +210,8 @@ export default function ValidationsPage() {
                      <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Pestaña</TableHead>
-                                {allRoles.map(role => <TableHead key={role} className="text-center">{role}</TableHead>)}
+                                <TableHead className="font-bold font-headline text-foreground">Pestaña</TableHead>
+                                {allRoles.map(role => <TableHead key={role} className="text-center font-bold font-headline text-foreground">{role}</TableHead>)}
                             </TableRow>
                         </TableHeader>
                         <TableBody>
