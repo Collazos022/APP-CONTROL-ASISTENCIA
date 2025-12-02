@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -45,10 +46,10 @@ const initialCargos = [
 ];
 
 const initialFrentes = [
-  { name: 'Frente A', lat: '4.60971', lon: '-74.08175' },
-  { name: 'Frente B', lat: '3.451647', lon: '-76.531982' },
-  { name: 'Taller', lat: '6.244203', lon: '-75.581215' },
-  { name: 'Oficina', lat: '4.624335', lon: '-74.063644' },
+  { name: 'Frente A', coords: '4.60971, -74.08175' },
+  { name: 'Frente B', coords: '3.451647, -76.531982' },
+  { name: 'Taller', coords: '6.244203, -75.581215' },
+  { name: 'Oficina', coords: '4.624335, -74.063644' },
 ];
 
 const allRoles: Role[] = ['Administrador', 'Editor', 'Aprobador', 'Empleado'];
@@ -76,12 +77,11 @@ export default function ValidationsPage() {
 
   const handleFrenteCoordChange = (
     frenteName: string,
-    coord: 'lat' | 'lon',
     value: string
   ) => {
     setFrentes(
       frentes.map((frente) =>
-        frente.name === frenteName ? { ...frente, [coord]: value } : frente
+        frente.name === frenteName ? { ...frente, coords: value } : frente
       )
     );
   };
@@ -174,8 +174,7 @@ export default function ValidationsPage() {
                     <TableHeader>
                         <TableRow>
                         <TableHead>Frente</TableHead>
-                        <TableHead>Latitud</TableHead>
-                        <TableHead>Longitud</TableHead>
+                        <TableHead>Coordenadas (Lat, Lon)</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -184,18 +183,10 @@ export default function ValidationsPage() {
                             <TableCell className="font-medium">{frente.name}</TableCell>
                             <TableCell>
                             <Input
-                                value={frente.lat}
-                                onChange={(e) => handleFrenteCoordChange(frente.name, 'lat', e.target.value)}
+                                value={frente.coords}
+                                onChange={(e) => handleFrenteCoordChange(frente.name, e.target.value)}
                                 disabled={!isAdmin}
-                                placeholder="Ej: 4.60971"
-                            />
-                            </TableCell>
-                            <TableCell>
-                            <Input
-                                value={frente.lon}
-                                onChange={(e) => handleFrenteCoordChange(frente.name, 'lon', e.target.value)}
-                                disabled={!isAdmin}
-                                placeholder="Ej: -74.08175"
+                                placeholder="Ej: 4.60971, -74.08175"
                             />
                             </TableCell>
                         </TableRow>
