@@ -20,6 +20,9 @@ const loginSchema = z.object({
 
 const registerSchema = z.object({
   name: z.string().min(1, { message: "El nombre es obligatorio." }),
+  identificacion: z.string().min(1, { message: "La identificación es obligatoria." }),
+  telefono: z.string().min(1, { message: "El teléfono es obligatorio." }),
+  cargo: z.string().min(1, { message: "El cargo es obligatorio." }),
   email: z.string().email({ message: "Por favor, introduce un correo electrónico válido." }),
   password: z.string().min(8, { message: "La contraseña debe tener al menos 8 caracteres." }),
 })
@@ -119,13 +122,28 @@ export function AuthForm() {
       </TabsContent>
       <TabsContent value="register">
         <form onSubmit={handleRegisterSubmit(onRegister)}>
-          <div className="grid gap-4">
-            <div className="grid gap-2">
+          <div className="grid gap-2">
+            <div className="grid gap-1">
               <Label htmlFor="name">Nombre Completo</Label>
               <Input id="name" placeholder="Tu Nombre" {...registerRegister("name")} />
               {registerErrors.name && <p className="text-xs text-destructive">{registerErrors.name.message}</p>}
             </div>
-            <div className="grid gap-2">
+            <div className="grid gap-1">
+              <Label htmlFor="identificacion">Identificación</Label>
+              <Input id="identificacion" placeholder="Tu Identificación" {...registerRegister("identificacion")} />
+              {registerErrors.identificacion && <p className="text-xs text-destructive">{registerErrors.identificacion.message}</p>}
+            </div>
+            <div className="grid gap-1">
+              <Label htmlFor="telefono">Teléfono</Label>
+              <Input id="telefono" placeholder="Tu Teléfono" {...registerRegister("telefono")} />
+              {registerErrors.telefono && <p className="text-xs text-destructive">{registerErrors.telefono.message}</p>}
+            </div>
+            <div className="grid gap-1">
+              <Label htmlFor="cargo">Cargo</Label>
+              <Input id="cargo" placeholder="Tu Cargo" {...registerRegister("cargo")} />
+              {registerErrors.cargo && <p className="text-xs text-destructive">{registerErrors.cargo.message}</p>}
+            </div>
+            <div className="grid gap-1">
               <Label htmlFor="email">Correo Electrónico</Label>
               <Input
                 id="email-register"
@@ -135,12 +153,12 @@ export function AuthForm() {
               />
               {registerErrors.email && <p className="text-xs text-destructive">{registerErrors.email.message}</p>}
             </div>
-            <div className="grid gap-2">
+            <div className="grid gap-1">
               <Label htmlFor="password">Contraseña</Label>
               <Input id="password-register" type="password" {...registerRegister("password")} />
               {registerErrors.password && <p className="text-xs text-destructive">{registerErrors.password.message}</p>}
             </div>
-            <Button type="submit" className="w-full" disabled={isRegisterLoading}>
+            <Button type="submit" className="w-full mt-2" disabled={isRegisterLoading}>
               {isRegisterLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Crear Cuenta
             </Button>
