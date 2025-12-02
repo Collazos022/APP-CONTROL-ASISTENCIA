@@ -129,8 +129,8 @@ export default function ValidationsPage() {
                   <TableBody>
                     {cargos.map((cargo) => (
                       <TableRow key={cargo.name}>
-                        <TableCell className="font-medium">{cargo.name}</TableCell>
-                        <TableCell>
+                        <TableCell className="font-medium py-2 px-4">{cargo.name}</TableCell>
+                        <TableCell className="py-2 px-4">
                           <Select
                             value={cargo.role}
                             onValueChange={(value) => handleCargoRoleChange(cargo.name, value as Role)}
@@ -178,8 +178,8 @@ export default function ValidationsPage() {
                     <TableBody>
                         {frentes.map((frente) => (
                         <TableRow key={frente.name}>
-                            <TableCell className="font-medium">{frente.name}</TableCell>
-                            <TableCell>
+                            <TableCell className="font-medium py-2 px-4">{frente.name}</TableCell>
+                            <TableCell className="py-2 px-4">
                             <Input
                                 value={frente.coords}
                                 onChange={(e) => handleFrenteCoordChange(frente.name, e.target.value)}
@@ -217,9 +217,9 @@ export default function ValidationsPage() {
                         <TableBody>
                             {navItems.map(item => (
                                 <TableRow key={item.href}>
-                                    <TableCell className="font-medium">{item.label}</TableCell>
+                                    <TableCell className="font-medium py-2 px-4">{item.label}</TableCell>
                                     {allRoles.map(role => (
-                                        <TableCell key={`${item.href}-${role}`} className="text-center">
+                                        <TableCell key={`${item.href}-${role}`} className="text-center py-2 px-4">
                                             <div className="flex justify-center">
                                                 <Checkbox
                                                     checked={item.roles.includes(role)}
