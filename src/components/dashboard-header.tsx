@@ -21,6 +21,9 @@ import {
   ClipboardList,
   Users,
   Building,
+  User,
+  CheckSquare,
+  FileText
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { placeholderImages } from '@/lib/placeholder-images';
@@ -30,7 +33,7 @@ import { useRouter } from 'next/navigation';
 
 const mobileNavItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['Administrador', 'Aprobador', 'Editor', 'Empleado'] },
-  { href: '/dashboard/records', label: 'Registros', icon: ClipboardList, roles: ['Administrador', 'Aprobador', 'Editor'] },
+  { href: '/dashboard/records', label: 'Registros', icon: ClipboardList, roles: ['Administrador', 'Aprobador', 'Editor', 'Empleado'] },
   { href: '/dashboard/management', label: 'Gestión', icon: Users, roles: ['Administrador'] },
 ];
 
@@ -130,8 +133,26 @@ export function DashboardHeader() {
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Ajustes</DropdownMenuItem>
-            <DropdownMenuItem>Soporte</DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => router.push('/dashboard/profile')}>
+              <User className="mr-2 h-4 w-4" />
+              Mi Perfil
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => router.push('/dashboard/validations')}>
+              <CheckSquare className="mr-2 h-4 w-4" />
+              Validaciones
+            </DropdownMenuItem>
+             <DropdownMenuItem onSelect={() => router.push('/dashboard/users')}>
+              <Users className="mr-2 h-4 w-4" />
+              Usuarios
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => router.push('/dashboard/records')}>
+              <FileText className="mr-2 h-4 w-4" />
+              Registros
+            </DropdownMenuItem>
+             <DropdownMenuItem onSelect={() => router.push('/dashboard/approvals')}>
+              <ClipboardList className="mr-2 h-4 w-4" />
+              Aprobaciones
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout}>Cerrar Sesión</DropdownMenuItem>
           </DropdownMenuContent>

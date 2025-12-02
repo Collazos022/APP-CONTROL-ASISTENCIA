@@ -14,6 +14,9 @@ import {
   Users,
   Settings,
   Building,
+  CheckSquare,
+  FileText,
+  User,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import * as React from 'react';
@@ -28,8 +31,12 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['Administrador', 'Aprobador', 'Editor', 'Empleado'] },
-  { href: '/dashboard/records', label: 'Registros', icon: ClipboardList, roles: ['Administrador', 'Aprobador', 'Editor'] },
-  { href: '/dashboard/management', label: 'Gestión', icon: Users, roles: ['Administrador'] },
+  { href: '/dashboard/profile', label: 'Mi Perfil', icon: User, roles: ['Administrador', 'Aprobador', 'Editor', 'Empleado'] },
+  { href: '/dashboard/records', label: 'Mis Registros', icon: FileText, roles: ['Empleado'] },
+  { href: '/dashboard/approvals', label: 'Aprobaciones', icon: ClipboardList, roles: ['Administrador', 'Aprobador', 'Editor'] },
+  { href: '/dashboard/users', label: 'Usuarios', icon: Users, roles: ['Administrador'] },
+  { href: '/dashboard/validations', label: 'Validaciones', icon: CheckSquare, roles: ['Administrador'] },
+  { href: '/dashboard/management', label: 'Gestión General', icon: Settings, roles: ['Administrador'] },
 ];
 
 export function DashboardSidebar() {
@@ -63,7 +70,7 @@ export function DashboardSidebar() {
                   href={item.href}
                   className={cn(
                     "flex h-9 w-9 items-center justify-center rounded-lg transition-colors md:h-8 md:w-8",
-                    pathname === item.href
+                    pathname.startsWith(item.href) && item.href !== '/dashboard' || pathname === item.href
                       ? 'bg-accent text-accent-foreground'
                       : 'text-muted-foreground hover:text-foreground'
                   )}
