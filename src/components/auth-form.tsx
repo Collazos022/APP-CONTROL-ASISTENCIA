@@ -1,9 +1,10 @@
+
 "use client"
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
+import { Controller, useForm } from "react-hook-form"
 import * as z from "zod"
 import { Loader2 } from "lucide-react"
 
@@ -12,17 +13,37 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/hooks/use-toast"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Por favor, introduce un correo electrónico válido." }),
   password: z.string().min(1, { message: "La contraseña es obligatoria." }),
 })
 
+const cargoEnum = z.enum([
+  "Gerente",
+  "Coordinador",
+  "RRHH",
+  "Supervisor Op",
+  "Supervisor HSE",
+  "Ingeniero Op",
+  "Soldador API",
+  "Tubero 1",
+  "Auxiliar Soldadura",
+  "Obrero",
+]);
+
 const registerSchema = z.object({
   name: z.string().min(1, { message: "El nombre es obligatorio." }),
   identificacion: z.string().min(1, { message: "La identificación es obligatoria." }),
   telefono: z.string().min(1, { message: "El teléfono es obligatorio." }),
-  cargo: z.string().min(1, { message: "El cargo es obligatorio." }),
+  cargo: cargoEnum,
   email: z.string().email({ message: "Por favor, introduce un correo electrónico válido." }),
   password: z.string().min(8, { message: "La contraseña debe tener al menos 8 caracteres." }),
 })
@@ -47,6 +68,7 @@ export function AuthForm() {
   const {
     register: registerRegister,
     handleSubmit: handleRegisterSubmit,
+    control: registerControl,
     formState: { errors: registerErrors },
   } = useForm<RegisterData>({
     resolver: zodResolver(registerSchema),
@@ -97,7 +119,7 @@ export function AuthForm() {
         <form onSubmit={handleLoginSubmit(onLogin)}>
           <div className="grid gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="email">Correo Electrónico</Label>
+              <Label htmlFor="email-login">Correo Electrónico</Label>
               <Input
                 id="email-login"
                 type="email"
@@ -108,7 +130,7 @@ export function AuthForm() {
             </div>
             <div className="grid gap-2">
               <div className="flex items-center">
-                <Label htmlFor="password">Contraseña</Label>
+                <Label htmlFor="password-login">Contraseña</Label>
               </div>
               <Input id="password-login" type="password" {...registerLogin("password")} />
               {loginErrors.password && <p className="text-xs text-destructive">{loginErrors.password.message}</p>}
@@ -138,13 +160,30 @@ export function AuthForm() {
               <Input id="telefono" placeholder="Tu Teléfono" {...registerRegister("telefono")} />
               {registerErrors.telefono && <p className="text-xs text-destructive">{registerErrors.telefono.message}</p>}
             </div>
-            <div className="grid gap-1">
+             <div className="grid gap-1">
               <Label htmlFor="cargo">Cargo</Label>
-              <Input id="cargo" placeholder="Tu Cargo" {...registerRegister("cargo")} />
+              <Controller
+                control={registerControl}
+                name="cargo"
+                render={({ field }) => (
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <SelectTrigger id="cargo">
+                      <SelectValue placeholder="Selecciona un cargo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {cargoEnum.options.map((cargo) => (
+                        <SelectItem key={cargo} value={cargo}>
+                          {cargo}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
               {registerErrors.cargo && <p className="text-xs text-destructive">{registerErrors.cargo.message}</p>}
             </div>
             <div className="grid gap-1">
-              <Label htmlFor="email">Correo Electrónico</Label>
+              <Label htmlFor="email-register">Correo Electrónico</Label>
               <Input
                 id="email-register"
                 type="email"
@@ -154,7 +193,7 @@ export function AuthForm() {
               {registerErrors.email && <p className="text-xs text-destructive">{registerErrors.email.message}</p>}
             </div>
             <div className="grid gap-1">
-              <Label htmlFor="password">Contraseña</Label>
+              <Label htmlFor="password-register">Contraseña</Label>
               <Input id="password-register" type="password" {...registerRegister("password")} />
               {registerErrors.password && <p className="text-xs text-destructive">{registerErrors.password.message}</p>}
             </div>
