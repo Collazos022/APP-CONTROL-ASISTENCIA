@@ -22,24 +22,18 @@ import {
   Users,
   Building,
   User,
-  CheckSquare,
-  FileText
+  LogOut,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { placeholderImages } from '@/lib/placeholder-images';
 import * as React from 'react';
 import { type Role } from '@/lib/types';
 import { useRouter } from 'next/navigation';
-
-const mobileNavItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['Administrador', 'Aprobador', 'Editor', 'Empleado'] },
-  { href: '/dashboard/records', label: 'Registros', icon: ClipboardList, roles: ['Administrador', 'Aprobador', 'Editor', 'Empleado'] },
-  { href: '/dashboard/management', label: 'Gestión', icon: Users, roles: ['Administrador'] },
-];
+import { navItems } from './dashboard-sidebar';
 
 export function DashboardHeader() {
   const router = useRouter();
-  const [userRole, setUserRole] = React.useState<Role>('Empleado');
+  const [userRole, setUserRole] = React.useState<Role | null>(null);
   const userAvatar = placeholderImages.find(p => p.id === 'avatar-1');
 
   React.useEffect(() => {
@@ -56,14 +50,22 @@ export function DashboardHeader() {
     router.push('/');
   };
 
-  const accessibleMobileNavItems = mobileNavItems.filter(item => item.roles.includes(userRole));
+  const accessibleMobileNavItems = userRole ? navItems.filter(item => item.roles.includes(userRole)) : [];
 
-  const roleNames: Role[] = ['Empleado', 'Aprobador', 'Administrador'];
+  const roleNames: Role[] = ['Empleado', 'Aprobador', 'Editor', 'Administrador'];
   const changeRole = (newRole: Role) => {
     localStorage.setItem('userRole', newRole);
     setUserRole(newRole);
     window.location.reload();
   };
+
+  if (!userRole) {
+    return (
+       <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
+        {/* Placeholder or loading state */}
+      </header>
+    )
+  }
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
@@ -93,6 +95,13 @@ export function DashboardHeader() {
                 {item.label}
               </Link>
             ))}
+             <button
+                onClick={handleLogout}
+                className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
+              >
+                <LogOut className="h-5 w-5" />
+                Cerrar Sesión
+              </button>
           </nav>
         </SheetContent>
       </Sheet>
@@ -117,46 +126,17 @@ export function DashboardHeader() {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="outline"
-              size="icon"
-              className="overflow-hidden rounded-full"
-            >
-              <Avatar>
-                <AvatarImage src={userAvatar?.imageUrl} alt="User avatar" data-ai-hint={userAvatar?.imageHint} />
-                <AvatarFallback>U</AvatarFallback>
-              </Avatar>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onSelect={() => router.push('/dashboard/profile')}>
-              <User className="mr-2 h-4 w-4" />
-              Mi Perfil
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => router.push('/dashboard/validations')}>
-              <CheckSquare className="mr-2 h-4 w-4" />
-              Validaciones
-            </DropdownMenuItem>
-             <DropdownMenuItem onSelect={() => router.push('/dashboard/users')}>
-              <Users className="mr-2 h-4 w-4" />
-              Usuarios
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => router.push('/dashboard/records')}>
-              <FileText className="mr-2 h-4 w-4" />
-              Registros
-            </DropdownMenuItem>
-             <DropdownMenuItem onSelect={() => router.push('/dashboard/approvals')}>
-              <ClipboardList className="mr-2 h-4 w-4" />
-              Aprobaciones
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout}>Cerrar Sesión</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <Button
+            variant="outline"
+            size="icon"
+            className="overflow-hidden rounded-full"
+            onClick={() => router.push('/dashboard/profile')}
+          >
+            <Avatar>
+              <AvatarImage src={userAvatar?.imageUrl} alt="User avatar" data-ai-hint={userAvatar?.imageHint} />
+              <AvatarFallback>{/* Can be user initials */}</AvatarFallback>
+            </Avatar>
+        </Button>
       </div>
     </header>
   );
