@@ -34,12 +34,15 @@ import { navItems } from './dashboard-sidebar';
 export function DashboardHeader() {
   const router = useRouter();
   const [userRole, setUserRole] = React.useState<Role | null>(null);
+  const [userName, setUserName] = React.useState<string | null>(null);
   const userAvatar = placeholderImages.find(p => p.id === 'avatar-1');
 
   React.useEffect(() => {
     const role = localStorage.getItem('userRole') as Role;
+    const name = localStorage.getItem('userName');
     if (role) {
       setUserRole(role);
+      setUserName(name);
     } else {
       router.push('/');
     }
@@ -47,17 +50,11 @@ export function DashboardHeader() {
   
   const handleLogout = () => {
     localStorage.removeItem('userRole');
+    localStorage.removeItem('userName');
     router.push('/');
   };
 
   const accessibleMobileNavItems = userRole ? navItems.filter(item => item.roles.includes(userRole)) : [];
-
-  const roleNames: Role[] = ['Empleado', 'Aprobador', 'Editor', 'Administrador'];
-  const changeRole = (newRole: Role) => {
-    localStorage.setItem('userRole', newRole);
-    setUserRole(newRole);
-    window.location.reload();
-  };
 
   if (!userRole) {
     return (
@@ -106,25 +103,12 @@ export function DashboardHeader() {
         </SheetContent>
       </Sheet>
       <div className="flex-1">
-        <h1 className="font-semibold text-lg font-headline">Panel de {userRole}</h1>
+        {/* Title removed as requested */}
       </div>
       <div className="flex items-center gap-4">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm">
-              Cambiar Rol (Demo)
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Seleccionar Rol</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {roleNames.map(role => (
-              <DropdownMenuItem key={role} onSelect={() => changeRole(role)}>
-                {role}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex items-center gap-2">
+            <span className="font-semibold text-sm hidden sm:inline">{userName || 'Usuario'} ({userRole})</span>
+        </div>
 
         <Button
             variant="outline"
@@ -134,7 +118,7 @@ export function DashboardHeader() {
           >
             <Avatar>
               <AvatarImage src={userAvatar?.imageUrl} alt="User avatar" data-ai-hint={userAvatar?.imageHint} />
-              <AvatarFallback>{/* Can be user initials */}</AvatarFallback>
+              <AvatarFallback>{userName?.substring(0,2) || 'U'}</AvatarFallback>
             </Avatar>
         </Button>
       </div>

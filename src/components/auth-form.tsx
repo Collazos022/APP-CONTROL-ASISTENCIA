@@ -79,14 +79,20 @@ export function AuthForm() {
     console.log("Login data:", data)
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1500))
-    // Simulate role based on email for demo
-    if (data.email.includes("admin")) {
-        localStorage.setItem("userRole", "Administrador")
-    } else if (data.email.includes("aprobador")) {
-        localStorage.setItem("userRole", "Aprobador")
-    } else {
-        localStorage.setItem("userRole", "Empleado")
+
+    // Demo user data
+    const demoUsers: {[key: string]: {name: string, role: string}} = {
+      "admin@example.com": { name: "Admin User", role: "Administrador"},
+      "aprobador@example.com": { name: "Aprobador User", role: "Aprobador"},
+      "empleado@example.com": { name: "Empleado User", role: "Empleado"},
+      "carlos@example.com": { name: "Carlos Ramirez", role: "Empleado" },
     }
+    
+    const user = demoUsers[data.email.toLowerCase()] || { name: "Usuario", role: "Empleado"}
+
+    localStorage.setItem("userRole", user.role)
+    localStorage.setItem("userName", user.name)
+
 
     setIsLoginLoading(false)
     toast({
