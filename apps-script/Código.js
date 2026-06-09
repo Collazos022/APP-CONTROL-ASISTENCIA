@@ -34,21 +34,11 @@ function doGet(e) {
       usuarios: readSheet("USUARIOS"),
       cargos: readSheet("CARGOS"),
       frentes: readSheet("FRENTES")
-    })).setMimeType(ContentService.MimeType.JSON)
-       .setHeaders({
-         "Access-Control-Allow-Origin": "*",
-         "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-         "Access-Control-Allow-Headers": "Content-Type"
-       });
+    })).setMimeType(ContentService.MimeType.JSON);
     
   } catch (err) {
     return ContentService.createTextOutput(JSON.stringify({ status: "error", message: err.toString() }))
-      .setMimeType(ContentService.MimeType.JSON)
-      .setHeaders({
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type"
-      });
+      .setMimeType(ContentService.MimeType.JSON);
   }
 }
 
@@ -56,14 +46,6 @@ function doPost(e) {
   try {
     const params = JSON.parse(e.postData.contents);
     const ss = SpreadsheetApp.getActiveSpreadsheet();
-    
-    // Configurar CORS preflight headers
-    const corsHeaders = {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-      "Access-Control-Max-Age": "86400"
-    };
 
     // -------------------------------------------------------------
     // ACCIÓN: LOGIN
@@ -94,14 +76,14 @@ function doPost(e) {
             return ContentService.createTextOutput(JSON.stringify({
               status: "success",
               user: userObj
-            })).setMimeType(ContentService.MimeType.JSON).setHeaders(corsHeaders);
+            })).setMimeType(ContentService.MimeType.JSON);
           }
         }
       }
       return ContentService.createTextOutput(JSON.stringify({
         status: "error",
         message: "Correo o contraseña incorrectos."
-      })).setMimeType(ContentService.MimeType.JSON).setHeaders(corsHeaders);
+      })).setMimeType(ContentService.MimeType.JSON);
     }
 
     // -------------------------------------------------------------
@@ -122,7 +104,7 @@ function doPost(e) {
           return ContentService.createTextOutput(JSON.stringify({
             status: "error",
             message: "El correo electrónico ya está registrado."
-          })).setMimeType(ContentService.MimeType.JSON).setHeaders(corsHeaders);
+          })).setMimeType(ContentService.MimeType.JSON);
         }
       }
 
@@ -164,7 +146,7 @@ function doPost(e) {
       return ContentService.createTextOutput(JSON.stringify({
         status: "success",
         user: { id: newId, name: params.name, email: params.email, role: role, cargo: params.cargo, telefono: params.telefono, avatar: params.avatarUrl || randomAvatar }
-      })).setMimeType(ContentService.MimeType.JSON).setHeaders(corsHeaders);
+      })).setMimeType(ContentService.MimeType.JSON);
     }
 
     // -------------------------------------------------------------
@@ -255,7 +237,7 @@ function doPost(e) {
           userAvatar: params.userAvatar || "avatar-1",
           employeeComments: params.employeeComments || ""
         }
-      })).setMimeType(ContentService.MimeType.JSON).setHeaders(corsHeaders);
+      })).setMimeType(ContentService.MimeType.JSON);
     }
 
     // -------------------------------------------------------------
@@ -286,7 +268,7 @@ function doPost(e) {
           
           return ContentService.createTextOutput(JSON.stringify({
             status: "success"
-          })).setMimeType(ContentService.MimeType.JSON).setHeaders(corsHeaders);
+          })).setMimeType(ContentService.MimeType.JSON);
         }
       }
       throw new Error("Registro no encontrado.");
@@ -318,7 +300,7 @@ function doPost(e) {
           
           return ContentService.createTextOutput(JSON.stringify({
             status: "success"
-          })).setMimeType(ContentService.MimeType.JSON).setHeaders(corsHeaders);
+          })).setMimeType(ContentService.MimeType.JSON);
         }
       }
       throw new Error("Registro no encontrado.");
@@ -355,7 +337,7 @@ function doPost(e) {
           }
           return ContentService.createTextOutput(JSON.stringify({
             status: "success"
-          })).setMimeType(ContentService.MimeType.JSON).setHeaders(corsHeaders);
+          })).setMimeType(ContentService.MimeType.JSON);
         }
       }
       throw new Error("Usuario no encontrado.");
@@ -380,7 +362,7 @@ function doPost(e) {
       });
       
       return ContentService.createTextOutput(JSON.stringify({ status: "success" }))
-        .setMimeType(ContentService.MimeType.JSON).setHeaders(corsHeaders);
+        .setMimeType(ContentService.MimeType.JSON);
     }
 
     // -------------------------------------------------------------
@@ -401,30 +383,15 @@ function doPost(e) {
       });
       
       return ContentService.createTextOutput(JSON.stringify({ status: "success" }))
-        .setMimeType(ContentService.MimeType.JSON).setHeaders(corsHeaders);
+        .setMimeType(ContentService.MimeType.JSON);
     }
     
     throw new Error("Tipo de acción no reconocida.");
       
   } catch (err) {
     return ContentService.createTextOutput(JSON.stringify({ status: "error", message: err.toString() }))
-      .setMimeType(ContentService.MimeType.JSON)
-      .setHeaders({
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type"
-      });
+      .setMimeType(ContentService.MimeType.JSON);
   }
-}
-
-function doOptions(e) {
-  return ContentService.createTextOutput("").setMimeType(ContentService.MimeType.JSON)
-    .setHeaders({
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-      "Access-Control-Max-Age": "86400"
-    });
 }
 
 /**
