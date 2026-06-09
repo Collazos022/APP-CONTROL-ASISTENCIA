@@ -1,5 +1,5 @@
-
 'use client';
+
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
@@ -8,38 +8,25 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import {
-  LayoutDashboard,
-  ClipboardList,
-  Users,
-  Settings,
-  Building,
-  CheckSquare,
-  FileText,
-  User,
-  LogOut,
-} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import * as React from 'react';
 import { type Role } from '@/lib/types';
-import { Button } from './ui/button';
 
 export interface NavItem {
   href: string;
   label: string;
-  icon: React.ElementType;
+  icon: string; // Nombre del icono de Material Symbols
   roles: Role[];
-  isBottom?: boolean;
 }
 
 export const navItems: NavItem[] = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['Administrador', 'Aprobador', 'Editor', 'Empleado'] },
-  { href: '/dashboard/profile', label: 'Mi Perfil', icon: User, roles: ['Administrador', 'Aprobador', 'Editor', 'Empleado'] },
-  { href: '/dashboard/records', label: 'Mis Registros', icon: FileText, roles: ['Empleado'] },
-  { href: '/dashboard/approvals', label: 'Aprobaciones', icon: ClipboardList, roles: ['Administrador', 'Aprobador', 'Editor'] },
-  { href: '/dashboard/users', label: 'Usuarios', icon: Users, roles: ['Administrador'] },
-  { href: '/dashboard/validations', label: 'Validaciones', icon: CheckSquare, roles: ['Administrador'] },
-  { href: '/dashboard/management', label: 'Gestión General', icon: Settings, roles: ['Administrador'] },
+  { href: '/dashboard', label: 'Turno', icon: 'schedule', roles: ['Administrador', 'Aprobador', 'Editor', 'Empleado'] },
+  { href: '/dashboard/records', label: 'Histórico', icon: 'history', roles: ['Empleado'] },
+  { href: '/dashboard/approvals', label: 'Aprobaciones', icon: 'fact_check', roles: ['Administrador', 'Aprobador', 'Editor'] },
+  { href: '/dashboard/users', label: 'Usuarios', icon: 'group', roles: ['Administrador'] },
+  { href: '/dashboard/validations', label: 'Validaciones', icon: 'settings', roles: ['Administrador'] },
+  { href: '/dashboard/management', label: 'Gestión', icon: 'tune', roles: ['Administrador'] },
+  { href: '/dashboard/profile', label: 'Mi Perfil', icon: 'person', roles: ['Administrador', 'Aprobador', 'Editor', 'Empleado'] },
 ];
 
 export function DashboardSidebar() {
@@ -58,65 +45,112 @@ export function DashboardSidebar() {
   
   const handleLogout = () => {
     localStorage.removeItem('userRole');
+    localStorage.removeItem('userName');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('userEmail');
+    localStorage.removeItem('userAvatar');
     router.push('/');
   };
 
   if (!userRole) {
     return (
-      <aside className="fixed inset-y-0 left-0 z-10 hidden w-14 flex-col border-r bg-background sm:flex">
-        {/* Skeleton or loading state */}
-      </aside>
+      <>
+        {/* Loading state placeholders */}
+        <aside className="fixed inset-y-0 right-0 z-10 hidden w-16 flex-col border-l bg-background/80 backdrop-blur-md lg:flex" />
+        <nav className="fixed bottom-0 left-0 w-full z-50 flex h-16 border-t bg-background/80 backdrop-blur-md lg:hidden" />
+      </>
     );
   }
 
   const accessibleNavItems = navItems.filter(item => item.roles.includes(userRole));
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-10 hidden w-14 flex-col border-r bg-background sm:flex">
-      <TooltipProvider>
-        <nav className="flex flex-col items-center gap-4 px-2 sm:py-5">
-          <Link
-            href="/dashboard"
-            className="group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:h-8 md:w-8 md:text-base"
-          >
-            <Building className="h-4 w-4 transition-all group-hover:scale-110" />
-            <span className="sr-only">ASSAM</span>
-          </Link>
-          {accessibleNavItems.map((item) => (
-            <Tooltip key={item.href}>
+    <>
+      {/* 1. VISTA DE ESCRITORIO: BARRA LATERAL DERECHA */}
+      <aside className="fixed inset-y-0 right-0 z-10 hidden w-16 flex-col border-l bg-surface-glass backdrop-blur-md border-white/20 shadow-lg lg:flex items-center py-5 justify-between">
+        <TooltipProvider>
+          <div className="flex flex-col items-center gap-6">
+            <Link
+              href="/dashboard"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-white shadow-md active:scale-95 transition-all"
+            >
+              <span className="material-symbols-outlined text-[22px]">corporate_fare</span>
+            </Link>
+            
+            <nav className="flex flex-col items-center gap-4">
+              {accessibleNavItems.map((item) => {
+                const isActive = pathname === item.href || (pathname.startsWith(item.href) && item.href !== '/dashboard');
+                return (
+                  <Tooltip key={item.href}>
+                    <TooltipTrigger asChild>
+                      <Link
+                        href={item.href}
+                        className={cn(
+                          "flex h-10 w-10 items-center justify-center rounded-xl transition-all active:scale-95",
+                          isActive
+                            ? 'bg-primary-fixed/30 text-primary font-bold'
+                            : 'text-on-surface-variant hover:text-primary hover:bg-surface-container'
+                        )}
+                      >
+                        <span className={cn(
+                          "material-symbols-outlined text-[24px]",
+                          isActive && "filled-icon"
+                        )} style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}>
+                          {item.icon}
+                        </span>
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent side="left">{item.label}</TooltipContent>
+                  </Tooltip>
+                );
+              })}
+            </nav>
+          </div>
+
+          <div className="flex flex-col items-center gap-4">
+            <Tooltip>
               <TooltipTrigger asChild>
-                <Link
-                  href={item.href}
-                  className={cn(
-                    "flex h-9 w-9 items-center justify-center rounded-lg transition-colors md:h-8 md:w-8",
-                    (pathname === item.href || (pathname.startsWith(item.href) && item.href !== '/dashboard'))
-                      ? 'bg-accent text-accent-foreground'
-                      : 'text-muted-foreground hover:text-foreground'
-                  )}
+                <button
+                  onClick={handleLogout}
+                  className="flex h-10 w-10 items-center justify-center rounded-xl text-error hover:bg-error-container hover:text-on-error-container transition-all active:scale-95"
                 >
-                  <item.icon className="h-5 w-5" />
-                  <span className="sr-only">{item.label}</span>
-                </Link>
+                  <span className="material-symbols-outlined text-[24px]">logout</span>
+                </button>
               </TooltipTrigger>
-              <TooltipContent side="right">{item.label}</TooltipContent>
+              <TooltipContent side="left">Cerrar Sesión</TooltipContent>
             </Tooltip>
-          ))}
-        </nav>
-        <nav className="mt-auto flex flex-col items-center gap-4 px-2 sm:py-5">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                onClick={handleLogout}
-                className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
-              >
-                <LogOut className="h-5 w-5" />
-                <span className="sr-only">Cerrar Sesión</span>
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="right">Cerrar Sesión</TooltipContent>
-          </Tooltip>
-        </nav>
-      </TooltipProvider>
-    </aside>
+          </div>
+        </TooltipProvider>
+      </aside>
+
+      {/* 2. VISTA MÓVIL: MENÚ DE NAVEGACIÓN INFERIOR (BOTTOM NAV) */}
+      <nav className="lg:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-2 pb-safe bg-surface-glass backdrop-blur-lg border-t border-white/20 shadow-lg rounded-t-xl h-16">
+        {accessibleNavItems.map((item) => {
+          const isActive = pathname === item.href || (pathname.startsWith(item.href) && item.href !== '/dashboard');
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                "flex flex-col items-center justify-center rounded-xl transition-all w-12 h-12 active-tap",
+                isActive
+                  ? 'text-primary bg-primary-fixed/30'
+                  : 'text-on-surface-variant hover:text-primary'
+              )}
+            >
+              <span className="material-symbols-outlined text-[24px]" style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}>
+                {item.icon}
+              </span>
+            </Link>
+          );
+        })}
+        <button
+          onClick={handleLogout}
+          className="flex flex-col items-center justify-center text-error w-12 h-12 active-tap"
+        >
+          <span className="material-symbols-outlined text-[24px]">logout</span>
+        </button>
+      </nav>
+    </>
   );
 }

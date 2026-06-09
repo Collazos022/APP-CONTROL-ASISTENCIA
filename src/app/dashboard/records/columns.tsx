@@ -1,8 +1,10 @@
 "use client"
 
+import * as React from "react"
 import { ColumnDef } from "@tanstack/react-table"
 import { CheckInRecord } from "@/lib/types"
 import { MoreHorizontal, ArrowUpDown } from "lucide-react"
+import { api } from "@/lib/api"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -88,6 +90,48 @@ export const columns: ColumnDef<CheckInRecord>[] = [
     id: "actions",
     cell: ({ row }) => {
       const record = row.original
+      const [userRole, setUserRole] = React.useState<string | null>(null);
+
+      React.useEffect(() => {
+        if (typeof window !== "undefined") {
+          setUserRole(localStorage.getItem("userRole"));
+        }
+      }, []);
+
+      const handleApprove = async () => {
+        try {
+          const approvedBy = localStorage.getItem("userName") || "Supervisor";
+          await api.validateRecord({
+            recordId: record.id,
+            status: "Aprobado",
+            approvedBy
+          });
+          window.dispatchEvent(new CustomEvent("refresh-records"));
+        } catch (error: any) {
+          console.error("Error approving record:", error);
+        }
+      };
+
+      const handleReject = async () => {
+        const comment = prompt("Por favor, ingrese el motivo del rechazo:");
+        if (comment === null) return; // cancelado
+        
+        try {
+          const approvedBy = localStorage.getItem("userName") || "Supervisor";
+          await api.validateRecord({
+            recordId: record.id,
+            status: "Rechazado",
+            comments: comment,
+            approvedBy
+          });
+          window.dispatchEvent(new CustomEvent("refresh-records"));
+        } catch (error: any) {
+          console.error("Error rejecting record:", error);
+        }
+      };
+
+      // Si es empleado, no mostrar las opciones de validación
+      const showValidationActions = userRole && userRole !== "Empleado";
 
       return (
         <DropdownMenu>
@@ -104,9 +148,17 @@ export const columns: ColumnDef<CheckInRecord>[] = [
             >
               Copiar ID de Registro
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>Aprobar</DropdownMenuItem>
-            <DropdownMenuItem className="text-destructive">Rechazar</DropdownMenuItem>
+            {showValidationActions && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleApprove}>
+                  Aprobar
+                </DropdownMenuItem>
+                <DropdownMenuItem className="text-destructive" onClick={handleReject}>
+                  Rechazar
+                </DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       )

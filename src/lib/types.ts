@@ -24,7 +24,8 @@ export interface CheckInRecord {
   distanceFromPost: number | null;
   signatureUrl: string;
   status: CheckInStatus;
-  comments?: string;
+  comments?: string; // Comentarios del supervisor
+  employeeComments?: string; // Comentarios del empleado
   approvedBy?: string;
   userAvatar: string;
 }

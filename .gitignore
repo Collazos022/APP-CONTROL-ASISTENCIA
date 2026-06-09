@@ -43,3 +43,9 @@ next-env.d.ts
 # firebase
 firebase-debug.log
 firestore-debug.log
+
+# agents and editor config
+.agents/
+.vscode/
+studio.json
+stitch_assam_control_asistencia_web/

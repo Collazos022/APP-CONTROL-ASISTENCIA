@@ -1,4 +1,6 @@
+'use client';
 
+import * as React from "react";
 import {
   Table,
   TableBody,
@@ -17,17 +19,46 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { placeholderImages } from "@/lib/placeholder-images";
 import { Badge } from "@/components/ui/badge";
-
-const users = [
-    { name: "Carlos Ramirez", email: "carlos@example.com", role: "Empleado", avatar: "avatar-1"},
-    { name: "Ana Garcia", email: "ana@example.com", role: "Empleado", avatar: "avatar-2"},
-    { name: "Luis Fernandez", email: "luis@example.com", role: "Empleado", avatar: "avatar-3"},
-    { name: "Maria Rodriguez", email: "maria@example.com", role: "Administrador", avatar: "avatar-2"},
-    { name: "Jorge Perez", email: "jorge@example.com", role: "Aprobador", avatar: "avatar-1"},
-];
-
+import { api } from "@/lib/api";
+import { type User } from "@/lib/types";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function UsersPage() {
+  const [users, setUsers] = React.useState<User[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    api.fetchAllData().then(data => {
+      setUsers(data.usuarios);
+    }).catch(err => {
+      console.error("Error loading users:", err);
+    }).finally(() => {
+      setLoading(false);
+    });
+  }, []);
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-6 w-32 mb-2" />
+          <Skeleton className="h-4 w-72" />
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="flex items-center gap-4">
+                <Skeleton className="h-10 w-10 rounded-full" />
+                <Skeleton className="h-4 w-48" />
+                <Skeleton className="h-4 w-32" />
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -45,14 +76,16 @@ export default function UsersPage() {
           </TableHeader>
           <TableBody>
             {users.map((user) => {
-              const avatar = placeholderImages.find(p => p.id === user.avatar);
+              const avatarSrc = user.avatar?.startsWith("data:") || user.avatar?.startsWith("http")
+                ? user.avatar
+                : placeholderImages.find(p => p.id === user.avatar)?.imageUrl;
               return (
                 <TableRow key={user.email}>
                   <TableCell>
                     <div className="flex items-center gap-3">
                         <Avatar>
-                            <AvatarImage src={avatar?.imageUrl} data-ai-hint={avatar?.imageHint} />
-                            <AvatarFallback>{user.name.substring(0,2)}</AvatarFallback>
+                            <AvatarImage src={avatarSrc} className="object-cover" />
+                            <AvatarFallback className="bg-primary/10 text-primary font-bold">{user.name.substring(0,2).toUpperCase()}</AvatarFallback>
                         </Avatar>
                         <span className="font-medium">{user.name}</span>
                     </div>
