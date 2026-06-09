@@ -28,12 +28,26 @@ function doGet(e) {
       }).filter(r => r[headers[0]]); // Filtrar filas vacías
     };
 
+    const getHeaders = (name) => {
+      const sheet = ss.getSheetByName(name);
+      if (!sheet) return [];
+      const data = sheet.getDataRange().getValues();
+      if (data.length === 0) return [];
+      return data[0].filter(h => h !== "");
+    };
+
     return ContentService.createTextOutput(JSON.stringify({ 
       status: "success", 
       registros: readSheet("REGISTROS"), 
       usuarios: readSheet("USUARIOS"),
       cargos: readSheet("CARGOS"),
-      frentes: readSheet("FRENTES")
+      frentes: readSheet("FRENTES"),
+      headers: {
+        REGISTROS: getHeaders("REGISTROS"),
+        USUARIOS: getHeaders("USUARIOS"),
+        CARGOS: getHeaders("CARGOS"),
+        FRENTES: getHeaders("FRENTES")
+      }
     })).setMimeType(ContentService.MimeType.JSON);
     
   } catch (err) {
