@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { MapPin, Loader2, X } from "lucide-react";
 import { type CheckInType, type CheckInRecord } from "@/lib/types";
 import { api } from "@/lib/api";
+import { cn } from "@/lib/utils";
 
 export default function EmployeeDashboard() {
   const { toast } = useToast();
