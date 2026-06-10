@@ -105,13 +105,9 @@ export default function AdminDashboard({ role }: AdminDashboardProps) {
     const order = [1, 2, 3, 4, 5, 6, 0];
     return order.map(idx => {
       const realVal = dayCounts[idx];
-      // Si está vacío, rellenamos con una pequeña curva realista en modo demo
-      const demoVal = idx === 6 || idx === 0 
-        ? Math.floor(Math.random() * 2) 
-        : Math.floor(Math.random() * 5) + 8;
       return {
         name: dayNames[idx],
-        Registros: realVal || demoVal
+        Registros: realVal
       };
     });
   }, [records]);
@@ -123,26 +119,26 @@ export default function AdminDashboard({ role }: AdminDashboardProps) {
     const rejected = records.filter(r => r.status === 'Rechazado').length;
     const total = approved + pending + rejected || 1;
 
-    const approvedPct = Math.round((approved / total) * 100);
-    const pendingPct = Math.round((pending / total) * 100);
-    const rejectedPct = Math.round((rejected / total) * 100);
+    const approvedPct = total > 0 ? Math.round((approved / total) * 100) : 0;
+    const pendingPct = total > 0 ? Math.round((pending / total) * 100) : 0;
+    const rejectedPct = total > 0 ? Math.round((rejected / total) * 100) : 0;
 
     const pie = [
-      { name: 'Aprobados', value: approved || 12, color: '#326e46' },
-      { name: 'Pendientes', value: pending || 4, color: '#ea8635' },
-      { name: 'Rechazados', value: rejected || 2, color: '#ba1a1a' }
-    ];
+      { name: 'Aprobados', value: approved, color: '#326e46' },
+      { name: 'Pendientes', value: pending, color: '#ea8635' },
+      { name: 'Rechazados', value: rejected, color: '#ba1a1a' }
+    ].filter(item => item.value > 0); // Solo mostrar los que tienen datos
 
     return {
       pieData: pie,
       stats: {
-        approved: approved || 12,
-        approvedPct: approved ? approvedPct : 65,
-        pending: pending || 4,
-        pendingPct: pending ? pendingPct : 20,
-        rejected: rejected || 2,
-        rejectedPct: rejected ? rejectedPct : 15,
-        total: approved + pending + rejected
+        approved: approved,
+        approvedPct: approvedPct,
+        pending: pending,
+        pendingPct: pendingPct,
+        rejected: rejected,
+        rejectedPct: rejectedPct,
+        total: total
       }
     };
   }, [records]);
@@ -283,6 +279,10 @@ export default function AdminDashboard({ role }: AdminDashboardProps) {
             <div className="h-44 w-44 relative shrink-0">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
+                  <ChartTooltip 
+                    contentStyle={{ backgroundColor: '#1e1e1e', borderRadius: '8px', border: 'none', color: '#fff', fontSize: '12px', fontWeight: 'bold' }}
+                    itemStyle={{ color: '#fff' }}
+                  />
                   <Pie
                     data={pieData}
                     cx="50%"
@@ -291,6 +291,10 @@ export default function AdminDashboard({ role }: AdminDashboardProps) {
                     outerRadius={75}
                     paddingAngle={4}
                     dataKey="value"
+                    isAnimationActive={true}
+                    animationBegin={0}
+                    animationDuration={800}
+                    animationEasing="ease-out"
                   >
                     {pieData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
@@ -306,17 +310,17 @@ export default function AdminDashboard({ role }: AdminDashboardProps) {
             
             <div className="flex flex-col gap-3 w-full sm:w-auto">
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-success"></div>
+                <div className="w-3 h-3 rounded-sm bg-success"></div>
                 <span className="text-xs font-semibold text-on-surface flex-1">Aprobados</span>
                 <span className="text-xs font-bold text-on-surface-variant ml-2">{stats.approved} ({stats.approvedPct}%)</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-warning"></div>
+                <div className="w-3 h-3 rounded-sm bg-warning"></div>
                 <span className="text-xs font-semibold text-on-surface flex-1">Pendientes</span>
                 <span className="text-xs font-bold text-on-surface-variant ml-2">{stats.pending} ({stats.pendingPct}%)</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-error"></div>
+                <div className="w-3 h-3 rounded-sm bg-error"></div>
                 <span className="text-xs font-semibold text-on-surface flex-1">Rechazados</span>
                 <span className="text-xs font-bold text-on-surface-variant ml-2">{stats.rejected} ({stats.rejectedPct}%)</span>
               </div>
