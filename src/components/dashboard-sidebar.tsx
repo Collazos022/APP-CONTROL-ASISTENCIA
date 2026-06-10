@@ -21,7 +21,7 @@ export interface NavItem {
 
 export const navItems: NavItem[] = [
   { href: '/dashboard', label: 'Turno', icon: 'schedule', roles: ['Administrador', 'Aprobador', 'Editor', 'Empleado'] },
-  { href: '/dashboard/records', label: 'Histórico', icon: 'history', roles: ['Empleado'] },
+  { href: '/dashboard/records', label: 'Histórico', icon: 'history', roles: ['Administrador', 'Aprobador', 'Editor', 'Empleado'] },
   { href: '/dashboard/approvals', label: 'Aprobaciones', icon: 'fact_check', roles: ['Administrador', 'Aprobador', 'Editor'] },
   { href: '/dashboard/users', label: 'Usuarios', icon: 'group', roles: ['Administrador'] },
   { href: '/dashboard/validations', label: 'Validaciones', icon: 'settings', roles: ['Administrador'] },
