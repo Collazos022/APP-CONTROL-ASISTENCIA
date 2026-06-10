@@ -329,11 +329,10 @@ export default function AdminDashboard({ role }: AdminDashboardProps) {
       <section className="glass-card p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-start gap-4 sm:gap-6">
         <div className="flex flex-col text-center sm:text-left flex-1 sm:flex-none">
           <h3 className="text-sm font-bold text-on-surface">Descargar Datos</h3>
-          <p className="text-xs text-on-surface-variant hidden sm:block">Exportar a Excel (.xlsx)</p>
+          <p className="text-xs text-on-surface-variant hidden sm:block">Descargue los datos de registros de asistencia en formato Excel (.xlsx).</p>
         </div>
         
         <div className="flex items-center gap-3 w-full sm:w-auto justify-center sm:justify-start">
-          <span className="material-symbols-outlined text-[28px] text-primary/60 hidden sm:block">table_view</span>
           <button 
             onClick={() => {
               const exportData = records.map(r => ({
