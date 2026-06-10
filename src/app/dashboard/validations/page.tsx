@@ -53,12 +53,32 @@ export default function ValidationsPage() {
     );
   };
 
-  const handleFrenteCoordChange = (frenteName: string, value: string) => {
-    setFrentes(
-      frentes.map((frente) =>
-        frente.name === frenteName ? { ...frente, coords: value } : frente
-      )
-    );
+  const handleFrenteCoordChange = (index: number, value: string) => {
+    const newFrentes = [...frentes];
+    newFrentes[index].coords = value;
+    setFrentes(newFrentes);
+  };
+
+  const handleFrenteNameChange = (index: number, value: string) => {
+    const newFrentes = [...frentes];
+    newFrentes[index].name = value;
+    setFrentes(newFrentes);
+  };
+
+  const handleFrenteRadioChange = (index: number, value: string) => {
+    const newFrentes = [...frentes];
+    newFrentes[index].radio = parseInt(value) || 0;
+    setFrentes(newFrentes);
+  };
+
+  const handleAddFrente = () => {
+    setFrentes([...frentes, { name: '', coords: '', radio: 50 }]);
+  };
+
+  const handleDeleteFrente = (index: number) => {
+    const newFrentes = [...frentes];
+    newFrentes.splice(index, 1);
+    setFrentes(newFrentes);
   };
   
   const handleSaveChanges = async (section: string) => {
@@ -192,26 +212,52 @@ export default function ValidationsPage() {
                       <th className="py-3 px-4">Frente</th>
                       <th className="py-3 px-4">Coordenadas (Lat, Lon)</th>
                       <th className="py-3 px-4 w-[120px]">Radio (metros)</th>
+                      {isAdmin && <th className="py-3 px-4 w-[60px]"></th>}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
-                    {frentes.map((frente) => (
-                      <tr key={frente.name} className="hover:bg-white/10 transition-colors">
-                        <td className="py-3 px-4 font-bold text-on-surface">{frente.name}</td>
+                    {frentes.map((frente, index) => (
+                      <tr key={index} className="hover:bg-white/10 transition-colors">
+                        <td className="py-3 px-4">
+                          <Input
+                            value={frente.name}
+                            onChange={(e) => handleFrenteNameChange(index, e.target.value)}
+                            disabled={!isAdmin || isSaving}
+                            placeholder="Nombre del frente"
+                            className="bg-transparent border-none focus-visible:ring-0 px-0 h-auto font-bold text-on-surface shadow-none"
+                          />
+                        </td>
                         <td className="py-2 px-4">
                           <Input
                             value={frente.coords}
-                            onChange={(e) => handleFrenteCoordChange(frente.name, e.target.value)}
+                            onChange={(e) => handleFrenteCoordChange(index, e.target.value)}
                             disabled={!isAdmin || isSaving}
                             placeholder="Ej: 4.60971, -74.08175"
                             className="bg-white/70 border border-white/20 rounded-xl text-xs h-9 focus:ring-primary focus:ring-1 w-full"
                           />
                         </td>
                         <td className="py-2 px-4">
-                          <div className="bg-surface-container/40 px-3 py-2 rounded-xl text-xs text-on-surface-variant font-bold border border-white/10 select-none text-center">
-                            {frente.radio}m
-                          </div>
+                          <Input
+                            type="number"
+                            value={frente.radio}
+                            onChange={(e) => handleFrenteRadioChange(index, e.target.value)}
+                            disabled={!isAdmin || isSaving}
+                            className="bg-surface-container/40 px-3 py-2 rounded-xl text-xs text-on-surface-variant font-bold border border-white/10 select-none text-center focus:ring-primary focus:ring-1"
+                          />
                         </td>
+                        {isAdmin && (
+                          <td className="py-2 px-4 text-center">
+                            <button
+                              type="button"
+                              disabled={isSaving}
+                              onClick={() => handleDeleteFrente(index)}
+                              className="text-error/70 hover:text-error hover:bg-error/10 p-1.5 rounded-lg transition-colors"
+                              title="Eliminar Frente"
+                            >
+                              <span className="material-symbols-outlined text-[18px]">delete</span>
+                            </button>
+                          </td>
+                        )}
                       </tr>
                     ))}
                   </tbody>
@@ -219,7 +265,17 @@ export default function ValidationsPage() {
               </div>
 
               {isAdmin && (
-                <div className="flex justify-end pt-3">
+                <div className="flex justify-between items-center pt-3 border-t border-white/10">
+                  <Button 
+                    variant="outline"
+                    onClick={handleAddFrente} 
+                    disabled={isSaving}
+                    className="border-primary text-primary hover:bg-primary/10 rounded-xl text-xs font-bold h-9 px-4 active:scale-95 transition-all flex items-center gap-1.5"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">add</span>
+                    Agregar Nuevo Frente
+                  </Button>
+                  
                   <Button 
                     onClick={() => handleSaveChanges('Frentes')} 
                     disabled={isSaving}
