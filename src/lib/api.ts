@@ -313,9 +313,21 @@ export const api = {
 
   async updateCargos(cargos: { name: string; role: Role }[]): Promise<void> {
     if (!this.isConfigured()) throw new Error("API not configured");
+    const response = await fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify({ type: "update_cargos", cargos })
+    });
+    const data = await response.json();
+    if (data.status !== "success") throw new Error(data.message || "Error al actualizar cargos");
   },
 
   async updateFrentes(frentes: { name: string; coords: string; radio: number }[]): Promise<void> {
     if (!this.isConfigured()) throw new Error("API not configured");
+    const response = await fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify({ type: "update_frentes", frentes })
+    });
+    const data = await response.json();
+    if (data.status !== "success") throw new Error(data.message || "Error al actualizar frentes");
   }
 };

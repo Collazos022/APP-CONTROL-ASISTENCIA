@@ -171,7 +171,7 @@ function doPost(e) {
         else if (h === "Rol_App") newRow.push(role);
         else if (h === "Fecha_Ingreso") newRow.push(new Date().toISOString().split('T')[0]);
         else if (h === "Estado") newRow.push("Activo");
-        else if (h === "Foto") newRow.push(randomAvatar);
+        else if (h === "Foto") newRow.push(defaultAvatar);
         else newRow.push("");
       });
 
@@ -185,7 +185,7 @@ function doPost(e) {
           role: role, 
           cargo: params.cargo, 
           telefono: params.telefono, 
-          avatar: randomAvatar 
+          avatar: defaultAvatar 
         }
       })).setMimeType(ContentService.MimeType.JSON);
     }
