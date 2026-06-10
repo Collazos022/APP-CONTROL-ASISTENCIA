@@ -326,13 +326,13 @@ export default function AdminDashboard({ role }: AdminDashboardProps) {
       </section>
 
       {/* Download Data Section */}
-      <section className="glass-card p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-start gap-4 sm:gap-6">
+      <section className="glass-card p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6">
         <div className="flex flex-col text-center sm:text-left flex-1 sm:flex-none">
           <h3 className="text-sm font-bold text-on-surface">Descargar Datos</h3>
           <p className="text-xs text-on-surface-variant hidden sm:block">Descargue los datos de registros de asistencia en formato Excel (.xlsx).</p>
         </div>
         
-        <div className="flex items-center gap-3 w-full sm:w-auto justify-center sm:justify-start">
+        <div className="flex items-center gap-3 w-full sm:w-auto justify-center sm:justify-end">
           <button 
             onClick={() => {
               const exportData = records.map(r => ({
@@ -352,10 +352,10 @@ export default function AdminDashboard({ role }: AdminDashboardProps) {
               XLSX.utils.book_append_sheet(wb, ws, "Registros");
               XLSX.writeFile(wb, `registros_asistencia_${new Date().getTime()}.xlsx`);
             }}
-            className="w-full sm:w-auto bg-primary text-white font-bold text-xs px-5 py-2.5 rounded-xl hover:opacity-90 active:scale-95 transition-all shadow-md shadow-primary/20 flex items-center justify-center gap-2"
+            className="w-full sm:w-auto bg-primary text-white font-bold text-xs px-5 py-2.5 rounded-xl hover:opacity-90 active:scale-95 transition-all shadow-md shadow-primary/20 flex items-center justify-center gap-2 shrink-0"
           >
             <span className="material-symbols-outlined text-[18px]">download</span>
-            Descargar Excel
+            Descargar
           </button>
         </div>
       </section>
