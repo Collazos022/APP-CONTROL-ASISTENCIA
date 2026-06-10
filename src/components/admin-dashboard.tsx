@@ -280,8 +280,19 @@ export default function AdminDashboard({ role }: AdminDashboardProps) {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <ChartTooltip 
-                    contentStyle={{ backgroundColor: '#1e1e1e', borderRadius: '8px', border: 'none', color: '#fff', fontSize: '12px', fontWeight: 'bold' }}
-                    itemStyle={{ color: '#fff' }}
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        const data = payload[0];
+                        return (
+                          <div className="bg-[#1e1e1e] p-3 rounded-lg shadow-lg border-none flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: data.payload.color }}></div>
+                            <span className="text-white font-bold text-sm" style={{ color: 'white' }}>{data.name}</span>
+                            <span className="text-white font-bold text-sm ml-1" style={{ color: 'white' }}>{data.value}</span>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
                   />
                   <Pie
                     data={pieData}
@@ -310,17 +321,17 @@ export default function AdminDashboard({ role }: AdminDashboardProps) {
             
             <div className="flex flex-col gap-3 w-full sm:w-auto">
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-sm bg-success"></div>
+                <div className="w-3 h-3 rounded-sm bg-[#326e46]"></div>
                 <span className="text-xs font-semibold text-on-surface flex-1">Aprobados</span>
                 <span className="text-xs font-bold text-on-surface-variant ml-2">{stats.approved} ({stats.approvedPct}%)</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-sm bg-warning"></div>
+                <div className="w-3 h-3 rounded-sm bg-[#ea8635]"></div>
                 <span className="text-xs font-semibold text-on-surface flex-1">Pendientes</span>
                 <span className="text-xs font-bold text-on-surface-variant ml-2">{stats.pending} ({stats.pendingPct}%)</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-sm bg-error"></div>
+                <div className="w-3 h-3 rounded-sm bg-[#ba1a1a]"></div>
                 <span className="text-xs font-semibold text-on-surface flex-1">Rechazados</span>
                 <span className="text-xs font-bold text-on-surface-variant ml-2">{stats.rejected} ({stats.rejectedPct}%)</span>
               </div>
