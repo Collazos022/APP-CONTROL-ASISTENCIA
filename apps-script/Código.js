@@ -6,7 +6,6 @@ function doGet(e) {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     
-    // Función auxiliar para leer hojas dinámicamente
     const readSheet = (name, hasHeaders = true) => {
       const sheet = ss.getSheetByName(name);
       if (!sheet) return [];
@@ -14,7 +13,7 @@ function doGet(e) {
       if (!hasHeaders || data.length < 2) return [];
       const headers = data[0];
       return data.slice(1).map((row, rowIndex) => {
-        let obj = { _rowIndex: rowIndex + 2 }; // Guardar la fila real (1-based index + headers)
+        let obj = { _rowIndex: rowIndex + 2 };
         headers.forEach((h, i) => {
           if (h) {
             if (row[i] instanceof Date) {
@@ -25,7 +24,7 @@ function doGet(e) {
           }
         });
         return obj;
-      }).filter(r => r[headers[0]]); // Filtrar filas vacías
+      }).filter(r => r[headers[0]]); 
     };
 
     const getHeaders = (name) => {
@@ -36,16 +35,31 @@ function doGet(e) {
       return data[0].filter(h => h !== "");
     };
 
+    // Especial para cargos, leer columnas D y E de la pestaña Validacion
+    const sheetCargos = ss.getSheetByName("Validacion");
+    let cargosList = [];
+    if (sheetCargos) {
+       const cData = sheetCargos.getDataRange().getValues();
+       for(let i=1; i<cData.length; i++){
+          if(cData[i][3]) { // Columna D (índice 3)
+            cargosList.push({
+               Cargo: cData[i][3],
+               Rol_App: cData[i][4] || "Empleado"
+            });
+          }
+       }
+    }
+
     return ContentService.createTextOutput(JSON.stringify({ 
       status: "success", 
-      registros: readSheet("REGISTROS"), 
+      registros: readSheet("Registros_HT"), 
       usuarios: readSheet("USUARIOS"),
-      cargos: readSheet("CARGOS"),
+      cargos: cargosList,
       frentes: readSheet("FRENTES"),
       headers: {
-        REGISTROS: getHeaders("REGISTROS"),
+        REGISTROS: getHeaders("Registros_HT"),
         USUARIOS: getHeaders("USUARIOS"),
-        CARGOS: getHeaders("CARGOS"),
+        CARGOS: ["Cargo", "Rol_App"],
         FRENTES: getHeaders("FRENTES")
       }
     })).setMimeType(ContentService.MimeType.JSON);
@@ -70,23 +84,33 @@ function doPost(e) {
       const data = sheet.getDataRange().getValues();
       const headers = data[0];
       
-      const emailIdx = headers.indexOf("email");
-      const passwordIdx = headers.indexOf("password");
+      const emailIdx = headers.indexOf("Email_Usuario");
+      const passwordIdx = headers.indexOf("Credencial");
       
       if (emailIdx === -1 || passwordIdx === -1) {
-        throw new Error("Estructura de la tabla USUARIOS incorrecta.");
+        throw new Error("Estructura de la tabla USUARIOS incorrecta. Faltan columnas Email_Usuario o Credencial.");
       }
 
       for (let i = 1; i < data.length; i++) {
         if (data[i][emailIdx] && data[i][emailIdx].toString().toLowerCase() === params.email.toLowerCase()) {
           if (data[i][passwordIdx] && data[i][passwordIdx].toString() === params.password.toString()) {
-            // Generar objeto de usuario
-            let userObj = {};
-            headers.forEach((h, idx) => {
-              if (h !== "password") {
-                userObj[h] = data[i][idx];
-              }
-            });
+            
+            const getVal = (colName) => {
+              const idx = headers.indexOf(colName);
+              return idx !== -1 ? data[i][idx] : "";
+            };
+
+            const userObj = {
+               id: getVal("Email_Usuario"), // Use email as unique identifier
+               name: getVal("Nombre_Apellido"),
+               email: getVal("Email_Usuario"),
+               identificacion: getVal("Identificacion"),
+               telefono: getVal("Telefono"),
+               cargo: getVal("Cargo"),
+               role: getVal("Rol_App") || "Empleado",
+               avatar: getVal("Avatar") || "avatar-1"
+            };
+
             return ContentService.createTextOutput(JSON.stringify({
               status: "success",
               user: userObj
@@ -109,10 +133,9 @@ function doPost(e) {
       const data = sheet.getDataRange().getValues();
       const headers = data[0];
       
-      const emailIdx = headers.indexOf("email");
-      if (emailIdx === -1) throw new Error("Estructura de la tabla USUARIOS incorrecta (falta email).");
+      const emailIdx = headers.indexOf("Email_Usuario");
+      if (emailIdx === -1) throw new Error("Estructura de la tabla USUARIOS incorrecta (falta Email_Usuario).");
 
-      // Verificar si el correo ya existe
       for (let i = 1; i < data.length; i++) {
         if (data[i][emailIdx] && data[i][emailIdx].toString().toLowerCase() === params.email.toLowerCase()) {
           return ContentService.createTextOutput(JSON.stringify({
@@ -122,44 +145,47 @@ function doPost(e) {
         }
       }
 
-      // Obtener rol por defecto basado en cargo o asignar Empleado
       let role = "Empleado";
-      const sheetCargos = ss.getSheetByName("CARGOS");
+      const sheetCargos = ss.getSheetByName("Validacion");
       if (sheetCargos) {
         const cargosData = sheetCargos.getDataRange().getValues();
         for (let j = 1; j < cargosData.length; j++) {
-          if (cargosData[j][0] && cargosData[j][0].toString().toLowerCase() === params.cargo.toLowerCase()) {
-            role = cargosData[j][1] || "Empleado";
+          if (cargosData[j][3] && cargosData[j][3].toString().toLowerCase() === params.cargo.toLowerCase()) {
+            role = cargosData[j][4] || "Empleado";
             break;
           }
         }
       }
 
-      // Asignar avatar aleatorio de los 3 predeterminados o vacio para foto URL en el futuro
       const avatars = ["avatar-1", "avatar-2", "avatar-3"];
       const randomAvatar = avatars[Math.floor(Math.random() * avatars.length)];
 
-      const newId = "usr-" + Utilities.getUuid().substring(0, 8);
-      
-      // Crear fila correspondiente a las cabeceras
       let newRow = [];
       headers.forEach(h => {
-        if (h === "id") newRow.push(newId);
-        else if (h === "name") newRow.push(params.name);
-        else if (h === "identificacion") newRow.push(params.identificacion);
-        else if (h === "telefono") newRow.push(params.telefono);
-        else if (h === "cargo") newRow.push(params.cargo);
-        else if (h === "email") newRow.push(params.email);
-        else if (h === "password") newRow.push(params.password);
-        else if (h === "rol") newRow.push(role);
-        else if (h === "avatar") newRow.push(params.avatarUrl || randomAvatar); // Soporte para foto guardada en celda
+        if (h === "Nombre_Apellido") newRow.push(params.name);
+        else if (h === "Identificacion") newRow.push(params.identificacion);
+        else if (h === "Telefono") newRow.push(params.telefono);
+        else if (h === "Cargo") newRow.push(params.cargo);
+        else if (h === "Email_Usuario") newRow.push(params.email);
+        else if (h === "Credencial") newRow.push(params.password);
+        else if (h === "Rol_App") newRow.push(role);
+        else if (h === "Fecha_Ingreso") newRow.push(new Date().toISOString().split('T')[0]);
+        else if (h === "Estado") newRow.push("Activo");
         else newRow.push("");
       });
 
       sheet.appendRow(newRow);
       return ContentService.createTextOutput(JSON.stringify({
         status: "success",
-        user: { id: newId, name: params.name, email: params.email, role: role, cargo: params.cargo, telefono: params.telefono, avatar: params.avatarUrl || randomAvatar }
+        user: { 
+          id: params.email, 
+          name: params.name, 
+          email: params.email, 
+          role: role, 
+          cargo: params.cargo, 
+          telefono: params.telefono, 
+          avatar: randomAvatar 
+        }
       })).setMimeType(ContentService.MimeType.JSON);
     }
 
@@ -167,14 +193,11 @@ function doPost(e) {
     // ACCIÓN: REGISTRO DE ASISTENCIA (CHECK-IN / CHECK-OUT)
     // -------------------------------------------------------------
     else if (params.type === 'check_in_out') {
-      const sheet = ss.getSheetByName("REGISTROS");
-      if (!sheet) throw new Error("La pestaña REGISTROS no existe.");
-      const headers = sheet.getDataRange().getValues()[0];
-
-      // 1. Guardar la firma digital directamente en la celda como código base64
+      const sheet = ss.getSheetByName("Registros_HT");
+      if (!sheet) throw new Error("La pestaña Registros_HT no existe.");
+      let headers = sheet.getDataRange().getValues()[0];
+      
       let signatureUrl = params.signatureBase64 || "";
-
-      // 2. Calcular geocercas y distancia
       let nearestFront = "Fuera de geocerca";
       let minDistance = null;
       
@@ -182,15 +205,16 @@ function doPost(e) {
       if (sheetFrentes && params.latitude && params.longitude) {
         const frentesData = sheetFrentes.getDataRange().getValues();
         const fHeaders = frentesData[0];
-        const nameCol = fHeaders.indexOf("frente");
-        const coordsCol = fHeaders.indexOf("coords");
-        const radioCol = fHeaders.indexOf("radio"); // Opcional, radio en metros (ej. 100)
+        const nameCol = fHeaders.indexOf("Frentes de trabajo");
+        const coordsCol = fHeaders.indexOf("Coords");
+        const radioCol = fHeaders.indexOf("Radio"); 
 
         if (nameCol !== -1 && coordsCol !== -1) {
           for (let k = 1; k < frentesData.length; k++) {
             const frenteName = frentesData[k][nameCol];
             const coordStr = frentesData[k][coordsCol];
-            const radioVal = radioCol !== -1 ? parseFloat(frentesData[k][radioCol]) || 100 : 100;
+            const radioKm = radioCol !== -1 ? parseFloat(frentesData[k][radioCol]) : 0.1;
+            const radioVal = radioKm * 1000;
             
             if (coordStr && coordStr.indexOf(",") !== -1) {
               const coordsParts = coordStr.split(",");
@@ -211,30 +235,69 @@ function doPost(e) {
         }
       }
 
-      // 3. Registrar marcas de entrada o salida
-      const newRecId = "rec-" + Utilities.getUuid().substring(0, 8);
       const timestampStr = new Date().toISOString();
+      const todayStr = timestampStr.split('T')[0];
 
-      let newRow = [];
-      headers.forEach(h => {
-        if (h === "id") newRow.push(newRecId);
-        else if (h === "userId") newRow.push(params.userId);
-        else if (h === "userName") newRow.push(params.userName);
-        else if (h === "type") newRow.push(params.typeAction); // Entrada / Salida
-        else if (h === "timestamp") newRow.push(timestampStr);
-        else if (h === "latitude") newRow.push(params.latitude || "");
-        else if (h === "longitude") newRow.push(params.longitude || "");
-        else if (h === "distanceFromPost") newRow.push(minDistance);
-        else if (h === "signatureUrl") newRow.push(signatureUrl);
-        else if (h === "status") newRow.push("Pendiente");
-        else if (h === "userAvatar") newRow.push(params.userAvatar || "avatar-1");
-        else if (h === "comments") newRow.push(""); // Comentarios del supervisor
-        else if (h === "approvedBy") newRow.push("");
-        else if (h === "employeeComments") newRow.push(params.employeeComments || ""); // Comentarios del empleado
-        else newRow.push("");
-      });
+      const data = sheet.getDataRange().getValues();
+      const emailIdx = headers.indexOf("Email_Usuario");
+      const fechaIdx = headers.indexOf("Fecha");
+      const horaEntradaIdx = headers.indexOf("Hora_Entrada");
+      const horaSalidaIdx = headers.indexOf("Hora_Salida");
+      const firmaEntradaIdx = headers.indexOf("Firma_Entrada");
+      const firmaSalidaIdx = headers.indexOf("Firma_Salida");
 
-      sheet.appendRow(newRow);
+      let existingRowIdx = -1;
+      let newRecId = "rec-" + Utilities.getUuid().substring(0, 8);
+
+      // Buscar si el usuario ya registró entrada hoy
+      for (let i = 1; i < data.length; i++) {
+        if (emailIdx !== -1 && fechaIdx !== -1) {
+           let rEmail = data[i][emailIdx];
+           let rFecha = data[i][fechaIdx];
+           let rFechaStr = rFecha instanceof Date ? rFecha.toISOString().split('T')[0] : String(rFecha).split('T')[0];
+           if (rEmail === params.userId && rFechaStr === todayStr) { 
+              existingRowIdx = i;
+              newRecId = data[i][headers.indexOf("ID_Registro")] || newRecId;
+              break;
+           }
+        }
+      }
+
+      const isCheckIn = params.typeAction === 'Entrada';
+
+      if (existingRowIdx !== -1) {
+        // Update existing row (Salida)
+        if (!isCheckIn) {
+           if(horaSalidaIdx !== -1) sheet.getRange(existingRowIdx + 1, horaSalidaIdx + 1).setValue(timestampStr);
+           if(firmaSalidaIdx !== -1) sheet.getRange(existingRowIdx + 1, firmaSalidaIdx + 1).setValue(signatureUrl);
+        } else {
+           if(horaEntradaIdx !== -1) sheet.getRange(existingRowIdx + 1, horaEntradaIdx + 1).setValue(timestampStr);
+           if(firmaEntradaIdx !== -1) sheet.getRange(existingRowIdx + 1, firmaEntradaIdx + 1).setValue(signatureUrl);
+        }
+      } else {
+        // Create new row (Entrada)
+        let newRow = [];
+        headers.forEach(h => {
+          if (h === "ID_Registro") newRow.push(newRecId);
+          else if (h === "Email_Usuario") newRow.push(params.userId); // el userId del frontend es el email
+          else if (h === "Fecha") newRow.push(todayStr);
+          else if (h === "Frente_de_Trabajo") newRow.push(nearestFront);
+          else if (h === "Hora_Entrada") newRow.push(isCheckIn ? timestampStr : "");
+          else if (h === "Firma_Entrada") newRow.push(isCheckIn ? signatureUrl : "");
+          else if (h === "Hora_Salida") newRow.push(!isCheckIn ? timestampStr : "");
+          else if (h === "Firma_Salida") newRow.push(!isCheckIn ? signatureUrl : "");
+          else if (h === "Aprobacion") newRow.push("Pendiente");
+          else if (h === "Comentarios_Sup") newRow.push("");
+          else if (h === "Email_Sup") newRow.push("");
+          // Si el usuario añade estas columnas, se llenarán:
+          else if (h === "Latitud") newRow.push(params.latitude || ""); 
+          else if (h === "Longitud") newRow.push(params.longitude || "");
+          else if (h === "Comentario_Empleado") newRow.push(params.employeeComments || "");
+          else newRow.push("");
+        });
+        sheet.appendRow(newRow);
+      }
+
       return ContentService.createTextOutput(JSON.stringify({
         status: "success",
         record: {
@@ -255,34 +318,29 @@ function doPost(e) {
     }
 
     // -------------------------------------------------------------
-    // ACCIÓN: ACTUALIZAR COMENTARIOS DEL EMPLEADO (SOLICITUD DE MODIFICACIÓN)
+    // ACCIÓN: ACTUALIZAR COMENTARIOS DEL EMPLEADO
     // -------------------------------------------------------------
     else if (params.type === 'update_employee_comment') {
-      const sheet = ss.getSheetByName("REGISTROS");
-      if (!sheet) throw new Error("La pestaña REGISTROS no existe.");
+      const sheet = ss.getSheetByName("Registros_HT");
+      if (!sheet) throw new Error("La pestaña Registros_HT no existe.");
       const data = sheet.getDataRange().getValues();
       const headers = data[0];
       
-      const idIdx = headers.indexOf("id");
-      const empCommIdx = headers.indexOf("employeeComments");
-      const statusIdx = headers.indexOf("status");
+      const idIdx = headers.indexOf("ID_Registro");
+      const empCommIdx = headers.indexOf("Comentario_Empleado"); 
+      const statusIdx = headers.indexOf("Aprobacion");
       
-      if (idIdx === -1 || empCommIdx === -1) {
-        throw new Error("Estructura de la tabla REGISTROS incorrecta (falta id o employeeComments).");
-      }
+      if (idIdx === -1) throw new Error("Estructura de Registros_HT incorrecta (Falta ID_Registro).");
 
       for (let i = 1; i < data.length; i++) {
         if (data[i][idIdx] && data[i][idIdx].toString() === params.recordId.toString()) {
-          sheet.getRange(i + 1, empCommIdx + 1).setValue(params.employeeComments || "");
-          
-          // Si estaba rechazado, devolver el estado a "Pendiente" para revisión del supervisor
+          if (empCommIdx !== -1) {
+            sheet.getRange(i + 1, empCommIdx + 1).setValue(params.employeeComments || "");
+          }
           if (statusIdx !== -1 && data[i][statusIdx] === "Rechazado") {
             sheet.getRange(i + 1, statusIdx + 1).setValue("Pendiente");
           }
-          
-          return ContentService.createTextOutput(JSON.stringify({
-            status: "success"
-          })).setMimeType(ContentService.MimeType.JSON);
+          return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
         }
       }
       throw new Error("Registro no encontrado.");
@@ -292,29 +350,26 @@ function doPost(e) {
     // ACCIÓN: VALIDAR REGISTRO (APROBAR / RECHAZAR)
     // -------------------------------------------------------------
     else if (params.type === 'validate_record') {
-      const sheet = ss.getSheetByName("REGISTROS");
-      if (!sheet) throw new Error("La pestaña REGISTROS no existe.");
+      const sheet = ss.getSheetByName("Registros_HT");
+      if (!sheet) throw new Error("La pestaña Registros_HT no existe.");
       const data = sheet.getDataRange().getValues();
       const headers = data[0];
       
-      const idIdx = headers.indexOf("id");
-      const statusIdx = headers.indexOf("status");
-      const commentsIdx = headers.indexOf("comments");
-      const approvedByIdx = headers.indexOf("approvedBy");
+      const idIdx = headers.indexOf("ID_Registro");
+      const statusIdx = headers.indexOf("Aprobacion");
+      const commentsIdx = headers.indexOf("Comentarios_Sup");
+      const approvedByIdx = headers.indexOf("Email_Sup");
       
       if (idIdx === -1 || statusIdx === -1 || commentsIdx === -1 || approvedByIdx === -1) {
-        throw new Error("Estructura de la tabla REGISTROS incorrecta.");
+        throw new Error("Estructura de Registros_HT incorrecta.");
       }
 
       for (let i = 1; i < data.length; i++) {
         if (data[i][idIdx] && data[i][idIdx].toString() === params.recordId.toString()) {
-          sheet.getRange(i + 1, statusIdx + 1).setValue(params.status); // Aprobado / Rechazado
+          sheet.getRange(i + 1, statusIdx + 1).setValue(params.status);
           sheet.getRange(i + 1, commentsIdx + 1).setValue(params.comments || "");
           sheet.getRange(i + 1, approvedByIdx + 1).setValue(params.approvedBy || "");
-          
-          return ContentService.createTextOutput(JSON.stringify({
-            status: "success"
-          })).setMimeType(ContentService.MimeType.JSON);
+          return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
         }
       }
       throw new Error("Registro no encontrado.");
@@ -329,11 +384,10 @@ function doPost(e) {
       const data = sheet.getDataRange().getValues();
       const headers = data[0];
       
-      const idIdx = headers.indexOf("id");
-      const nameIdx = headers.indexOf("name");
-      const phoneIdx = headers.indexOf("telefono");
-      const passwordIdx = headers.indexOf("password");
-      const avatarIdx = headers.indexOf("avatar");
+      const idIdx = headers.indexOf("Email_Usuario");
+      const nameIdx = headers.indexOf("Nombre_Apellido");
+      const phoneIdx = headers.indexOf("Telefono");
+      const passwordIdx = headers.indexOf("Credencial");
       
       if (idIdx === -1 || nameIdx === -1 || phoneIdx === -1 || passwordIdx === -1) {
         throw new Error("Estructura de la tabla USUARIOS incorrecta.");
@@ -346,58 +400,17 @@ function doPost(e) {
           if (params.password) {
             sheet.getRange(i + 1, passwordIdx + 1).setValue(params.password);
           }
-          if (params.avatarUrl && avatarIdx !== -1) {
-            sheet.getRange(i + 1, avatarIdx + 1).setValue(params.avatarUrl);
-          }
-          return ContentService.createTextOutput(JSON.stringify({
-            status: "success"
-          })).setMimeType(ContentService.MimeType.JSON);
+          return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
         }
       }
       throw new Error("Usuario no encontrado.");
     }
-
+    
     // -------------------------------------------------------------
-    // ACCIÓN: ACTUALIZAR CONFIGURACIÓN DE CARGOS
+    // ACCIONES DE CONFIGURACIÓN DE PESTAÑAS (IGNORADAS PUES AHORA ESTÁ MAPPEADO ESTRICTO)
     // -------------------------------------------------------------
-    else if (params.type === 'update_cargos') {
-      const sheet = ss.getSheetByName("CARGOS");
-      if (!sheet) throw new Error("La pestaña CARGOS no existe.");
-      
-      // Limpiar datos anteriores (excepto cabecera)
-      const lastRow = sheet.getLastRow();
-      if (lastRow > 1) {
-        sheet.deleteRows(2, lastRow - 1);
-      }
-      
-      const items = params.cargos; // Array de { name, role }
-      items.forEach(item => {
-        sheet.appendRow([item.name, item.role]);
-      });
-      
-      return ContentService.createTextOutput(JSON.stringify({ status: "success" }))
-        .setMimeType(ContentService.MimeType.JSON);
-    }
-
-    // -------------------------------------------------------------
-    // ACCIÓN: ACTUALIZAR CONFIGURACIÓN DE FRENTES
-    // -------------------------------------------------------------
-    else if (params.type === 'update_frentes') {
-      const sheet = ss.getSheetByName("FRENTES");
-      if (!sheet) throw new Error("La pestaña FRENTES no existe.");
-      
-      const lastRow = sheet.getLastRow();
-      if (lastRow > 1) {
-        sheet.deleteRows(2, lastRow - 1);
-      }
-      
-      const items = params.frentes; // Array de { name, coords, radio }
-      items.forEach(item => {
-        sheet.appendRow([item.name, item.coords, item.radio || 100]);
-      });
-      
-      return ContentService.createTextOutput(JSON.stringify({ status: "success" }))
-        .setMimeType(ContentService.MimeType.JSON);
+    else if (params.type === 'update_cargos' || params.type === 'update_frentes') {
+      return ContentService.createTextOutput(JSON.stringify({ status: "success", message: "Ignorado - Ahora se gestiona directo desde la hoja" })).setMimeType(ContentService.MimeType.JSON);
     }
     
     throw new Error("Tipo de acción no reconocida.");
@@ -408,9 +421,6 @@ function doPost(e) {
   }
 }
 
-/**
- * Fórmula de Haversine para distancia entre dos coordenadas GPS en metros
- */
 function getDistance(lat1, lon1, lat2, lon2) {
   const R = 6371000; // Radio de la Tierra en metros
   const dLat = (lat2 - lat1) * Math.PI / 180;
