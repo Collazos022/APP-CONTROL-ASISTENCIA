@@ -82,7 +82,7 @@ export const api = {
           name: u.Nombre_Apellido || u.name || "Usuario",
           email: u.Email_Usuario || u.email || "",
           role: (u.Rol_App || u.rol || "Empleado") as Role,
-          avatar: u.Avatar || u.avatar || "avatar-1",
+          avatar: u.Foto || u.Avatar || u.avatar || "avatar-1",
           identificacion: u.Identificacion || u.identificacion || "",
           telefono: u.Telefono || u.telefono || "",
           cargo: u.Cargo || u.cargo || ""
