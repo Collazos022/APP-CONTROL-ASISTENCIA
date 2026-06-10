@@ -96,7 +96,7 @@ function doPost(e) {
           if (data[i][passwordIdx] && data[i][passwordIdx].toString() === params.password.toString()) {
             
             const getVal = (colName) => {
-              const idx = headers.indexOf(colName);
+              const idx = headers.findIndex(h => h.toString().trim().toLowerCase() === colName.toString().trim().toLowerCase());
               return idx !== -1 ? data[i][idx] : "";
             };
 
@@ -108,7 +108,7 @@ function doPost(e) {
                telefono: getVal("Telefono"),
                cargo: getVal("Cargo"),
                role: getVal("Rol_App") || "Empleado",
-               avatar: getVal("Avatar") || "avatar-1"
+               avatar: getVal("Foto") || getVal("Avatar") || "avatar-1"
             };
 
             return ContentService.createTextOutput(JSON.stringify({
@@ -157,8 +157,8 @@ function doPost(e) {
         }
       }
 
-      const avatars = ["avatar-1", "avatar-2", "avatar-3"];
-      const randomAvatar = avatars[Math.floor(Math.random() * avatars.length)];
+      // Foto de un soldador por defecto de Unsplash
+      const defaultAvatar = "https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?q=80&w=150&auto=format&fit=crop";
 
       let newRow = [];
       headers.forEach(h => {
@@ -171,6 +171,7 @@ function doPost(e) {
         else if (h === "Rol_App") newRow.push(role);
         else if (h === "Fecha_Ingreso") newRow.push(new Date().toISOString().split('T')[0]);
         else if (h === "Estado") newRow.push("Activo");
+        else if (h === "Foto") newRow.push(randomAvatar);
         else newRow.push("");
       });
 
@@ -389,6 +390,9 @@ function doPost(e) {
       const phoneIdx = headers.indexOf("Telefono");
       const passwordIdx = headers.indexOf("Credencial");
       
+      // Buscar la columna "Foto" de forma flexible
+      const photoIdx = headers.findIndex(h => h.toString().trim().toLowerCase() === "foto");
+      
       if (idIdx === -1 || nameIdx === -1 || phoneIdx === -1 || passwordIdx === -1) {
         throw new Error("Estructura de la tabla USUARIOS incorrecta.");
       }
@@ -400,17 +404,45 @@ function doPost(e) {
           if (params.password) {
             sheet.getRange(i + 1, passwordIdx + 1).setValue(params.password);
           }
+          if (photoIdx !== -1 && params.avatarUrl) {
+            sheet.getRange(i + 1, photoIdx + 1).setValue(params.avatarUrl);
+          }
           return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
         }
       }
-      throw new Error("Usuario no encontrado.");
-    }
-    
-    // -------------------------------------------------------------
-    // ACCIONES DE CONFIGURACIÓN DE PESTAÑAS (IGNORADAS PUES AHORA ESTÁ MAPPEADO ESTRICTO)
-    // -------------------------------------------------------------
-    else if (params.type === 'update_cargos' || params.type === 'update_frentes') {
-      return ContentService.createTextOutput(JSON.stringify({ status: "success", message: "Ignorado - Ahora se gestiona directo desde la hoja" })).setMimeType(ContentService.MimeType.JSON);
+      return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "Usuario no encontrado." })).setMimeType(ContentService.MimeType.JSON);
+      
+    } else if (params.type === 'update_cargos') {
+      const sheet = ss.getSheetByName("Validacion");
+      if (!sheet) throw new Error("La pestaña Validacion no existe.");
+      // params.cargos es un arreglo [{name, role}]
+      const data = sheet.getDataRange().getValues();
+      for (let i = 1; i < data.length; i++) {
+        if (data[i][3]) { // Columna D es índice 3
+          const cargoObj = params.cargos.find(c => c.name.toString().toLowerCase() === data[i][3].toString().toLowerCase());
+          if (cargoObj) {
+            sheet.getRange(i + 1, 5).setValue(cargoObj.role); // Columna E es índice 4, columna 5 en getRange
+          }
+        }
+      }
+      return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
+      
+    } else if (params.type === 'update_frentes') {
+      const sheet = ss.getSheetByName("FRENTES");
+      if (!sheet) throw new Error("La pestaña FRENTES no existe.");
+      
+      // Limpiar datos existentes menos cabeceras
+      const lastRow = sheet.getLastRow();
+      if (lastRow > 1) {
+        sheet.getRange(2, 1, lastRow - 1, 3).clearContent();
+      }
+      
+      // Escribir los nuevos frentes (reemplazo completo)
+      if (params.frentes && params.frentes.length > 0) {
+        const rows = params.frentes.map(f => [f.name, f.coords, f.radio]);
+        sheet.getRange(2, 1, rows.length, 3).setValues(rows);
+      }
+      return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
     }
     
     throw new Error("Tipo de acción no reconocida.");
