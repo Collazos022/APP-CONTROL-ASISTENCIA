@@ -3,11 +3,11 @@ const fs = require('fs');
 const API_URL = 'https://script.google.com/macros/s/AKfycbxu5iBSSRYQPtjBJOl5eLfX8xHRnosxjYj-YmJ7O8JmDxS7EQZ_Ot2LPxaW40laI5iX/exec';
 
 const users = [
-  { action: 'register', email: 'carlos@assam.com', name: 'Carlos Gomez', phone: '3001112222', id: '1001', role: 'Empleado', cargo: 'Ayudante', password: '123' },
-  { action: 'register', email: 'ana@assam.com', name: 'Ana Martinez', phone: '3002223333', id: '1002', role: 'Empleado', cargo: 'Soldador', password: '123' },
-  { action: 'register', email: 'luis@assam.com', name: 'Luis Rodriguez', phone: '3003334444', id: '1003', role: 'Empleado', cargo: 'Armador', password: '123' },
-  { action: 'register', email: 'marta@assam.com', name: 'Marta Diaz', phone: '3004445555', id: '1004', role: 'Empleado', cargo: 'Tubero', password: '123' },
-  { action: 'register', email: 'pedro@assam.com', name: 'Pedro Sanchez', phone: '3005556666', id: '1005', role: 'Empleado', cargo: 'Pintor', password: '123' }
+  { type: 'register', email: 'carlos@assam.com', name: 'Carlos Gomez', phone: '3001112222', identificacion: '1001', role: 'Empleado', cargo: 'Ayudante', password: '123' },
+  { type: 'register', email: 'ana@assam.com', name: 'Ana Martinez', phone: '3002223333', identificacion: '1002', role: 'Empleado', cargo: 'Soldador', password: '123' },
+  { type: 'register', email: 'luis@assam.com', name: 'Luis Rodriguez', phone: '3003334444', identificacion: '1003', role: 'Empleado', cargo: 'Armador', password: '123' },
+  { type: 'register', email: 'marta@assam.com', name: 'Marta Diaz', phone: '3004445555', identificacion: '1004', role: 'Empleado', cargo: 'Tubero', password: '123' },
+  { type: 'register', email: 'pedro@assam.com', name: 'Pedro Sanchez', phone: '3005556666', identificacion: '1005', role: 'Empleado', cargo: 'Pintor', password: '123' }
 ];
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -43,7 +43,7 @@ async function generateData() {
     if (i % 2 !== 0) dayOffset++; // Avanza un día cada 2 registros
 
     const payload = {
-      action: 'checkin',
+      type: 'check_in_out',
       userId: user.email,
       typeAction: i % 2 === 0 ? 'Entrada' : 'Salida',
       timestamp: d.toISOString(),

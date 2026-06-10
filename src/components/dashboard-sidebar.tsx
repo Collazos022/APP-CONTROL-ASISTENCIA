@@ -78,7 +78,7 @@ export function DashboardSidebar() {
             
             <nav className="flex flex-col items-center gap-4">
               {accessibleNavItems.map((item) => {
-                const isActive = pathname === item.href || (pathname.startsWith(item.href) && item.href !== '/dashboard' && item.href !== '/dashboard/admin');
+                const isActive = pathname === item.href || (pathname?.startsWith(item.href) && item.href !== '/dashboard' && item.href !== '/dashboard/admin');
                 return (
                   <Tooltip key={item.href}>
                     <TooltipTrigger asChild>
@@ -125,7 +125,7 @@ export function DashboardSidebar() {
       {/* 2. VISTA MÓVIL: MENÚ DE NAVEGACIÓN INFERIOR (BOTTOM NAV) */}
       <nav className="lg:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-2 pb-safe bg-surface-glass backdrop-blur-lg border-t border-white/20 shadow-lg h-16">
         {accessibleNavItems.map((item) => {
-          const isActive = pathname === item.href || (pathname.startsWith(item.href) && item.href !== '/dashboard' && item.href !== '/dashboard/admin');
+          const isActive = pathname === item.href || (pathname?.startsWith(item.href) && item.href !== '/dashboard' && item.href !== '/dashboard/admin');
           return (
             <Link
               key={item.href}
