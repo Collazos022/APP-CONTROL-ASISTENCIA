@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 
 export default function EmployeeDashboard() {
   const { toast } = useToast();
+  const [mounted, setMounted] = React.useState(false);
   const [currentTime, setCurrentTime] = React.useState(new Date());
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [location, setLocation] = React.useState<{ lat: number; lon: number } | null>(null);
@@ -55,6 +56,7 @@ export default function EmployeeDashboard() {
   }, []);
 
   React.useEffect(() => {
+    setMounted(true);
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     loadDashboardData();
     return () => clearInterval(timer);
@@ -215,15 +217,15 @@ export default function EmployeeDashboard() {
 
   const shift = calculateShiftHours();
 
-  // Formatear hora y fecha en español
-  const formattedTime = currentTime.toLocaleTimeString("es-MX", { hour12: false });
-  const rawDateStr = currentTime.toLocaleDateString("es-MX", {
+  // Formatear hora y fecha en español, evitando errores de hidratación (mismatch servidor/cliente)
+  const formattedTime = mounted ? currentTime.toLocaleTimeString("es-MX", { hour12: false }) : "--:--:--";
+  const rawDateStr = mounted ? currentTime.toLocaleDateString("es-MX", {
     weekday: "long",
     year: "numeric",
     month: "long",
     day: "numeric",
-  });
-  const formattedDate = rawDateStr.charAt(0).toUpperCase() + rawDateStr.slice(1);
+  }) : "";
+  const formattedDate = rawDateStr ? rawDateStr.charAt(0).toUpperCase() + rawDateStr.slice(1) : "Cargando...";
 
   return (
     <div className="max-w-lg mx-auto flex flex-col gap-6 pt-4">
