@@ -72,7 +72,9 @@ export const api = {
     }
 
     try {
-      const response = await fetch(API_URL);
+      // Usar cache-busting para siempre obtener los datos más recientes desde Google Sheets
+      const response = await fetch(`${API_URL}?t=${new Date().getTime()}`);
+      if (!response.ok) throw new Error("Error en la petición a Google Sheets");
       const data = await response.json();
       if (data.status === "success") {
         
