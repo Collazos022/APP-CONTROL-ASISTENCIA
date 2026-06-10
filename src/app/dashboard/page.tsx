@@ -28,8 +28,7 @@ export default function Dashboard() {
       case 'Empleado':
         return <EmployeeDashboard />;
       case 'Administrador':
-      case 'Aprobador':
-      case 'Editor':
+      case 'Supervisor':
         return <AdminDashboard role={userRole} />;
       default:
         return (
