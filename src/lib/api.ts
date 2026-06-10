@@ -77,16 +77,21 @@ export const api = {
       if (data.status === "success") {
         
         // Mapear Usuarios
-        const usuarios = (data.usuarios || []).map((u: any) => ({
-          id: u.Email_Usuario || u.id,
-          name: u.Nombre_Apellido || u.name || "Usuario",
-          email: u.Email_Usuario || u.email || "",
-          role: (u.Rol_App || u.rol || "Empleado") as Role,
-          avatar: u.Foto || u.Avatar || u.avatar || "avatar-1",
-          identificacion: u.Identificacion || u.identificacion || "",
-          telefono: u.Telefono || u.telefono || "",
-          cargo: u.Cargo || u.cargo || ""
-        }));
+        const usuarios = (data.usuarios || []).map((u: any) => {
+          const fotoKey = Object.keys(u).find(k => k.trim().toLowerCase() === 'foto') || 'Foto';
+          const avatarKey = Object.keys(u).find(k => k.trim().toLowerCase() === 'avatar') || 'Avatar';
+          
+          return {
+            id: u.Email_Usuario || u.id,
+            name: u.Nombre_Apellido || u.name || "Usuario",
+            email: u.Email_Usuario || u.email || "",
+            role: (u.Rol_App || u.rol || "Empleado") as Role,
+            avatar: u[fotoKey] || u[avatarKey] || u.avatar || "avatar-1",
+            identificacion: u.Identificacion || u.identificacion || "",
+            telefono: u.Telefono || u.telefono || "",
+            cargo: u.Cargo || u.cargo || ""
+          };
+        });
 
         // Construir diccionario rápido de usuarios para nombre y avatar
         const usersDict: Record<string, any> = {};
