@@ -60,6 +60,28 @@ export default function EmployeeDashboard() {
     return () => clearInterval(timer);
   }, [loadDashboardData]);
 
+  // Solicitar ubicación GPS tan pronto como carga el componente
+  React.useEffect(() => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setLocation({
+            lat: position.coords.latitude,
+            lon: position.coords.longitude,
+          });
+          setLocationError(null);
+        },
+        (error) => {
+          console.error("GPS Init Error:", error);
+          setLocationError(`Error de GPS: ${error.message}. Active su ubicación.`);
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    } else {
+      setLocationError("Geolocalización no soportada.");
+    }
+  }, []);
+
   // Capturar geolocalización al hacer clic en los botones de Entrada/Salida
   const handleActionClick = (action: CheckInType) => {
     setCurrentAction(action);
