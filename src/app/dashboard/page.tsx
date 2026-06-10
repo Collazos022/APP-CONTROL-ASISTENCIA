@@ -9,8 +9,9 @@ export default function Dashboard() {
   const [userRole, setUserRole] = React.useState<Role | null>(null);
 
   React.useEffect(() => {
-    const role = localStorage.getItem('userRole') as Role;
-    setUserRole(role || 'Empleado');
+    const rawRole = localStorage.getItem('userRole') || 'Empleado';
+    const role = rawRole.trim() as Role;
+    setUserRole(role);
   }, []);
 
   if (!userRole) {
@@ -31,7 +32,11 @@ export default function Dashboard() {
       case 'Editor':
         return <AdminDashboard role={userRole} />;
       default:
-        return <div>Rol no reconocido.</div>;
+        return (
+          <div className="p-8 text-center text-slate-500">
+            Rol no reconocido: "{userRole}". Por favor contacte a soporte si cree que esto es un error.
+          </div>
+        );
     }
   };
 

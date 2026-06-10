@@ -17,18 +17,11 @@ const loginSchema = z.object({
   password: z.string().min(1, { message: "La contraseña es obligatoria." }),
 })
 
-const cargoEnum = z.enum([
-  "Soldador API",
-  "Tubero",
-  "Obrero",
-  "Supervisor",
-]);
-
 const registerSchema = z.object({
   name: z.string().min(1, { message: "El nombre es obligatorio." }),
   identificacion: z.string().min(1, { message: "La identificación es obligatoria." }),
   telefono: z.string().min(1, { message: "El teléfono es obligatorio." }),
-  cargo: cargoEnum,
+  cargo: z.string().min(1, { message: "El cargo es obligatorio." }),
   email: z.string().email({ message: "Por favor, introduce un correo electrónico válido." }),
   password: z.string().min(8, { message: "La contraseña debe tener al menos 8 caracteres." }),
 })
@@ -42,6 +35,15 @@ export function AuthForm() {
   const [activeTab, setActiveTab] = React.useState<"login" | "register">("login")
   const [isLoginLoading, setIsLoginLoading] = React.useState(false)
   const [isRegisterLoading, setIsRegisterLoading] = React.useState(false)
+  const [cargos, setCargos] = React.useState<{name: string, role: string}[]>([])
+
+  React.useEffect(() => {
+    api.fetchAllData().then(data => {
+      setCargos(data.cargos || []);
+    }).catch(err => {
+      console.error("No se pudieron cargar los cargos:", err);
+    });
+  }, []);
 
   const {
     register: registerLogin,
@@ -64,7 +66,7 @@ export function AuthForm() {
     setIsLoginLoading(true)
     try {
       const user = await api.login(data.email, data.password)
-      localStorage.setItem("userRole", user.role)
+      localStorage.setItem("userRole", user.role.trim())
       localStorage.setItem("userName", user.name)
       localStorage.setItem("userId", user.id)
       localStorage.setItem("userEmail", user.email || "")
@@ -271,9 +273,13 @@ export function AuthForm() {
                     value={field.value}
                   >
                     <option value="" disabled>Seleccione cargo</option>
-                    {cargoEnum.options.map((cargo) => (
-                      <option key={cargo} value={cargo}>{cargo}</option>
-                    ))}
+                    {cargos.length > 0 ? (
+                      cargos.map((cargo) => (
+                        <option key={cargo.name} value={cargo.name}>{cargo.name}</option>
+                      ))
+                    ) : (
+                      <option value="Empleado">Empleado (Cargando...)</option>
+                    )}
                   </select>
                 )}
               />
