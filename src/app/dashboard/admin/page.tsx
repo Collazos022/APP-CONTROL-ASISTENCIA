@@ -1,18 +1,27 @@
 'use client';
 import * as React from 'react';
 import { type Role } from '@/lib/types';
-import EmployeeDashboard from '@/components/employee-dashboard';
 import AdminDashboard from '@/components/admin-dashboard';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useRouter } from 'next/navigation';
 
-export default function Dashboard() {
+export default function AdminDashboardPage() {
   const [userRole, setUserRole] = React.useState<Role | null>(null);
+  const router = useRouter();
 
   React.useEffect(() => {
-    const rawRole = localStorage.getItem('userRole') || 'Empleado';
+    const rawRole = localStorage.getItem('userRole');
+    if (!rawRole) {
+      router.push('/');
+      return;
+    }
     const role = rawRole.trim() as Role;
-    setUserRole(role);
-  }, []);
+    if (role === 'Empleado') {
+      router.push('/dashboard');
+    } else {
+      setUserRole(role);
+    }
+  }, [router]);
 
   if (!userRole) {
     return (
@@ -23,6 +32,5 @@ export default function Dashboard() {
     );
   }
 
-  // Turno es para todos los roles, renderiza el EmployeeDashboard (Check-in/out)
-  return <div><EmployeeDashboard /></div>;
+  return <AdminDashboard role={userRole} />;
 }

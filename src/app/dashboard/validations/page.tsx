@@ -67,12 +67,12 @@ export default function ValidationsPage() {
 
   const handleFrenteRadioChange = (index: number, value: string) => {
     const newFrentes = [...frentes];
-    newFrentes[index].radio = parseInt(value) || 0;
+    newFrentes[index].radio = parseFloat(value) || 1;
     setFrentes(newFrentes);
   };
 
   const handleAddFrente = () => {
-    setFrentes([...frentes, { name: '', coords: '', radio: 50 }]);
+    setFrentes([...frentes, { name: '', coords: '', radio: 1 }]);
   };
 
   const handleDeleteFrente = (index: number) => {
@@ -141,11 +141,6 @@ export default function ValidationsPage() {
           {/* TABLA DE CARGOS */}
           <TabsContent value="cargos" className="focus-visible:outline-none">
             <div className="glass-card rounded-3xl p-6 border border-white/20 shadow-sm space-y-4">
-              <div className="border-b border-white/10 pb-3">
-                <h3 className="text-md font-bold text-on-surface">Cargos Registrados</h3>
-                <p className="text-xs text-on-surface-variant">Asigne un rol del sistema a cada cargo de la base de datos.</p>
-              </div>
-
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
@@ -200,11 +195,6 @@ export default function ValidationsPage() {
           {/* TABLA DE FRENTES */}
           <TabsContent value="frentes" className="focus-visible:outline-none">
             <div className="glass-card rounded-3xl p-6 border border-white/20 shadow-sm space-y-4">
-              <div className="border-b border-white/10 pb-3">
-                <h3 className="text-md font-bold text-on-surface">Ubicación de Frentes</h3>
-                <p className="text-xs text-on-surface-variant">Configure las coordenadas GPS de cada centro de operación y su radio.</p>
-              </div>
-
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
@@ -239,6 +229,7 @@ export default function ValidationsPage() {
                         <td className="py-2 px-4">
                           <Input
                             type="number"
+                            step="0.1"
                             value={frente.radio}
                             onChange={(e) => handleFrenteRadioChange(index, e.target.value)}
                             disabled={!isAdmin || isSaving}
@@ -292,11 +283,6 @@ export default function ValidationsPage() {
           {/* TABLA DE ROLES */}
           <TabsContent value="roles" className="focus-visible:outline-none">
             <div className="glass-card rounded-3xl p-6 border border-white/20 shadow-sm space-y-4">
-              <div className="border-b border-white/10 pb-3">
-                <h3 className="text-md font-bold text-on-surface">Matriz de Acceso</h3>
-                <p className="text-xs text-on-surface-variant">Resumen de acceso a las vistas de la aplicación por rol asignado.</p>
-              </div>
-
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>

@@ -6,6 +6,9 @@ export interface User {
   email: string;
   role: Role;
   avatar: string;
+  identificacion?: string;
+  telefono?: string;
+  cargo?: string;
 }
 
 export type CheckInStatus = "Pendiente" | "Aprobado" | "Rechazado";

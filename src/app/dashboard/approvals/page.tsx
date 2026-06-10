@@ -24,7 +24,7 @@ export default function ApprovalsPage() {
   const [records, setRecords] = React.useState<CheckInRecord[]>([]);
   const [frentes, setFrentes] = React.useState<string[]>(["Todos"]);
   const [selectedFrente, setSelectedFrente] = React.useState("Todos");
-  const [selectedStatus, setSelectedStatus] = React.useState<"Pendiente" | "Aprobado" | "Rechazado">("Pendiente");
+  const [selectedStatus, setSelectedStatus] = React.useState<"Pendientes" | "Aprobados" | "Rechazados" | "Todos">("Pendientes");
   const [loading, setLoading] = React.useState(true);
   const [selectedDate, setSelectedDate] = React.useState<Date | null>(new Date());
   
@@ -53,14 +53,29 @@ export default function ApprovalsPage() {
     };
   }, [loadData]);
 
-  // Generar últimos 10 días para el calendario
+  // Generar fechas dinámicas únicas desde los registros (ordenadas de más reciente a más antigua)
   const calendarDates = React.useMemo(() => {
-    return Array.from({ length: 10 }).map((_, i) => {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      return d;
+    if (records.length === 0) {
+      // Si no hay registros, mostrar solo la fecha de hoy
+      return [new Date()];
+    }
+    const dates = new Map<string, Date>();
+    records.forEach(r => {
+      const dateStr = r.timestamp.toDateString();
+      if (!dates.has(dateStr)) {
+        dates.set(dateStr, r.timestamp);
+      }
     });
-  }, []);
+    const sortedDates = Array.from(dates.values()).sort((a, b) => b.getTime() - a.getTime());
+    return sortedDates.length > 0 ? sortedDates : [new Date()];
+  }, [records]);
+
+  // Si selectedDate no está inicializada o ya no es válida, tomar la primera fecha
+  React.useEffect(() => {
+    if (!selectedDate && calendarDates.length > 0) {
+      setSelectedDate(calendarDates[0]);
+    }
+  }, [calendarDates, selectedDate]);
 
   // Formatear día de la semana
   const getDayName = (date: Date) => {
@@ -72,7 +87,10 @@ export default function ApprovalsPage() {
   const filteredRecords = React.useMemo(() => {
     return records.filter(r => {
       // 1. Filtro por Estado
-      if (r.status !== selectedStatus) return false;
+      if (selectedStatus !== "Todos") {
+        const mappedStatus = selectedStatus === "Pendientes" ? "Pendiente" : selectedStatus === "Aprobados" ? "Aprobado" : "Rechazado";
+        if (r.status !== mappedStatus) return false;
+      }
 
       // 2. Filtro por Fecha (si hay una seleccionada)
       if (selectedDate) {
@@ -189,7 +207,7 @@ export default function ApprovalsPage() {
     <div className="max-w-3xl mx-auto space-y-6 pb-20">
       {/* Title */}
       <section className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold font-headline text-primary">Aprobación de Marcas</h1>
+        <h1 className="text-2xl font-bold font-headline text-primary">Aprobaciones</h1>
         <p className="text-sm text-on-surface-variant leading-tight">
           Gestione las solicitudes de asistencia diaria del personal en campo.
         </p>
@@ -225,8 +243,11 @@ export default function ApprovalsPage() {
                 <span className={`font-bold text-[10px] uppercase tracking-wider ${isSelected ? "text-white/80" : "text-on-surface-variant/70"}`}>
                   {getDayName(date)}
                 </span>
-                <span className="font-bold text-[15px] mt-0.5">
+                <span className="font-bold text-[15px] mt-0.5 leading-none">
                   {date.getDate()}
+                </span>
+                <span className={`font-medium text-[8px] uppercase mt-0.5 tracking-widest ${isSelected ? "text-white/70" : "text-on-surface-variant/50"}`}>
+                  {date.toLocaleDateString('es-ES', { month: 'short' })}
                 </span>
               </button>
             );
@@ -237,7 +258,7 @@ export default function ApprovalsPage() {
       {/* Status Filter Tabs & Frente Selector */}
       <section className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center justify-between">
         <div className="flex bg-surface-container-low p-1 rounded-2xl border border-outline-variant/30 flex-1 sm:max-w-md">
-          {(["Pendiente", "Aprobado", "Rechazado"] as const).map((status) => (
+          {(["Pendientes", "Aprobados", "Rechazados", "Todos"] as const).map((status) => (
             <button
               key={status}
               type="button"

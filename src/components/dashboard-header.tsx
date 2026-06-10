@@ -73,14 +73,14 @@ export function DashboardHeader() {
         </div>
       </div>
       
-      <div className="flex items-center gap-3">
-        <span className="text-body-sm font-medium text-on-surface hidden sm:inline-block">
+      <div 
+        className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+        onClick={() => router.push('/dashboard/profile')}
+      >
+        <span className="text-body-sm font-medium text-on-surface hidden sm:inline-block select-none">
           {shortName}
         </span>
-        <div 
-          className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/20 cursor-pointer hover:border-primary/50 transition-colors"
-          onClick={() => router.push('/dashboard/profile')}
-        >
+        <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/20 hover:border-primary/50 transition-colors">
           <Avatar className="h-full w-full">
             {avatarSrc ? (
               <AvatarImage src={avatarSrc} alt={userName || "Avatar"} className="object-cover" />

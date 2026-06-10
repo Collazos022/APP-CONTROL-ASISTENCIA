@@ -70,7 +70,9 @@ export default function UsersPage() {
           <TableHeader>
             <TableRow>
               <TableHead>Usuario</TableHead>
-              <TableHead>Email</TableHead>
+              <TableHead>Identificación</TableHead>
+              <TableHead>Teléfono</TableHead>
+              <TableHead>Cargo</TableHead>
               <TableHead>Rol</TableHead>
             </TableRow>
           </TableHeader>
@@ -90,7 +92,9 @@ export default function UsersPage() {
                         <span className="font-medium">{user.name}</span>
                     </div>
                   </TableCell>
-                  <TableCell>{user.email}</TableCell>
+                  <TableCell>{user.identificacion || "-"}</TableCell>
+                  <TableCell>{user.telefono || "-"}</TableCell>
+                  <TableCell>{user.cargo || "-"}</TableCell>
                   <TableCell>
                     <Badge variant={user.role === 'Administrador' ? 'default' : 'secondary'}>
                       {user.role}

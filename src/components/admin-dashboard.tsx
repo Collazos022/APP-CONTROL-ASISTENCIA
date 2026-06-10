@@ -7,6 +7,7 @@ import { placeholderImages } from "@/lib/placeholder-images";
 import { api } from "@/lib/api";
 import { Skeleton } from "./ui/skeleton";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip as ChartTooltip, PieChart, Pie, Cell } from "recharts";
+import * as XLSX from 'xlsx';
 
 interface AdminDashboardProps {
   role: Role;
@@ -324,65 +325,40 @@ export default function AdminDashboard({ role }: AdminDashboardProps) {
         </div>
       </section>
 
-      {/* Recent Activity Table (Stitch styled card list) */}
+      {/* Download Data Section */}
       <section className="glass-card p-5 rounded-2xl space-y-4">
         <div className="flex justify-between items-center border-b border-white/20 pb-3">
           <div>
-            <h3 className="text-md font-bold text-on-surface">Actividad Reciente</h3>
-            <p className="text-xs text-on-surface-variant">Últimos registros reportados en campo.</p>
+            <h3 className="text-md font-bold text-on-surface">Descargar Datos</h3>
+            <p className="text-xs text-on-surface-variant">Descargue los datos de registros de asistencia en formato Excel (.xlsx).</p>
           </div>
-          {pendingCount > 0 && (
-            <span className="bg-warning/20 text-warning px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide">
-              {pendingCount} Pendiente{pendingCount > 1 ? 's' : ''}
-            </span>
-          )}
         </div>
-        <div className="divide-y divide-white/10">
-          {recentActivities.length === 0 ? (
-            <div className="text-center py-6 text-sm text-on-surface-variant">
-              No hay actividad reciente en el sistema.
-            </div>
-          ) : (
-            recentActivities.map((activity) => {
-              const avatarSrc = activity.userAvatar?.startsWith("data:") || activity.userAvatar?.startsWith("http")
-                ? activity.userAvatar
-                : placeholderImages.find(p => p.id === activity.userAvatar)?.imageUrl;
-
-              let statusColor = "text-warning bg-warning/10";
-              if (activity.status === "Aprobado") statusColor = "text-success bg-success/10";
-              if (activity.status === "Rechazado") statusColor = "text-error bg-error/10";
-
-              return (
-                <div key={activity.id} className="flex items-center py-4 first:pt-0 last:pb-0 gap-4">
-                  <Avatar className="h-10 w-10 border border-white/50">
-                    <AvatarImage src={avatarSrc} className="object-cover" />
-                    <AvatarFallback className="bg-primary/10 text-primary font-bold">
-                      {activity.userName.substring(0, 2).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 space-y-1">
-                    <p className="text-sm font-semibold text-on-surface leading-none">
-                      {activity.userName}
-                    </p>
-                    <p className="text-xs text-on-surface-variant flex items-center gap-1.5">
-                      <span className="material-symbols-outlined text-[14px]">
-                        {activity.type === 'Entrada' ? 'login' : 'logout'}
-                      </span>
-                      Marcó {activity.type.toLowerCase()} • {activity.timestamp.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}
-                    </p>
-                  </div>
-                  <div className="text-right flex flex-col items-end gap-1">
-                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusColor}`}>
-                      {activity.status}
-                    </span>
-                    <span className="text-[10px] text-on-surface-variant font-medium">
-                      {activity.timestamp.toLocaleDateString("es-ES", { day: "numeric", month: "short" })}
-                    </span>
-                  </div>
-                </div>
-              );
-            })
-          )}
+        <div className="py-4 flex flex-col items-center justify-center gap-4">
+          <span className="material-symbols-outlined text-[48px] text-primary/60">table_view</span>
+          <button 
+            onClick={() => {
+              const exportData = records.map(r => ({
+                'ID Registro': r.id,
+                'ID Empleado': r.userId,
+                'Nombre Empleado': r.userName,
+                'Tipo': r.type,
+                'Fecha y Hora': r.timestamp.toLocaleString('es-ES'),
+                'Estado': r.status,
+                'Comentarios': r.comments || '',
+                'Aprobado Por': r.approvedBy || '',
+                'Latitud': r.location.lat,
+                'Longitud': r.location.lng,
+              }));
+              const ws = XLSX.utils.json_to_sheet(exportData);
+              const wb = XLSX.utils.book_new();
+              XLSX.utils.book_append_sheet(wb, ws, "Registros");
+              XLSX.writeFile(wb, `registros_asistencia_${new Date().getTime()}.xlsx`);
+            }}
+            className="bg-primary text-white font-bold text-sm px-8 py-3 rounded-xl hover:opacity-90 active:scale-95 transition-all shadow-md shadow-primary/20 flex items-center gap-2"
+          >
+            <span className="material-symbols-outlined">download</span>
+            Descargar Excel
+          </button>
         </div>
       </section>
     </div>
