@@ -53,22 +53,19 @@ export default function ApprovalsPage() {
     };
   }, [loadData]);
 
-  // Generar fechas dinámicas únicas desde los registros (ordenadas de más reciente a más antigua)
+  // Generar todos los días del mes actual (de izquierda a derecha)
   const calendarDates = React.useMemo(() => {
-    if (records.length === 0) {
-      // Si no hay registros, mostrar solo la fecha de hoy
-      return [new Date()];
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    
+    const dates = [];
+    for (let i = 1; i <= daysInMonth; i++) {
+      dates.push(new Date(year, month, i));
     }
-    const dates = new Map<string, Date>();
-    records.forEach(r => {
-      const dateStr = r.timestamp.toDateString();
-      if (!dates.has(dateStr)) {
-        dates.set(dateStr, r.timestamp);
-      }
-    });
-    const sortedDates = Array.from(dates.values()).sort((a, b) => b.getTime() - a.getTime());
-    return sortedDates.length > 0 ? sortedDates : [new Date()];
-  }, [records]);
+    return dates;
+  }, []);
 
   // Si selectedDate no está inicializada o ya no es válida, tomar la primera fecha
   React.useEffect(() => {
@@ -269,13 +266,13 @@ export default function ApprovalsPage() {
                   : "text-on-surface-variant hover:text-primary"
               }`}
             >
-              {status}s
+              {status}
             </button>
           ))}
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
-          <span className="text-xs font-bold text-on-surface-variant uppercase">Frente:</span>
+        <div className="flex flex-col items-end gap-1 shrink-0">
+          <span className="text-[9px] font-bold text-on-surface-variant/70 uppercase">Frente</span>
           <Select value={selectedFrente} onValueChange={setSelectedFrente}>
             <SelectTrigger className="w-[150px] bg-white border-white/20 rounded-xl shadow-sm text-xs h-9">
               <SelectValue placeholder="Frente de trabajo" />
