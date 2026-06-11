@@ -110,13 +110,22 @@ export const api = {
           const hasSalida = !!r.Hora_Salida;
           if (!hasEntrada && !hasSalida) return;
 
+          let dateStr = r.Fecha;
+          if (dateStr && typeof dateStr === 'string' && dateStr.includes('T')) dateStr = dateStr.split('T')[0];
+
+          let tEntrada = r.Hora_Entrada;
+          let tSalida = r.Hora_Salida;
+          
+          if (tEntrada && typeof tEntrada === 'string' && !tEntrada.includes('T')) tEntrada = `${dateStr}T${tEntrada}:00`;
+          if (tSalida && typeof tSalida === 'string' && !tSalida.includes('T')) tSalida = `${dateStr}T${tSalida}:00`;
+
           registros.push({
             id: baseId,
             userId: uEmail,
             userName: uInfo.name,
-            timestamp: new Date(r.Hora_Entrada || r.Hora_Salida),
-            timestampEntrada: r.Hora_Entrada ? new Date(r.Hora_Entrada) : undefined,
-            timestampSalida: r.Hora_Salida ? new Date(r.Hora_Salida) : undefined,
+            timestamp: new Date(tEntrada || tSalida),
+            timestampEntrada: tEntrada ? new Date(tEntrada) : undefined,
+            timestampSalida: tSalida ? new Date(tSalida) : undefined,
             location: {
               latitude: parseFloat(r.Latitud || r.latitude) || 0,
               longitude: parseFloat(r.Longitud || r.longitude) || 0
@@ -206,9 +215,17 @@ export const api = {
   async checkInOut(params: { userId: string; userName: string; typeAction: CheckInType; latitude: number; longitude: number; signatureBase64: string; userAvatar: string; employeeComments?: string }): Promise<CheckInRecord> {
     if (!this.isConfigured()) throw new Error("API not configured");
     try {
+      const localNow = new Date();
+      // Format as HH:mm and YYYY-MM-DD
+      const clientTime = localNow.toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit", hour12: false });
+      const year = localNow.getFullYear();
+      const month = String(localNow.getMonth() + 1).padStart(2, '0');
+      const day = String(localNow.getDate()).padStart(2, '0');
+      const clientDate = `${year}-${month}-${day}`;
+
       const response = await fetch(API_URL, {
         method: "POST",
-        body: JSON.stringify({ type: "check_in_out", ...params }),
+        body: JSON.stringify({ type: "check_in_out", ...params, clientTime, clientDate }),
       });
       const data = await response.json();
       if (data.status === "success") {

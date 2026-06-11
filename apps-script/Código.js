@@ -236,8 +236,8 @@ function doPost(e) {
         }
       }
 
-      const timestampStr = new Date().toISOString();
-      const todayStr = timestampStr.split('T')[0];
+      const timestampStr = params.clientTime || new Date().toISOString();
+      const todayStr = params.clientDate || (params.clientTime ? new Date().toISOString().split('T')[0] : timestampStr.split('T')[0]);
 
       const data = sheet.getDataRange().getValues();
       const emailIdx = headers.indexOf("Email_Usuario");
@@ -306,7 +306,7 @@ function doPost(e) {
           userId: params.userId,
           userName: params.userName,
           type: params.typeAction,
-          timestamp: timestampStr,
+          timestamp: params.clientTime ? (todayStr + "T" + timestampStr + ":00") : timestampStr,
           latitude: params.latitude,
           longitude: params.longitude,
           distanceFromPost: minDistance,
