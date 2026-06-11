@@ -216,6 +216,7 @@ export default function EmployeeDashboard() {
   };
 
   const shift = calculateShiftHours();
+  const hasEntradaToday = todayRecords.some(r => r.type === "Entrada" && r.status !== "Rechazado");
 
   // Formatear hora y fecha en español, evitando errores de hidratación (mismatch servidor/cliente)
   const formattedTime = mounted ? currentTime.toLocaleTimeString("es-MX", { hour12: false }) : "--:--:--";
@@ -292,9 +293,14 @@ export default function EmployeeDashboard() {
           </button>
           <button
             onClick={() => handleActionClick("Salida")}
-            className="active-tap w-full bg-amber-500 hover:bg-amber-600 rounded-xl flex items-center justify-center gap-2 h-14 shadow-md text-white font-bold text-sm transition-all"
+            disabled={!hasEntradaToday}
+            className={`active-tap w-full rounded-xl flex items-center justify-center gap-2 h-14 shadow-md font-bold text-sm transition-all ${
+              hasEntradaToday 
+                ? "bg-amber-500 hover:bg-amber-600 text-white" 
+                : "bg-slate-300 text-slate-500 cursor-not-allowed shadow-none"
+            }`}
           >
-            <span className="material-symbols-outlined text-white text-[20px]">logout</span>
+            <span className="material-symbols-outlined text-[20px]">logout</span>
             <span>Marcar Salida</span>
           </button>
         </div>
