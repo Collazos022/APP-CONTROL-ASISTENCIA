@@ -295,8 +295,16 @@ export default function EmployeeDashboard() {
                 : "bg-slate-300 text-slate-500 cursor-not-allowed shadow-none"
             }`}
           >
-            <span className="material-symbols-outlined text-[20px]">login</span>
-            <span>Marcar Entrada</span>
+            <span className={`material-symbols-outlined text-[20px] ${!canCheckIn ? "text-slate-500" : "text-white"}`}>
+              {canCheckIn ? "login" : "check_circle"}
+            </span>
+            <span className={!canCheckIn ? "text-slate-500" : "text-white"}>
+              {canCheckIn 
+                ? "Marcar Entrada" 
+                : openShift?.timestampEntrada 
+                  ? `Entrada: ${openShift.timestampEntrada.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })}` 
+                  : "Entrada Registrada"}
+            </span>
           </button>
           <button
             onClick={() => handleActionClick("Salida")}
