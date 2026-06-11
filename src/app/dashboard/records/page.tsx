@@ -306,9 +306,9 @@ export default function RecordsPage() {
 
             // Determinar colores de estado
             let dotColor = "";
-            if (cell.status === "Aprobado") dotColor = "bg-success";
-            else if (cell.status === "Pendiente") dotColor = "bg-warning";
-            else if (cell.status === "Rechazado") dotColor = "bg-error";
+            if (cell.status === "Aprobado") dotColor = "bg-[#326e46]";
+            else if (cell.status === "Pendiente") dotColor = "bg-[#ea8635]";
+            else if (cell.status === "Rechazado") dotColor = "bg-[#ba1a1a]";
 
             // Formatear horas cortas
             const formatTime = (dateStr?: Date) => {
@@ -336,10 +336,9 @@ export default function RecordsPage() {
 
                 {hasData ? (
                   <>
-                    <div className="flex flex-col items-center text-[7px] leading-tight text-on-surface-variant font-medium scale-90">
-                      <span>{cell.entrada ? formatTime(cell.entrada.timestamp) : "--:--"}</span>
-                      <span className="text-[6px] opacity-50">a</span>
-                      <span>{cell.salida ? formatTime(cell.salida.timestamp) : "--:--"}</span>
+                    <div className="flex flex-col items-center text-[9px] leading-tight text-on-surface-variant font-medium">
+                      <span>{cell.entrada ? formatTime(cell.entrada.timestamp) : ""}</span>
+                      <span>{cell.salida ? formatTime(cell.salida.timestamp) : ""}</span>
                     </div>
                     {dotColor && <div className={`w-1.5 h-1.5 rounded-full ${dotColor}`} />}
                   </>
@@ -354,16 +353,16 @@ export default function RecordsPage() {
         {/* Legend */}
         <div className="mt-4 flex gap-4 justify-center items-center border-t border-white/10 pt-3">
           <div className="flex items-center gap-1.5">
-            <div className="w-1.5 h-1.5 rounded-full bg-success"></div>
-            <span className="text-[9px] text-on-surface-variant font-bold uppercase tracking-wider">Aprobado</span>
+            <div className="w-2 h-2 rounded-full bg-[#326e46]"></div>
+            <span className="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider">Aprobado</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="w-1.5 h-1.5 rounded-full bg-warning"></div>
-            <span className="text-[9px] text-on-surface-variant font-bold uppercase tracking-wider">Pendiente</span>
+            <div className="w-2 h-2 rounded-full bg-[#ea8635]"></div>
+            <span className="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider">Pendiente</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="w-1.5 h-1.5 rounded-full bg-error"></div>
-            <span className="text-[9px] text-on-surface-variant font-bold uppercase tracking-wider">Rechazado</span>
+            <div className="w-2 h-2 rounded-full bg-[#ba1a1a]"></div>
+            <span className="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider">Rechazado</span>
           </div>
         </div>
       </section>
