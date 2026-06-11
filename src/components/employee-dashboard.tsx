@@ -189,19 +189,17 @@ export default function EmployeeDashboard() {
 
   // Calcular horas trabajadas en el turno de hoy (del primer Check-In de Entrada al Check-Out o a la hora actual)
   const calculateShiftHours = () => {
-    const entradaRecs = todayRecords.filter(r => r.type === "Entrada" && r.status !== "Rechazado");
-    if (entradaRecs.length === 0) return { hours: 0, minutes: 0, formatted: "00h 00m", percent: 0 };
+    const validRecs = todayRecords.filter(r => r.status !== "Rechazado");
+    if (validRecs.length === 0) return { hours: 0, minutes: 0, formatted: "00h 00m", percent: 0 };
 
-    // Ordenar de más antiguo a más reciente
-    const firstEntrada = entradaRecs.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())[0];
-    
-    const salidaRecs = todayRecords.filter(r => r.type === "Salida" && r.status !== "Rechazado");
-    const lastSalida = salidaRecs.length > 0 
-      ? salidaRecs.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())[0]
-      : null;
+    // Ordenar de más antiguo a más reciente para tomar la primera entrada
+    const sortedRecs = validRecs.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+    const todayRec = sortedRecs[0];
 
-    const end = lastSalida ? lastSalida.timestamp : new Date();
-    const diffMs = end.getTime() - firstEntrada.timestamp.getTime();
+    if (!todayRec.timestampEntrada) return { hours: 0, minutes: 0, formatted: "00h 00m", percent: 0 };
+
+    const end = todayRec.timestampSalida ? todayRec.timestampSalida : new Date();
+    const diffMs = end.getTime() - todayRec.timestampEntrada.getTime();
     
     const diffMins = Math.max(0, Math.floor(diffMs / (1000 * 60)));
     const hours = Math.floor(diffMins / 60);
@@ -216,7 +214,11 @@ export default function EmployeeDashboard() {
   };
 
   const shift = calculateShiftHours();
-  const hasEntradaToday = todayRecords.some(r => r.type === "Entrada" && r.status !== "Rechazado");
+  
+  // Buscar un turno abierto (tiene entrada pero no tiene salida)
+  const openShift = todayRecords.find(r => r.timestampEntrada && !r.timestampSalida && r.status !== "Rechazado");
+  const canCheckIn = !openShift; // Solo puede marcar entrada si no hay un turno abierto
+  const canCheckOut = !!openShift; // Solo puede marcar salida si hay un turno abierto
 
   // Formatear hora y fecha en español, evitando errores de hidratación (mismatch servidor/cliente)
   const formattedTime = mounted ? currentTime.toLocaleTimeString("es-MX", { hour12: false }) : "--:--:--";
@@ -286,16 +288,21 @@ export default function EmployeeDashboard() {
         <div className="flex flex-col gap-3 flex-1 justify-center">
           <button
             onClick={() => handleActionClick("Entrada")}
-            className="active-tap w-full bg-green-600 hover:bg-green-700 rounded-xl flex items-center justify-center gap-2 h-14 shadow-md text-white font-bold text-sm transition-all"
+            disabled={!canCheckIn}
+            className={`active-tap w-full rounded-xl flex items-center justify-center gap-2 h-14 shadow-md font-bold text-sm transition-all ${
+              canCheckIn
+                ? "bg-green-600 hover:bg-green-700 text-white"
+                : "bg-slate-300 text-slate-500 cursor-not-allowed shadow-none"
+            }`}
           >
-            <span className="material-symbols-outlined text-white text-[20px]">login</span>
+            <span className="material-symbols-outlined text-[20px]">login</span>
             <span>Marcar Entrada</span>
           </button>
           <button
             onClick={() => handleActionClick("Salida")}
-            disabled={!hasEntradaToday}
+            disabled={!canCheckOut}
             className={`active-tap w-full rounded-xl flex items-center justify-center gap-2 h-14 shadow-md font-bold text-sm transition-all ${
-              hasEntradaToday 
+              canCheckOut 
                 ? "bg-amber-500 hover:bg-amber-600 text-white" 
                 : "bg-slate-300 text-slate-500 cursor-not-allowed shadow-none"
             }`}

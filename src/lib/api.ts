@@ -106,49 +106,30 @@ export const api = {
           const uInfo = usersDict[uEmail] || { name: uEmail, avatar: "avatar-1" };
           const baseId = r.ID_Registro || r.id;
 
-          // Virtual record for "Entrada"
-          if (r.Hora_Entrada) {
-            registros.push({
-              id: `${baseId}-E`,
-              userId: uEmail,
-              userName: uInfo.name,
-              type: "Entrada" as CheckInType,
-              timestamp: new Date(r.Hora_Entrada),
-              location: {
-                latitude: parseFloat(r.Latitud || r.latitude) || 0,
-                longitude: parseFloat(r.Longitud || r.longitude) || 0
-              },
-              distanceFromPost: r.distanceFromPost ? parseInt(r.distanceFromPost) : null,
-              signatureUrl: r.Firma_Entrada || r.signatureUrl || "",
-              status: (r.Aprobacion || r.status || "Pendiente") as CheckInStatus,
-              comments: r.Comentarios_Sup || r.comments || "",
-              approvedBy: r.Email_Sup || r.approvedBy || "",
-              userAvatar: uInfo.avatar,
-              employeeComments: r.Comentario_Empleado || r.employeeComments || ""
-            });
-          }
+          const hasEntrada = !!r.Hora_Entrada;
+          const hasSalida = !!r.Hora_Salida;
+          if (!hasEntrada && !hasSalida) return;
 
-          // Virtual record for "Salida"
-          if (r.Hora_Salida) {
-            registros.push({
-              id: `${baseId}-S`,
-              userId: uEmail,
-              userName: uInfo.name,
-              type: "Salida" as CheckInType,
-              timestamp: new Date(r.Hora_Salida),
-              location: {
-                latitude: parseFloat(r.Latitud || r.latitude) || 0,
-                longitude: parseFloat(r.Longitud || r.longitude) || 0
-              },
-              distanceFromPost: r.distanceFromPost ? parseInt(r.distanceFromPost) : null,
-              signatureUrl: r.Firma_Salida || "",
-              status: (r.Aprobacion || r.status || "Pendiente") as CheckInStatus,
-              comments: r.Comentarios_Sup || r.comments || "",
-              approvedBy: r.Email_Sup || r.approvedBy || "",
-              userAvatar: uInfo.avatar,
-              employeeComments: r.Comentario_Empleado || r.employeeComments || ""
-            });
-          }
+          registros.push({
+            id: baseId,
+            userId: uEmail,
+            userName: uInfo.name,
+            timestamp: new Date(r.Hora_Entrada || r.Hora_Salida),
+            timestampEntrada: r.Hora_Entrada ? new Date(r.Hora_Entrada) : undefined,
+            timestampSalida: r.Hora_Salida ? new Date(r.Hora_Salida) : undefined,
+            location: {
+              latitude: parseFloat(r.Latitud || r.latitude) || 0,
+              longitude: parseFloat(r.Longitud || r.longitude) || 0
+            },
+            distanceFromPost: r.distanceFromPost ? parseInt(r.distanceFromPost) : null,
+            signatureUrlEntrada: r.Firma_Entrada || "",
+            signatureUrlSalida: r.Firma_Salida || "",
+            status: (r.Aprobacion || r.status || "Pendiente") as CheckInStatus,
+            comments: r.Comentario || r.comments || "", // Se cambió de Comentarios_Sup a Comentario
+            approvedBy: r.Email_Sup || r.approvedBy || "",
+            userAvatar: uInfo.avatar,
+            employeeComments: r.Comentario_Empleado || r.employeeComments || ""
+          });
         });
 
         // Ordenar por timestamp descendente
@@ -232,17 +213,19 @@ export const api = {
       const data = await response.json();
       if (data.status === "success") {
         return {
-          id: data.record.id + (params.typeAction === 'Entrada' ? '-E' : '-S'),
+          id: data.record.id,
           userId: data.record.userId,
           userName: data.record.userName,
-          type: data.record.type as CheckInType,
           timestamp: new Date(data.record.timestamp),
+          timestampEntrada: params.typeAction === 'Entrada' ? new Date(data.record.timestamp) : undefined,
+          timestampSalida: params.typeAction === 'Salida' ? new Date(data.record.timestamp) : undefined,
           location: {
             latitude: data.record.latitude,
             longitude: data.record.longitude
           },
           distanceFromPost: data.record.distanceFromPost,
-          signatureUrl: data.record.signatureUrl,
+          signatureUrlEntrada: params.typeAction === 'Entrada' ? data.record.signatureUrl : "",
+          signatureUrlSalida: params.typeAction === 'Salida' ? data.record.signatureUrl : "",
           status: data.record.status as CheckInStatus,
           userAvatar: data.record.userAvatar,
           employeeComments: data.record.employeeComments || ""
@@ -258,8 +241,7 @@ export const api = {
   async updateEmployeeComment(recordId: string, employeeComments: string): Promise<void> {
     if (!this.isConfigured()) throw new Error("API not configured");
     try {
-      // Strip virtual suffix
-      const realId = recordId.replace("-E", "").replace("-S", "");
+      const realId = recordId;
       const response = await fetch(API_URL, {
         method: "POST",
         body: JSON.stringify({ type: "update_employee_comment", recordId: realId, employeeComments }),
@@ -277,8 +259,7 @@ export const api = {
   async validateRecord(params: { recordId: string; status: CheckInStatus; comments?: string; approvedBy: string }): Promise<void> {
     if (!this.isConfigured()) throw new Error("API not configured");
     try {
-      // Strip virtual suffix
-      const realId = params.recordId.replace("-E", "").replace("-S", "");
+      const realId = params.recordId;
       const payload = { type: "validate_record", ...params, recordId: realId };
       const response = await fetch(API_URL, {
         method: "POST",

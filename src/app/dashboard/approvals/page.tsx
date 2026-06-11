@@ -346,13 +346,13 @@ export default function ApprovalsPage() {
                       <div className="flex flex-col">
                         <span className="text-[8px] text-on-surface-variant uppercase font-bold tracking-wider">Entrada</span>
                         <div className="bg-surface-container/70 border border-outline-variant/20 rounded-lg flex items-center justify-center py-1 text-xs font-bold text-on-surface mt-0.5">
-                          {record.type === "Entrada" ? recordTime : "--:--"}
+                          {record.timestampEntrada ? record.timestampEntrada.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }) : "--:--"}
                         </div>
                       </div>
                       <div className="flex flex-col">
                         <span className="text-[8px] text-on-surface-variant uppercase font-bold tracking-wider">Salida</span>
                         <div className="bg-surface-container/70 border border-outline-variant/20 rounded-lg flex items-center justify-center py-1 text-xs font-bold text-on-surface mt-0.5">
-                          {record.type === "Salida" ? recordTime : "--:--"}
+                          {record.timestampSalida ? record.timestampSalida.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }) : "--:--"}
                         </div>
                       </div>
                     </div>

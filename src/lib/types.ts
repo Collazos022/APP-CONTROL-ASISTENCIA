@@ -18,14 +18,16 @@ export interface CheckInRecord {
   id: string;
   userId: string;
   userName: string;
-  type: CheckInType;
-  timestamp: Date;
+  timestamp: Date; // Usamos esto para ordenamiento (generalmente será la de Entrada)
+  timestampEntrada?: Date;
+  timestampSalida?: Date;
   location: {
     latitude: number;
     longitude: number;
   };
   distanceFromPost: number | null;
-  signatureUrl: string;
+  signatureUrlEntrada?: string;
+  signatureUrlSalida?: string;
   status: CheckInStatus;
   comments?: string; // Comentarios del supervisor
   employeeComments?: string; // Comentarios del empleado

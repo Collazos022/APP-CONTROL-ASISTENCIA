@@ -20,8 +20,7 @@ interface ConsolidatedDay {
   date: Date;
   day: number;
   isCurrentMonth: boolean;
-  entrada?: CheckInRecord;
-  salida?: CheckInRecord;
+  record?: CheckInRecord;
   status?: "Aprobado" | "Pendiente" | "Rechazado";
 }
 
@@ -91,8 +90,8 @@ export default function RecordsPage() {
       if (r.timestamp.getMonth() === month && r.timestamp.getFullYear() === year) {
         const dayStr = r.timestamp.getDate().toString();
         if (!dailyGroups[dayStr]) dailyGroups[dayStr] = {};
-        if (r.type === "Entrada") dailyGroups[dayStr].checkIn = r.timestamp;
-        if (r.type === "Salida") dailyGroups[dayStr].checkOut = r.timestamp;
+        if (r.timestampEntrada) dailyGroups[dayStr].checkIn = r.timestampEntrada;
+        if (r.timestampSalida) dailyGroups[dayStr].checkOut = r.timestampSalida;
         
         if (!dailyGroups[dayStr].status) {
           dailyGroups[dayStr].status = r.status;
@@ -156,24 +155,14 @@ export default function RecordsPage() {
       const dayDate = new Date(year, month, i);
       const dayRecords = records.filter(r => r.timestamp.toDateString() === dayDate.toDateString());
       
-      const entrada = dayRecords.find(r => r.type === "Entrada");
-      const salida = dayRecords.find(r => r.type === "Salida");
+      const dayRecord = dayRecords[0]; // Como ahora es un solo registro por día
       
-      let status: "Aprobado" | "Pendiente" | "Rechazado" | undefined = undefined;
-      if (entrada || salida) {
-        const statuses = [entrada?.status, salida?.status];
-        if (statuses.includes("Rechazado")) status = "Rechazado";
-        else if (statuses.includes("Pendiente")) status = "Pendiente";
-        else status = "Aprobado";
-      }
-
       days.push({
         date: dayDate,
         day: i,
         isCurrentMonth: true,
-        entrada,
-        salida,
-        status
+        record: dayRecord,
+        status: dayRecord?.status
       });
     }
 
@@ -193,16 +182,16 @@ export default function RecordsPage() {
 
   // Selección de celda para ver detalle
   const handleSelectDay = (day: ConsolidatedDay) => {
-    if (!day.isCurrentMonth || (!day.entrada && !day.salida)) return;
+    if (!day.isCurrentMonth || !day.record) return;
     setSelectedDayDetail(day);
-    setJustificationText(day.entrada?.employeeComments || day.salida?.employeeComments || "");
+    setJustificationText(day.record.employeeComments || "");
     setIsEditingComment(false);
   };
 
   // Enviar modificación / justificación de rechazo
   const handleSendJustification = async () => {
     if (!selectedDayDetail) return;
-    const recordId = selectedDayDetail.entrada?.id || selectedDayDetail.salida?.id;
+    const recordId = selectedDayDetail.record?.id;
     if (!recordId) return;
 
     setActionLoading(true);
@@ -301,7 +290,7 @@ export default function RecordsPage() {
         {/* Days cells */}
         <div className="grid grid-cols-7 gap-1.5">
           {calendarDays.map((cell, idx) => {
-            const hasData = cell.isCurrentMonth && (cell.entrada || cell.salida);
+            const hasData = cell.isCurrentMonth && cell.record;
             const isClickable = hasData;
 
             // Determinar colores de estado
@@ -337,8 +326,8 @@ export default function RecordsPage() {
                 {hasData ? (
                   <>
                     <div className="flex flex-col items-center text-[9px] leading-tight text-on-surface-variant font-medium">
-                      <span>{cell.entrada ? formatTime(cell.entrada.timestamp) : ""}</span>
-                      <span>{cell.salida ? formatTime(cell.salida.timestamp) : ""}</span>
+                      <span>{cell.record?.timestampEntrada ? formatTime(cell.record.timestampEntrada) : ""}</span>
+                      <span>{cell.record?.timestampSalida ? formatTime(cell.record.timestampSalida) : ""}</span>
                     </div>
                     {dotColor && <div className={`w-1.5 h-1.5 rounded-full ${dotColor}`} />}
                   </>
@@ -384,28 +373,23 @@ export default function RecordsPage() {
                 <div className="bg-surface-container/60 p-3 rounded-xl border border-white/10">
                   <span className="text-[9px] font-bold text-on-surface-variant/70 uppercase">Entrada</span>
                   <p className="text-sm font-bold text-on-surface mt-0.5">
-                    {selectedDayDetail.entrada 
-                      ? selectedDayDetail.entrada.timestamp.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }) 
+                    {selectedDayDetail.record?.timestampEntrada 
+                      ? selectedDayDetail.record.timestampEntrada.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }) 
                       : "--:--"}
                   </p>
-                  {selectedDayDetail.entrada?.distanceFromPost !== null && (
+                  {selectedDayDetail.record?.distanceFromPost !== null && (
                     <p className="text-[9px] text-on-surface-variant mt-0.5">
-                      Distancia: {selectedDayDetail.entrada.distanceFromPost}m
+                      Distancia: {selectedDayDetail.record?.distanceFromPost}m
                     </p>
                   )}
                 </div>
                 <div className="bg-surface-container/60 p-3 rounded-xl border border-white/10">
                   <span className="text-[9px] font-bold text-on-surface-variant/70 uppercase">Salida</span>
                   <p className="text-sm font-bold text-on-surface mt-0.5">
-                    {selectedDayDetail.salida 
-                      ? selectedDayDetail.salida.timestamp.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }) 
+                    {selectedDayDetail.record?.timestampSalida 
+                      ? selectedDayDetail.record.timestampSalida.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }) 
                       : "--:--"}
                   </p>
-                  {selectedDayDetail.salida?.distanceFromPost !== null && (
-                    <p className="text-[9px] text-on-surface-variant mt-0.5">
-                      Distancia: {selectedDayDetail.salida.distanceFromPost}m
-                    </p>
-                  )}
                 </div>
               </div>
 
@@ -424,11 +408,11 @@ export default function RecordsPage() {
               </div>
 
               {/* Comentarios del Supervisor */}
-              {(selectedDayDetail.entrada?.comments || selectedDayDetail.salida?.comments) && (
+              {selectedDayDetail.record?.comments && (
                 <div className="bg-error-container/30 border border-error-container/50 p-3 rounded-xl text-xs space-y-1">
                   <span className="font-bold text-error text-[10px] uppercase">Motivo del Supervisor:</span>
                   <p className="text-on-surface-variant">
-                    {selectedDayDetail.entrada?.comments || selectedDayDetail.salida?.comments}
+                    {selectedDayDetail.record.comments}
                   </p>
                 </div>
               )}
@@ -446,7 +430,7 @@ export default function RecordsPage() {
                 ) : (
                   <div className="bg-surface-container/60 p-3 rounded-xl border border-white/10 min-h-[40px] text-xs">
                     <p className="text-on-surface italic">
-                      {selectedDayDetail.entrada?.employeeComments || selectedDayDetail.salida?.employeeComments || "Sin justificación cargada."}
+                      {selectedDayDetail.record?.employeeComments || "Sin justificación cargada."}
                     </p>
                   </div>
                 )}
