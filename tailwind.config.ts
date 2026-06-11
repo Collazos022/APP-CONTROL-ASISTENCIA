@@ -10,9 +10,10 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        body: ['"PT Sans"', 'sans-serif'],
-        headline: ['"PT Sans"', 'sans-serif'],
-        code: ['"Source Code Pro"', 'monospace'],
+        body: ['"Outfit"', 'sans-serif'],
+        headline: ['"Outfit"', 'sans-serif'],
+        sans: ['"Outfit"', 'sans-serif'],
+        code: ['"Outfit"', 'monospace'],
       },
       colors: {
         background: 'hsl(var(--background))',
