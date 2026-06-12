@@ -76,8 +76,8 @@ export default function ProfilePage() {
     loadProfile();
   }, [loadProfile]);
 
-  // Redimensionar y comprimir foto a base64 (Max 150x150 px, JPEG)
-  const compressImage = (file: File, maxWidth = 150, maxHeight = 150): Promise<string> => {
+  // Redimensionar y comprimir foto a base64 (Max 100x100 px, JPEG)
+  const compressImage = (file: File, maxWidth = 100, maxHeight = 100): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
@@ -107,7 +107,7 @@ export default function ProfilePage() {
           const ctx = canvas.getContext("2d");
           if (ctx) {
             ctx.drawImage(img, 0, 0, width, height);
-            const dataUrl = canvas.toDataURL("image/jpeg", 0.75); // 0.75 calidad para reducir peso
+            const dataUrl = canvas.toDataURL("image/jpeg", 0.6); // 0.6 calidad para reducir peso agresivamente
             resolve(dataUrl);
           } else {
             reject(new Error("No se pudo iniciar el renderizador de Canvas"));
