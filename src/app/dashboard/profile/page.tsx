@@ -187,6 +187,14 @@ export default function ProfilePage() {
     }
   };
 
+  const onError = () => {
+    toast({
+      variant: "destructive",
+      title: "Revisa el formulario",
+      description: "Por favor completa correctamente los campos obligatorios marcados en rojo (ej. Teléfono, Nombre).",
+    });
+  };
+
   if (loadingProfile) {
     return (
       <div className="max-w-5xl mx-auto space-y-6 pt-6">
@@ -291,7 +299,7 @@ export default function ProfilePage() {
 
           {/* Right Column: Edit Form */}
           <div className="lg:col-span-8">
-            <form onSubmit={form.handleSubmit(onSubmit)} className="glass-card rounded-3xl p-6 border border-white/20 shadow-sm space-y-6">
+            <form onSubmit={form.handleSubmit(onSubmit, onError)} className="glass-card rounded-3xl p-6 border border-white/20 shadow-sm space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 
                 {/* Nombre Completo */}
