@@ -14,10 +14,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const profileSchema = z.object({
   name: z.string().min(1, { message: "El nombre es obligatorio." }),
-  telefono: z.string().min(1, { message: "El teléfono es obligatorio." }),
-  email: z.string().email().optional(),
-  identificacion: z.string().optional(),
-  cargo: z.string().optional(),
+  telefono: z.coerce.string().min(1, { message: "El teléfono es obligatorio." }),
+  email: z.string().email().optional().or(z.literal('')),
+  identificacion: z.coerce.string().optional(),
+  cargo: z.coerce.string().optional(),
   password: z.string().min(8, { message: "La contraseña debe tener al menos 8 caracteres." }).optional().or(z.literal('')),
 });
 
@@ -187,11 +187,12 @@ export default function ProfilePage() {
     }
   };
 
-  const onError = () => {
+  const onError = (errors: any) => {
+    const errorFields = Object.keys(errors).join(", ");
     toast({
       variant: "destructive",
       title: "Revisa el formulario",
-      description: "Por favor completa correctamente los campos obligatorios marcados en rojo (ej. Teléfono, Nombre).",
+      description: `Errores en: ${errorFields}. Asegúrate de que los campos tengan el formato correcto.`,
     });
   };
 
