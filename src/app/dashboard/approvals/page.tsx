@@ -383,17 +383,17 @@ export default function ApprovalsPage() {
                           type="button"
                           onClick={() => handleApprove(record)}
                           disabled={actionLoading}
-                          className="w-9 h-9 bg-success text-on-primary rounded-xl flex items-center justify-center shadow-sm hover:opacity-90 active:scale-95 transition-all"
+                          className="w-9 h-9 bg-[#326e46] text-white rounded-xl flex items-center justify-center shadow-md shadow-[#326e46]/10 hover:bg-[#275536] hover:shadow-lg active:scale-95 transition-all cursor-pointer"
                         >
-                          <span className="material-symbols-outlined text-lg">check</span>
+                          <span className="material-symbols-outlined text-lg font-bold">check</span>
                         </button>
                         <button
                           type="button"
                           onClick={() => handleStartReject(record)}
                           disabled={actionLoading}
-                          className="w-9 h-9 rounded-xl border border-error flex items-center justify-center text-error hover:bg-error/5 active:scale-95 transition-all"
+                          className="w-9 h-9 border border-[#ba1a1a] text-[#ba1a1a] bg-white rounded-xl flex items-center justify-center hover:bg-[#ba1a1a]/5 active:scale-95 transition-all cursor-pointer"
                         >
-                          <span className="material-symbols-outlined text-lg">close</span>
+                          <span className="material-symbols-outlined text-lg font-bold">close</span>
                         </button>
                       </>
                     ) : record.status === "Aprobado" ? (

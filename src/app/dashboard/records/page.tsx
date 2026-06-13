@@ -512,14 +512,14 @@ export default function RecordsPage() {
                     <Button 
                       variant="outline" 
                       onClick={() => setIsEditingComment(false)}
-                      className="rounded-xl text-xs h-10 px-4"
+                      className="border border-outline-variant/30 rounded-xl text-xs h-10 px-4 hover:bg-black/5 active:scale-95 transition-all cursor-pointer"
                     >
                       Cancelar
                     </Button>
                     <Button 
                       onClick={handleSendJustification} 
                       disabled={actionLoading}
-                      className="bg-primary text-white hover:opacity-90 rounded-xl text-xs h-10 px-4"
+                      className="bg-[#326e46] text-white hover:bg-[#275536] hover:shadow-lg rounded-xl text-xs h-10 px-4 transition-all active:scale-95 cursor-pointer font-bold"
                     >
                       Guardar Cambios
                     </Button>
@@ -529,13 +529,13 @@ export default function RecordsPage() {
                     <Button 
                       variant="outline" 
                       onClick={() => setSelectedDayDetail(null)}
-                      className="rounded-xl text-xs h-10 px-4"
+                      className="border border-outline-variant/30 rounded-xl text-xs h-10 px-4 hover:bg-black/5 active:scale-95 transition-all cursor-pointer"
                     >
                       Cerrar
                     </Button>
                     <Button 
                       onClick={() => setIsEditingComment(true)}
-                      className="bg-warning text-white hover:opacity-90 rounded-xl text-xs h-10 px-4"
+                      className="bg-[#ea8635] text-white hover:bg-[#d67323] hover:shadow-lg rounded-xl text-xs h-10 px-4 transition-all active:scale-95 cursor-pointer font-bold"
                     >
                       Editar Registro
                     </Button>
@@ -545,7 +545,7 @@ export default function RecordsPage() {
             ) : (
               <Button 
                 onClick={() => setSelectedDayDetail(null)}
-                className="bg-primary text-white hover:opacity-90 rounded-xl text-xs h-10 px-4"
+                className="bg-primary text-white hover:opacity-90 rounded-xl text-xs h-10 px-4 transition-all active:scale-95 cursor-pointer font-bold"
               >
                 Cerrar
               </Button>
