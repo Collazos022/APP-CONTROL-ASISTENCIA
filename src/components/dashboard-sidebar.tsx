@@ -19,7 +19,7 @@ export interface NavItem {
   roles: Role[];
 }
 
-export const navItems: NavItem[] = [
+export const defaultNavItems: NavItem[] = [
   { href: '/dashboard/admin', label: 'Dashboard', icon: 'space_dashboard', roles: ['Administrador', 'Aprobador', 'Editor'] },
   { href: '/dashboard', label: 'Turno', icon: 'schedule', roles: ['Administrador', 'Aprobador', 'Editor', 'Empleado'] },
   { href: '/dashboard/records', label: 'Histórico', icon: 'history', roles: ['Administrador', 'Aprobador', 'Editor', 'Empleado'] },
@@ -32,11 +32,28 @@ export function DashboardSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [userRole, setUserRole] = React.useState<Role | null>(null);
+  const [navItems, setNavItems] = React.useState<NavItem[]>(defaultNavItems);
 
   React.useEffect(() => {
     const role = localStorage.getItem('userRole') as Role;
     if (role) {
       setUserRole(role);
+      
+      // Fetch dynamic permissions
+      import('@/lib/api').then(({ api }) => {
+        api.fetchAllData().then(data => {
+          if (data.permisos && data.permisos.length > 0) {
+            const dynamicNavItems = defaultNavItems.map(item => {
+               const perm = data.permisos.find((p: any) => p.label === item.label);
+               if (perm) {
+                  return { ...item, roles: perm.roles };
+               }
+               return item;
+            });
+            setNavItems(dynamicNavItems);
+          }
+        }).catch(err => console.error("Error fetching permissions for sidebar:", err));
+      });
     } else {
       router.push('/');
     }

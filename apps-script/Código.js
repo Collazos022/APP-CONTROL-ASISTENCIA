@@ -17,7 +17,13 @@ function doGet(e) {
         headers.forEach((h, i) => {
           if (h) {
             if (row[i] instanceof Date) {
-              obj[h] = row[i].toISOString();
+              if (h === "Hora_Entrada" || h === "Hora_Salida") {
+                obj[h] = Utilities.formatDate(row[i], ss.getSpreadsheetTimeZone(), "HH:mm");
+              } else if (h === "Fecha") {
+                obj[h] = Utilities.formatDate(row[i], ss.getSpreadsheetTimeZone(), "yyyy-MM-dd");
+              } else {
+                obj[h] = row[i].toISOString();
+              }
             } else {
               obj[h] = row[i] !== "" ? row[i] : null;
             }
@@ -56,6 +62,7 @@ function doGet(e) {
       usuarios: readSheet("USUARIOS"),
       cargos: cargosList,
       frentes: readSheet("FRENTES"),
+      permisos: readSheet("PERMISOS"),
       headers: {
         REGISTROS: getHeaders("Registros_HT"),
         USUARIOS: getHeaders("USUARIOS"),
@@ -191,6 +198,37 @@ function doPost(e) {
     }
 
     // -------------------------------------------------------------
+    // ACCIÓN: ACTUALIZAR PERMISOS
+    // -------------------------------------------------------------
+    else if (params.type === 'update_permisos') {
+      let sheet = ss.getSheetByName("PERMISOS");
+      if (!sheet) {
+        sheet = ss.insertSheet("PERMISOS");
+      } else {
+        sheet.clear();
+      }
+      
+      const allRoles = ['Administrador', 'Editor', 'Aprobador', 'Empleado'];
+      const headers = ["Modulo", ...allRoles];
+      sheet.appendRow(headers);
+      
+      if (params.permisos && Array.isArray(params.permisos)) {
+        params.permisos.forEach(p => {
+           let row = [p.label];
+           allRoles.forEach(r => {
+             row.push(p.roles.includes(r) ? true : false);
+           });
+           sheet.appendRow(row);
+        });
+      }
+      
+      return ContentService.createTextOutput(JSON.stringify({ 
+        status: "success", 
+        message: "Permisos actualizados correctamente"
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // -------------------------------------------------------------
     // ACCIÓN: REGISTRO DE ASISTENCIA (CHECK-IN / CHECK-OUT)
     // -------------------------------------------------------------
     else if (params.type === 'check_in_out') {
@@ -246,6 +284,7 @@ function doPost(e) {
       const horaSalidaIdx = headers.indexOf("Hora_Salida");
       const firmaEntradaIdx = headers.indexOf("Firma_Entrada");
       const firmaSalidaIdx = headers.indexOf("Firma_Salida");
+      const comentarioEmpleadoIdx = headers.indexOf("Comentario_Empleado");
 
       let existingRowIdx = -1;
       let newRecId = "rec-" + Utilities.getUuid().substring(0, 8);
@@ -255,7 +294,7 @@ function doPost(e) {
         if (emailIdx !== -1 && fechaIdx !== -1) {
            let rEmail = data[i][emailIdx];
            let rFecha = data[i][fechaIdx];
-           let rFechaStr = rFecha instanceof Date ? rFecha.toISOString().split('T')[0] : String(rFecha).split('T')[0];
+           let rFechaStr = rFecha instanceof Date ? Utilities.formatDate(rFecha, ss.getSpreadsheetTimeZone(), "yyyy-MM-dd") : String(rFecha).split('T')[0];
            if (rEmail === params.userId && rFechaStr === todayStr) { 
               existingRowIdx = i;
               newRecId = data[i][headers.indexOf("ID_Registro")] || newRecId;
@@ -271,9 +310,11 @@ function doPost(e) {
         if (!isCheckIn) {
            if(horaSalidaIdx !== -1) sheet.getRange(existingRowIdx + 1, horaSalidaIdx + 1).setValue(timestampStr);
            if(firmaSalidaIdx !== -1) sheet.getRange(existingRowIdx + 1, firmaSalidaIdx + 1).setValue(signatureUrl);
+           if(comentarioEmpleadoIdx !== -1 && params.employeeComments) sheet.getRange(existingRowIdx + 1, comentarioEmpleadoIdx + 1).setValue(params.employeeComments);
         } else {
            if(horaEntradaIdx !== -1) sheet.getRange(existingRowIdx + 1, horaEntradaIdx + 1).setValue(timestampStr);
            if(firmaEntradaIdx !== -1) sheet.getRange(existingRowIdx + 1, firmaEntradaIdx + 1).setValue(signatureUrl);
+           if(comentarioEmpleadoIdx !== -1 && params.employeeComments) sheet.getRange(existingRowIdx + 1, comentarioEmpleadoIdx + 1).setValue(params.employeeComments);
         }
       } else {
         // Create new row (Entrada)
@@ -290,6 +331,7 @@ function doPost(e) {
           else if (h === "Aprobacion") newRow.push("Pendiente");
           else if (h === "Comentarios_Sup") newRow.push("");
           else if (h === "Email_Sup") newRow.push("");
+          else if (h === "Comentario_Empleado") newRow.push(params.employeeComments || "");
           // Si el usuario añade estas columnas, se llenarán:
           else if (h === "Latitud") newRow.push(params.latitude || ""); 
           else if (h === "Longitud") newRow.push(params.longitude || "");
@@ -390,8 +432,7 @@ function doPost(e) {
       const phoneIdx = headers.indexOf("Telefono");
       const passwordIdx = headers.indexOf("Credencial");
       
-      // Buscar la columna "Foto" de forma flexible
-      const photoIdx = headers.findIndex(h => h.toString().trim().toLowerCase() === "foto");
+      const photoIdx = headers.indexOf("Foto");
       
       if (idIdx === -1 || nameIdx === -1 || phoneIdx === -1 || passwordIdx === -1) {
         throw new Error("Estructura de la tabla USUARIOS incorrecta.");

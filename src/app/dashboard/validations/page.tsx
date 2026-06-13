@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { type Role } from '@/lib/types';
 import { Checkbox } from '@/components/ui/checkbox';
-import { navItems } from '@/components/dashboard-sidebar';
+import { defaultNavItems, type NavItem } from '@/components/dashboard-sidebar';
 import { api } from '@/lib/api';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Loader2 } from 'lucide-react';
@@ -26,6 +26,7 @@ export default function ValidationsPage() {
   const [userRole, setUserRole] = React.useState<Role | null>(null);
   const [cargos, setCargos] = React.useState<{ name: string; role: Role }[]>([]);
   const [frentes, setFrentes] = React.useState<{ name: string; coords: string; radio: number }[]>([]);
+  const [permissions, setPermissions] = React.useState<NavItem[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [isSaving, setIsSaving] = React.useState(false);
   
@@ -38,6 +39,20 @@ export default function ValidationsPage() {
     api.fetchAllData().then(data => {
       setCargos(data.cargos);
       setFrentes(data.frentes);
+      
+      if (data.permisos && data.permisos.length > 0) {
+        const dynamicNavItems = defaultNavItems.map(item => {
+           const perm = data.permisos.find((p: any) => p.label === item.label);
+           if (perm) {
+              return { ...item, roles: perm.roles };
+           }
+           return item;
+        });
+        setPermissions(dynamicNavItems);
+      } else {
+        // deep copy defaultNavItems to avoid mutating constants
+        setPermissions(defaultNavItems.map(item => ({ ...item, roles: [...item.roles] })));
+      }
     }).catch(err => {
       console.error("Error loading validations config:", err);
     }).finally(() => {
@@ -81,6 +96,22 @@ export default function ValidationsPage() {
     setFrentes(newFrentes);
   };
   
+  const handleTogglePermission = (label: string, role: Role) => {
+    setPermissions(prev => prev.map(item => {
+      if (item.label === label) {
+        const hasRole = item.roles.includes(role);
+        let newRoles = [...item.roles];
+        if (hasRole) {
+          newRoles = newRoles.filter(r => r !== role);
+        } else {
+          newRoles.push(role);
+        }
+        return { ...item, roles: newRoles };
+      }
+      return item;
+    }));
+  };
+  
   const handleSaveChanges = async (section: string) => {
     setIsSaving(true);
     try {
@@ -88,6 +119,8 @@ export default function ValidationsPage() {
         await api.updateCargos(cargos);
       } else if (section === 'Frentes') {
         await api.updateFrentes(frentes);
+      } else if (section === 'Permisos') {
+        await api.updatePermisos(permissions.map(p => ({ label: p.label, roles: p.roles })));
       }
       toast({
         title: 'Cambios Guardados',
@@ -294,15 +327,16 @@ export default function ValidationsPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
-                    {navItems.map(item => (
-                      <tr key={item.href} className="hover:bg-white/10 transition-colors">
+                    {permissions.map(item => (
+                      <tr key={item.label} className="hover:bg-white/10 transition-colors">
                         <td className="py-3 px-4 font-bold text-on-surface">{item.label}</td>
                         {allRoles.map(role => (
-                          <td key={`${item.href}-${role}`} className="py-2 px-4">
+                          <td key={`${item.label}-${role}`} className="py-2 px-4">
                             <div className="flex justify-center">
                               <Checkbox
                                 checked={item.roles.includes(role)}
-                                disabled
+                                onCheckedChange={() => handleTogglePermission(item.label, role)}
+                                disabled={!isAdmin || isSaving}
                                 className="w-4 h-4 rounded border-slate-300 text-primary data-[state=checked]:bg-primary data-[state=checked]:text-on-primary shrink-0 opacity-70"
                               />
                             </div>
@@ -313,6 +347,19 @@ export default function ValidationsPage() {
                   </tbody>
                 </table>
               </div>
+              
+              {isAdmin && (
+                <div className="flex justify-end pt-3 border-t border-white/10">
+                  <Button 
+                    onClick={() => handleSaveChanges('Permisos')} 
+                    disabled={isSaving}
+                    className="bg-primary text-white hover:opacity-90 rounded-xl text-xs font-bold h-10 px-6 active:scale-95 transition-all shadow-md shadow-primary/20 flex items-center gap-1.5"
+                  >
+                    {isSaving && <Loader2 className="h-3 w-3 animate-spin" />}
+                    Guardar Permisos
+                  </Button>
+                </div>
+              )}
             </div>
           </TabsContent>
         </Tabs>

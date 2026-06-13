@@ -155,7 +155,16 @@ export const api = {
           role: (c.Rol_App || c.rol || c.role || "Empleado") as Role
         }));
 
-        return { registros, usuarios, cargos, frentes };
+        const permisos = (data.permisos || []).map((p: any) => {
+          const roles = [];
+          if (p.Administrador === true || p.Administrador === "TRUE") roles.push('Administrador');
+          if (p.Editor === true || p.Editor === "TRUE") roles.push('Editor');
+          if (p.Aprobador === true || p.Aprobador === "TRUE") roles.push('Aprobador');
+          if (p.Empleado === true || p.Empleado === "TRUE") roles.push('Empleado');
+          return { label: p.Modulo, roles };
+        });
+
+        return { registros, usuarios, cargos, frentes, permisos };
       }
       throw new Error(data.message || "Error al obtener datos");
     } catch (error) {
