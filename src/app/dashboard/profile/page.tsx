@@ -272,17 +272,6 @@ export default function ProfilePage() {
                   {form.getValues("cargo") || "Empleado"}
                 </p>
               </div>
-
-              <div className="w-full border-t border-white/10 mt-6 pt-4 flex flex-col gap-2 text-left text-xs text-on-surface-variant">
-                <div className="flex justify-between">
-                  <span className="font-semibold">ID Identificación:</span>
-                  <span className="text-on-surface font-bold">{form.getValues("identificacion") || "Sin cargar"}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="font-semibold">Email:</span>
-                  <span className="text-on-surface truncate max-w-[180px]">{form.getValues("email")}</span>
-                </div>
-              </div>
             </div>
 
             <div className="glass-card rounded-2xl p-4 flex items-start gap-3 border border-white/20 text-xs shadow-sm">
