@@ -326,15 +326,12 @@ function doPost(e) {
             // Copiar la fórmula exacta de la celda de la fila inmediatamente superior (existingRowIdx)
             if (existingRowIdx > 1) {
               try {
-                const sourceRange = sheet.getRange(existingRowIdx, horasTrabajadasIdx + 1, 1, 2);
-                const targetRange = sheet.getRange(existingRowIdx + 1, horasTrabajadasIdx + 1, 1, 2);
-                sourceRange.copyTo(targetRange, SpreadsheetApp.CopyPasteType.PASTE_FORMULA, false);
+                const formulaTrabajadas = sheet.getRange(existingRowIdx, horasTrabajadasIdx + 1).getFormulaLocal();
+                const formulaExtra = sheet.getRange(existingRowIdx, horasExtraIdx + 1).getFormulaLocal();
+                sheet.getRange(existingRowIdx + 1, horasTrabajadasIdx + 1).setFormulaLocal(formulaTrabajadas);
+                sheet.getRange(existingRowIdx + 1, horasExtraIdx + 1).setFormulaLocal(formulaExtra);
               } catch(e) {
-                // Si falla, copiamos los valores de getFormula
-                const formulaTrabajadas = sheet.getRange(existingRowIdx, horasTrabajadasIdx + 1).getFormula();
-                const formulaExtra = sheet.getRange(existingRowIdx, horasExtraIdx + 1).getFormula();
-                sheet.getRange(existingRowIdx + 1, horasTrabajadasIdx + 1).setFormula(formulaTrabajadas);
-                sheet.getRange(existingRowIdx + 1, horasExtraIdx + 1).setFormula(formulaExtra);
+                // Fallback si falla
               }
             }
         } else {
@@ -371,17 +368,12 @@ function doPost(e) {
         const lastRow = sheet.getLastRow();
         if (lastRow > 2) {
           try {
-            const sourceRange = sheet.getRange(lastRow - 1, horasTrabajadasIdx + 1, 1, 2);
-            const targetRange = sheet.getRange(lastRow, horasTrabajadasIdx + 1, 1, 2);
-            sourceRange.copyTo(targetRange, SpreadsheetApp.CopyPasteType.PASTE_FORMULA, false);
+            const formulaTrabajadas = sheet.getRange(lastRow - 1, horasTrabajadasIdx + 1).getFormulaLocal();
+            const formulaExtra = sheet.getRange(lastRow - 1, horasExtraIdx + 1).getFormulaLocal();
+            sheet.getRange(lastRow, horasTrabajadasIdx + 1).setFormulaLocal(formulaTrabajadas);
+            sheet.getRange(lastRow, horasExtraIdx + 1).setFormulaLocal(formulaExtra);
           } catch(e) {
-            // Si falla, intentamos con getFormula/setFormula
-            try {
-              const formulaTrabajadas = sheet.getRange(lastRow - 1, horasTrabajadasIdx + 1).getFormula();
-              const formulaExtra = sheet.getRange(lastRow - 1, horasExtraIdx + 1).getFormula();
-              sheet.getRange(lastRow, horasTrabajadasIdx + 1).setFormula(formulaTrabajadas);
-              sheet.getRange(lastRow, horasExtraIdx + 1).setFormula(formulaExtra);
-            } catch(err) {}
+            // Fallback si falla
           }
         }
       }
@@ -439,16 +431,12 @@ function doPost(e) {
           // Escribir Fórmulas copiando de la fila superior si existe
           if (i > 1) { // i es el índice 0-indexed de la fila, que equivale a i+1 en getRange
             try {
-              const sourceRange = sheet.getRange(i, horasTrabajadasIdx + 1, 1, 2);
-              const targetRange = sheet.getRange(i + 1, horasTrabajadasIdx + 1, 1, 2);
-              sourceRange.copyTo(targetRange, SpreadsheetApp.CopyPasteType.PASTE_FORMULA, false);
+              const formulaTrabajadas = sheet.getRange(i, horasTrabajadasIdx + 1).getFormulaLocal();
+              const formulaExtra = sheet.getRange(i, horasExtraIdx + 1).getFormulaLocal();
+              sheet.getRange(i + 1, horasTrabajadasIdx + 1).setFormulaLocal(formulaTrabajadas);
+              sheet.getRange(i + 1, horasExtraIdx + 1).setFormulaLocal(formulaExtra);
             } catch(e) {
-              try {
-                const formulaTrabajadas = sheet.getRange(i, horasTrabajadasIdx + 1).getFormula();
-                const formulaExtra = sheet.getRange(i, horasExtraIdx + 1).getFormula();
-                sheet.getRange(i + 1, horasTrabajadasIdx + 1).setFormula(formulaTrabajadas);
-                sheet.getRange(i + 1, horasExtraIdx + 1).setFormula(formulaExtra);
-              } catch(err) {}
+              // Fallback
             }
           }
 
