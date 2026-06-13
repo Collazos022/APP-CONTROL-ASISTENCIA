@@ -323,24 +323,20 @@ function doPost(e) {
             if(firmaSalidaIdx !== -1) sheet.getRange(existingRowIdx + 1, firmaSalidaIdx + 1).setValue(signatureUrl);
             if(comentarioEmpleadoIdx !== -1 && params.employeeComments) sheet.getRange(existingRowIdx + 1, comentarioEmpleadoIdx + 1).setValue(params.employeeComments);
             
-            // Obtener fórmulas de la fila superior si existe, sino usar valores estructurados por defecto con redondeo a 2 decimales
-            let formulaTrabajadas = '=SI(O(ESBLANCO(Registro_HL[Hora_Entrada]); ESBLANCO(Registro_HL[Hora_Salida])); ""; REDONDEAR(RESIDUO(Registro_HL[Hora_Salida] - Registro_HL[Hora_Entrada]; 1) * 24; 2))';
-            let formulaExtra = '=SI(ESBLANCO(Registro_HL[Horas_Trabajadas]); ""; REDONDEAR(MAX(0; Registro_HL[Horas_Trabajadas] - 10); 2))';
-            
             // Copiar la fórmula exacta de la celda de la fila inmediatamente superior (existingRowIdx)
             if (existingRowIdx > 1) {
               try {
-                const prevTrabajadas = sheet.getRange(existingRowIdx, horasTrabajadasIdx + 1).getFormula();
-                const prevExtra = sheet.getRange(existingRowIdx, horasExtraIdx + 1).getFormula();
-                if (prevTrabajadas) formulaTrabajadas = prevTrabajadas;
-                if (prevExtra) formulaExtra = prevExtra;
+                const sourceRange = sheet.getRange(existingRowIdx, horasTrabajadasIdx + 1, 1, 2);
+                const targetRange = sheet.getRange(existingRowIdx + 1, horasTrabajadasIdx + 1, 1, 2);
+                sourceRange.copyTo(targetRange, SpreadsheetApp.CopyPasteType.PASTE_FORMULA, false);
               } catch(e) {
-                // Fallback
+                // Si falla, copiamos los valores de getFormula
+                const formulaTrabajadas = sheet.getRange(existingRowIdx, horasTrabajadasIdx + 1).getFormula();
+                const formulaExtra = sheet.getRange(existingRowIdx, horasExtraIdx + 1).getFormula();
+                sheet.getRange(existingRowIdx + 1, horasTrabajadasIdx + 1).setFormula(formulaTrabajadas);
+                sheet.getRange(existingRowIdx + 1, horasExtraIdx + 1).setFormula(formulaExtra);
               }
             }
-            
-            sheet.getRange(existingRowIdx + 1, horasTrabajadasIdx + 1).setFormula(formulaTrabajadas);
-            sheet.getRange(existingRowIdx + 1, horasExtraIdx + 1).setFormula(formulaExtra);
         } else {
             if(horaEntradaIdx !== -1) sheet.getRange(existingRowIdx + 1, horaEntradaIdx + 1).setValue(timestampStr);
             if(firmaEntradaIdx !== -1) sheet.getRange(existingRowIdx + 1, firmaEntradaIdx + 1).setValue(signatureUrl);
@@ -371,25 +367,23 @@ function doPost(e) {
         });
         sheet.appendRow(newRow);
         
-        // Escribir fórmulas en la nueva fila creada
+        // Escribir fórmulas en la nueva fila creada copiando la fila superior
         const lastRow = sheet.getLastRow();
-        let formulaTrabajadas = '=SI(O(ESBLANCO(Registro_HL[Hora_Entrada]); ESBLANCO(Registro_HL[Hora_Salida])); ""; REDONDEAR(RESIDUO(Registro_HL[Hora_Salida] - Registro_HL[Hora_Entrada]; 1) * 24; 2))';
-        let formulaExtra = '=SI(ESBLANCO(Registro_HL[Horas_Trabajadas]); ""; REDONDEAR(MAX(0; Registro_HL[Horas_Trabajadas] - 10); 2))';
-        
-        // Copiar fórmula de la fila superior si existe (el nuevo registro va en lastRow, copiamos de lastRow - 1)
         if (lastRow > 2) {
           try {
-            const prevTrabajadas = sheet.getRange(lastRow - 1, horasTrabajadasIdx + 1).getFormula();
-            const prevExtra = sheet.getRange(lastRow - 1, horasExtraIdx + 1).getFormula();
-            if (prevTrabajadas) formulaTrabajadas = prevTrabajadas;
-            if (prevExtra) formulaExtra = prevExtra;
+            const sourceRange = sheet.getRange(lastRow - 1, horasTrabajadasIdx + 1, 1, 2);
+            const targetRange = sheet.getRange(lastRow, horasTrabajadasIdx + 1, 1, 2);
+            sourceRange.copyTo(targetRange, SpreadsheetApp.CopyPasteType.PASTE_FORMULA, false);
           } catch(e) {
-            // Fallback a fórmulas por defecto
+            // Si falla, intentamos con getFormula/setFormula
+            try {
+              const formulaTrabajadas = sheet.getRange(lastRow - 1, horasTrabajadasIdx + 1).getFormula();
+              const formulaExtra = sheet.getRange(lastRow - 1, horasExtraIdx + 1).getFormula();
+              sheet.getRange(lastRow, horasTrabajadasIdx + 1).setFormula(formulaTrabajadas);
+              sheet.getRange(lastRow, horasExtraIdx + 1).setFormula(formulaExtra);
+            } catch(err) {}
           }
         }
-        
-        sheet.getRange(lastRow, horasTrabajadasIdx + 1).setFormula(formulaTrabajadas);
-        sheet.getRange(lastRow, horasExtraIdx + 1).setFormula(formulaExtra);
       }
 
       return ContentService.createTextOutput(JSON.stringify({
@@ -443,21 +437,20 @@ function doPost(e) {
           }
           
           // Escribir Fórmulas copiando de la fila superior si existe
-          let formulaTrabajadas = '=SI(O(ESBLANCO(Registro_HL[Hora_Entrada]); ESBLANCO(Registro_HL[Hora_Salida])); ""; REDONDEAR(RESIDUO(Registro_HL[Hora_Salida] - Registro_HL[Hora_Entrada]; 1) * 24; 2))';
-          let formulaExtra = '=SI(ESBLANCO(Registro_HL[Horas_Trabajadas]); ""; REDONDEAR(MAX(0; Registro_HL[Horas_Trabajadas] - 10); 2))';
-          
-          if (i > 1) { // i es el índice 0-indexed de la fila, que equivale a i+1 en getRange, si i > 1 significa que hay fila arriba (>= 2)
+          if (i > 1) { // i es el índice 0-indexed de la fila, que equivale a i+1 en getRange
             try {
-              const prevTrabajadas = sheet.getRange(i, horasTrabajadasIdx + 1).getFormula();
-              const prevExtra = sheet.getRange(i, horasExtraIdx + 1).getFormula();
-              if (prevTrabajadas) formulaTrabajadas = prevTrabajadas;
-              if (prevExtra) formulaExtra = prevExtra;
+              const sourceRange = sheet.getRange(i, horasTrabajadasIdx + 1, 1, 2);
+              const targetRange = sheet.getRange(i + 1, horasTrabajadasIdx + 1, 1, 2);
+              sourceRange.copyTo(targetRange, SpreadsheetApp.CopyPasteType.PASTE_FORMULA, false);
             } catch(e) {
-              // Fallback
+              try {
+                const formulaTrabajadas = sheet.getRange(i, horasTrabajadasIdx + 1).getFormula();
+                const formulaExtra = sheet.getRange(i, horasExtraIdx + 1).getFormula();
+                sheet.getRange(i + 1, horasTrabajadasIdx + 1).setFormula(formulaTrabajadas);
+                sheet.getRange(i + 1, horasExtraIdx + 1).setFormula(formulaExtra);
+              } catch(err) {}
             }
           }
-          sheet.getRange(i + 1, horasTrabajadasIdx + 1).setFormula(formulaTrabajadas);
-          sheet.getRange(i + 1, horasExtraIdx + 1).setFormula(formulaExtra);
 
           if (data[i][statusIdx] === "Rechazado") {
             sheet.getRange(i + 1, statusIdx + 1).setValue("Pendiente");
