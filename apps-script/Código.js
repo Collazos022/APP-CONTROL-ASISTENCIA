@@ -323,16 +323,13 @@ function doPost(e) {
             if(firmaSalidaIdx !== -1) sheet.getRange(existingRowIdx + 1, firmaSalidaIdx + 1).setValue(signatureUrl);
             if(comentarioEmpleadoIdx !== -1 && params.employeeComments) sheet.getRange(existingRowIdx + 1, comentarioEmpleadoIdx + 1).setValue(params.employeeComments);
             
-            // Copiar la fórmula exacta de la celda de la fila inmediatamente superior (existingRowIdx)
-            if (existingRowIdx > 1) {
-              try {
-                const formulaTrabajadas = sheet.getRange(existingRowIdx, horasTrabajadasIdx + 1).getFormulaLocal();
-                const formulaExtra = sheet.getRange(existingRowIdx, horasExtraIdx + 1).getFormulaLocal();
-                sheet.getRange(existingRowIdx + 1, horasTrabajadasIdx + 1).setFormulaLocal(formulaTrabajadas);
-                sheet.getRange(existingRowIdx + 1, horasExtraIdx + 1).setFormulaLocal(formulaExtra);
-              } catch(e) {
-                // Fallback si falla
-              }
+            // Replicar fórmula usando copyTo puro desde la fila 2 de la tabla
+            try {
+              const sourceRange = sheet.getRange(2, horasTrabajadasIdx + 1, 1, 2);
+              const targetRange = sheet.getRange(existingRowIdx + 1, horasTrabajadasIdx + 1, 1, 2);
+              sourceRange.copyTo(targetRange, SpreadsheetApp.CopyPasteType.PASTE_FORMULA, false);
+            } catch(e) {
+              // Fallback
             }
         } else {
             if(horaEntradaIdx !== -1) sheet.getRange(existingRowIdx + 1, horaEntradaIdx + 1).setValue(timestampStr);
@@ -364,16 +361,15 @@ function doPost(e) {
         });
         sheet.appendRow(newRow);
         
-        // Escribir fórmulas en la nueva fila creada copiando la fila superior
+        // Escribir fórmulas en la nueva fila creada copiando la fila 2 de la tabla
         const lastRow = sheet.getLastRow();
         if (lastRow > 2) {
           try {
-            const formulaTrabajadas = sheet.getRange(lastRow - 1, horasTrabajadasIdx + 1).getFormulaLocal();
-            const formulaExtra = sheet.getRange(lastRow - 1, horasExtraIdx + 1).getFormulaLocal();
-            sheet.getRange(lastRow, horasTrabajadasIdx + 1).setFormulaLocal(formulaTrabajadas);
-            sheet.getRange(lastRow, horasExtraIdx + 1).setFormulaLocal(formulaExtra);
+            const sourceRange = sheet.getRange(2, horasTrabajadasIdx + 1, 1, 2);
+            const targetRange = sheet.getRange(lastRow, horasTrabajadasIdx + 1, 1, 2);
+            sourceRange.copyTo(targetRange, SpreadsheetApp.CopyPasteType.PASTE_FORMULA, false);
           } catch(e) {
-            // Fallback si falla
+            // Fallback
           }
         }
       }
@@ -428,16 +424,13 @@ function doPost(e) {
             sheet.getRange(i + 1, horaSalidaIdx + 1).setValue(params.checkOutTime);
           }
           
-          // Escribir Fórmulas copiando de la fila superior si existe
-          if (i > 1) { // i es el índice 0-indexed de la fila, que equivale a i+1 en getRange
-            try {
-              const formulaTrabajadas = sheet.getRange(i, horasTrabajadasIdx + 1).getFormulaLocal();
-              const formulaExtra = sheet.getRange(i, horasExtraIdx + 1).getFormulaLocal();
-              sheet.getRange(i + 1, horasTrabajadasIdx + 1).setFormulaLocal(formulaTrabajadas);
-              sheet.getRange(i + 1, horasExtraIdx + 1).setFormulaLocal(formulaExtra);
-            } catch(e) {
-              // Fallback
-            }
+          // Escribir Fórmulas copiando de la fila 2 de la tabla
+          try {
+            const sourceRange = sheet.getRange(2, horasTrabajadasIdx + 1, 1, 2);
+            const targetRange = sheet.getRange(i + 1, horasTrabajadasIdx + 1, 1, 2);
+            sourceRange.copyTo(targetRange, SpreadsheetApp.CopyPasteType.PASTE_FORMULA, false);
+          } catch(e) {
+            // Fallback
           }
 
           if (data[i][statusIdx] === "Rechazado") {
