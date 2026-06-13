@@ -53,26 +53,12 @@ export default function ApprovalsPage() {
     };
   }, [loadData]);
 
-  // Generar todos los días del mes actual (de izquierda a derecha)
-  const calendarDates = React.useMemo(() => {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = today.getMonth();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    
-    const dates = [];
-    for (let i = 1; i <= daysInMonth; i++) {
-      dates.push(new Date(year, month, i));
-    }
-    return dates;
-  }, []);
-
-  // Si selectedDate no está inicializada o ya no es válida, tomar la primera fecha
+  // Si selectedDate no está inicializada, tomar hoy
   React.useEffect(() => {
-    if (!selectedDate && calendarDates.length > 0) {
-      setSelectedDate(calendarDates[0]);
+    if (!selectedDate) {
+      setSelectedDate(new Date());
     }
-  }, [calendarDates, selectedDate]);
+  }, [selectedDate]);
 
   // Formatear día de la semana
   const getDayName = (date: Date) => {
@@ -211,56 +197,70 @@ export default function ApprovalsPage() {
       </section>
 
       {/* Date Filter Calendar Section */}
-      <section className="space-y-3">
-        <div className="flex justify-between items-center">
-          <h2 className="text-xs font-bold text-primary uppercase tracking-wider">Fecha de Registro</h2>
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => setSelectedDate(new Date())}
-            className="bg-primary text-on-primary font-bold text-xs px-4 py-1.5 h-auto rounded-full hover:opacity-90 active:scale-95 transition-all border-none"
-          >
-            Hoy
-          </Button>
+      <section className="flex items-center justify-between glass-card rounded-2xl shadow-sm p-2 border border-white/20">
+        <button 
+          onClick={() => {
+            if (selectedDate) {
+              const prev = new Date(selectedDate);
+              prev.setDate(prev.getDate() - 1);
+              setSelectedDate(prev);
+            }
+          }}
+          className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-primary/10 text-primary transition-all active:scale-90 shrink-0"
+        >
+          <span className="material-symbols-outlined text-[24px]">chevron_left</span>
+        </button>
+        
+        <div className="flex flex-col items-center justify-center relative group px-2 text-center">
+          <span className="text-[13px] sm:text-sm font-bold text-on-surface capitalize">
+            {selectedDate ? selectedDate.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : "Seleccionar Fecha"}
+          </span>
+          <div className="flex items-center gap-1 text-primary mt-0.5">
+            <span className="material-symbols-outlined text-[14px]">calendar_month</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider cursor-pointer group-hover:underline">
+              Cambiar Fecha
+            </span>
+          </div>
+          <input 
+            type="date"
+            className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+            value={selectedDate ? (() => {
+              const d = new Date(selectedDate);
+              d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+              return d.toISOString().split('T')[0];
+            })() : ""}
+            onChange={(e) => {
+              if (e.target.value) {
+                const [y, m, d] = e.target.value.split('-');
+                setSelectedDate(new Date(parseInt(y), parseInt(m)-1, parseInt(d)));
+              }
+            }}
+          />
         </div>
-        <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
-          {calendarDates.map((date, idx) => {
-            const isSelected = selectedDate && selectedDate.toDateString() === date.toDateString();
-            return (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => setSelectedDate(date)}
-                className={`flex-shrink-0 flex flex-col items-center justify-center w-14 h-18 py-3 rounded-2xl shadow-sm border transition-all active:scale-95 ${
-                  isSelected 
-                    ? "bg-primary text-on-primary border-primary/20 scale-105" 
-                    : "glass-card text-on-surface-variant border-white/20"
-                }`}
-              >
-                <span className={`font-bold text-[10px] uppercase tracking-wider ${isSelected ? "text-white/80" : "text-on-surface-variant/70"}`}>
-                  {getDayName(date)}
-                </span>
-                <span className="font-bold text-[15px] mt-0.5 leading-none">
-                  {date.getDate()}
-                </span>
-                <span className={`font-medium text-[8px] uppercase mt-0.5 tracking-widest ${isSelected ? "text-white/70" : "text-on-surface-variant/50"}`}>
-                  {date.toLocaleDateString('es-ES', { month: 'short' })}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+
+        <button 
+          onClick={() => {
+            if (selectedDate) {
+              const next = new Date(selectedDate);
+              next.setDate(next.getDate() + 1);
+              setSelectedDate(next);
+            }
+          }}
+          className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-primary/10 text-primary transition-all active:scale-90 shrink-0"
+        >
+          <span className="material-symbols-outlined text-[24px]">chevron_right</span>
+        </button>
       </section>
 
       {/* Status Filter Tabs & Frente Selector */}
       <section className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center justify-between">
-        <div className="flex flex-wrap sm:flex-nowrap bg-surface-container-low p-1 rounded-2xl border border-outline-variant/30 flex-1 sm:max-w-md h-auto gap-1">
+        <div className="flex bg-surface-container-low p-1 rounded-2xl border border-outline-variant/30 flex-1 sm:max-w-md w-full">
           {(["Pendientes", "Aprobados", "Rechazados", "Todos"] as const).map((status) => (
             <button
               key={status}
               type="button"
               onClick={() => setSelectedStatus(status)}
-              className={`flex-1 min-w-[80px] py-2 px-1 text-center text-xs font-bold rounded-xl transition-all ${
+              className={`flex-1 py-1.5 px-0.5 text-center text-[10px] sm:text-xs font-bold rounded-xl transition-all leading-tight ${
                 selectedStatus === status 
                   ? "bg-white shadow-sm text-primary" 
                   : "text-on-surface-variant hover:text-primary"
