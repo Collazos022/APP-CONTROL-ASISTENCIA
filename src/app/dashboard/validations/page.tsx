@@ -233,7 +233,10 @@ export default function ValidationsPage() {
                   <thead>
                     <tr className="border-b border-white/10 text-on-surface-variant uppercase font-bold">
                       <th className="py-3 px-4">Frente</th>
-                      <th className="py-3 px-4">Coordenadas (Lat, Lon)</th>
+                      <th className="py-3 px-4 leading-tight">
+                        Coordenadas<br />
+                        <span className="text-[10px] font-normal opacity-80">(Lat, Lon)</span>
+                      </th>
                       <th className="py-3 px-4 w-[120px]">Radio (metros)</th>
                       {isAdmin && <th className="py-3 px-4 w-[60px]"></th>}
                     </tr>
@@ -297,7 +300,7 @@ export default function ValidationsPage() {
                     className="border-primary text-primary hover:bg-primary/10 rounded-xl text-xs font-bold h-9 px-4 active:scale-95 transition-all flex items-center gap-1.5"
                   >
                     <span className="material-symbols-outlined text-[16px]">add</span>
-                    Agregar Nuevo Frente
+                    Agregar
                   </Button>
                   
                   <Button 
