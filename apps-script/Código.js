@@ -237,7 +237,7 @@ function doPost(e) {
       let headers = sheet.getDataRange().getValues()[0];
       
       let signatureUrl = params.signatureBase64 || "";
-      let nearestFront = "Fuera de geocerca";
+      let nearestFront = "Fuera de Rango";
       let minDistance = null;
       
       const sheetFrentes = ss.getSheetByName("FRENTES");
@@ -284,21 +284,26 @@ function doPost(e) {
       const horaSalidaIdx = headers.indexOf("Hora_Salida");
       const firmaEntradaIdx = headers.indexOf("Firma_Entrada");
       const firmaSalidaIdx = headers.indexOf("Firma_Salida");
-      const comentarioEmpleadoIdx = headers.indexOf("Comentario_Empleado");
+      const comentarioEmpleadoIdx = headers.indexOf("Comentarios");
 
       let existingRowIdx = -1;
       let newRecId = "rec-" + Utilities.getUuid().substring(0, 8);
 
-      // Buscar si el usuario ya registró entrada hoy
-      for (let i = 1; i < data.length; i++) {
+      // Buscar si el usuario tiene un turno ABIERTO hoy (sin Hora_Salida)
+      // Buscamos de abajo hacia arriba para encontrar el más reciente
+      for (let i = data.length - 1; i >= 1; i--) {
         if (emailIdx !== -1 && fechaIdx !== -1) {
            let rEmail = data[i][emailIdx];
            let rFecha = data[i][fechaIdx];
            let rFechaStr = rFecha instanceof Date ? Utilities.formatDate(rFecha, ss.getSpreadsheetTimeZone(), "yyyy-MM-dd") : String(rFecha).split('T')[0];
            if (rEmail === params.userId && rFechaStr === todayStr) { 
-              existingRowIdx = i;
-              newRecId = data[i][headers.indexOf("ID_Registro")] || newRecId;
-              break;
+              let rHoraSalida = horaSalidaIdx !== -1 ? data[i][horaSalidaIdx] : "";
+              // Solo actualizamos la fila si el turno actual sigue ABIERTO
+              if (!rHoraSalida) {
+                 existingRowIdx = i;
+                 newRecId = data[i][headers.indexOf("ID_Registro")] || newRecId;
+                 break;
+              }
            }
         }
       }
@@ -329,13 +334,12 @@ function doPost(e) {
           else if (h === "Hora_Salida") newRow.push(!isCheckIn ? timestampStr : "");
           else if (h === "Firma_Salida") newRow.push(!isCheckIn ? signatureUrl : "");
           else if (h === "Aprobacion") newRow.push("Pendiente");
-          else if (h === "Comentarios_Sup") newRow.push("");
-          else if (h === "Email_Sup") newRow.push("");
-          else if (h === "Comentario_Empleado") newRow.push(params.employeeComments || "");
+          else if (h === "Comentario") newRow.push("");
+          else if (h === "Aprobador") newRow.push("");
+          else if (h === "Comentarios") newRow.push(params.employeeComments || "");
           // Si el usuario añade estas columnas, se llenarán:
           else if (h === "Latitud") newRow.push(params.latitude || ""); 
           else if (h === "Longitud") newRow.push(params.longitude || "");
-          else if (h === "Comentario_Empleado") newRow.push(params.employeeComments || "");
           else newRow.push("");
         });
         sheet.appendRow(newRow);
@@ -400,11 +404,11 @@ function doPost(e) {
       
       const idIdx = headers.indexOf("ID_Registro");
       const statusIdx = headers.indexOf("Aprobacion");
-      const commentsIdx = headers.indexOf("Comentarios_Sup");
-      const approvedByIdx = headers.indexOf("Email_Sup");
+      const commentsIdx = headers.indexOf("Comentarios");
+      const approvedByIdx = headers.indexOf("Aprobador");
       
       if (idIdx === -1 || statusIdx === -1 || commentsIdx === -1 || approvedByIdx === -1) {
-        throw new Error("Estructura de Registros_HT incorrecta.");
+        throw new Error("Estructura de Registros_HT incorrecta (Faltan columnas requeridas).");
       }
 
       for (let i = 1; i < data.length; i++) {

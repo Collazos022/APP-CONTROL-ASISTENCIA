@@ -134,8 +134,8 @@ export const api = {
             signatureUrlEntrada: r.Firma_Entrada || "",
             signatureUrlSalida: r.Firma_Salida || "",
             status: (r.Aprobacion || r.status || "Pendiente") as CheckInStatus,
-            comments: r.Comentario || r.comments || "", // Se cambió de Comentarios_Sup a Comentario
-            approvedBy: r.Email_Sup || r.approvedBy || "",
+            comments: r.Comentarios || r.Comentario || r.comments || "",
+            approvedBy: r.Aprobador || r.Email_Sup || r.approvedBy || "",
             userAvatar: uInfo.avatar,
             employeeComments: r.Comentario_Empleado || r.employeeComments || ""
           });

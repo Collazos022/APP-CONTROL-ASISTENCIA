@@ -27,6 +27,7 @@ interface ConsolidatedDay {
 export default function RecordsPage() {
   const { toast } = useToast();
   const [records, setRecords] = React.useState<CheckInRecord[]>([]);
+  const [usersMap, setUsersMap] = React.useState<Record<string, string>>({});
   const [loading, setLoading] = React.useState(true);
   const [currentDate, setCurrentDate] = React.useState(new Date());
   
@@ -44,6 +45,15 @@ export default function RecordsPage() {
     api.fetchAllData().then(data => {
       const userRecords = data.registros.filter(r => r.userId === loggedInUserId);
       setRecords(userRecords);
+
+      // Build a map of email to user name
+      const map: Record<string, string> = {};
+      (data.usuarios || []).forEach(u => {
+        if (u.email) {
+          map[u.email.toLowerCase()] = u.name;
+        }
+      });
+      setUsersMap(map);
     }).catch(err => {
       console.error("Error loading user records:", err);
     }).finally(() => {
@@ -394,17 +404,39 @@ export default function RecordsPage() {
               </div>
 
               {/* Estado y Aprobador */}
-              <div className="flex justify-between items-center bg-surface-container/30 px-3 py-2 rounded-xl border border-white/10 text-xs">
-                <span className="font-bold text-on-surface-variant uppercase text-[10px]">Estado del Registro</span>
-                <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide ${
-                  selectedDayDetail.status === "Aprobado" 
-                    ? "bg-success/15 text-success" 
-                    : selectedDayDetail.status === "Rechazado" 
-                      ? "bg-error/15 text-error" 
-                      : "bg-warning/15 text-warning"
-                }`}>
-                  {selectedDayDetail.status}
-                </span>
+              <div className="flex flex-col gap-2 bg-surface-container/30 px-3 py-2 rounded-xl border border-white/10 text-xs">
+                <div className="flex justify-between items-center w-full">
+                  <span className="font-bold text-on-surface-variant uppercase text-[10px]">Estado del Registro</span>
+                  <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide ${
+                    selectedDayDetail.status === "Aprobado" 
+                      ? "bg-success/15 text-success" 
+                      : selectedDayDetail.status === "Rechazado" 
+                        ? "bg-error/15 text-error" 
+                        : "bg-warning/15 text-warning"
+                  }`}>
+                    {selectedDayDetail.status}
+                  </span>
+                </div>
+                {selectedDayDetail.status === "Aprobado" && selectedDayDetail.record?.approvedBy && (
+                  <div className="flex justify-between items-center w-full pt-1.5 border-t border-white/10">
+                    <span className="font-bold text-on-surface-variant uppercase text-[10px]">Aprobado por</span>
+                    <span className="font-medium text-on-surface text-[11px]">
+                      {selectedDayDetail.record.approvedBy.includes("@") 
+                        ? (usersMap[selectedDayDetail.record.approvedBy.toLowerCase()] || selectedDayDetail.record.approvedBy)
+                        : selectedDayDetail.record.approvedBy}
+                    </span>
+                  </div>
+                )}
+                {selectedDayDetail.status === "Rechazado" && selectedDayDetail.record?.approvedBy && (
+                  <div className="flex justify-between items-center w-full pt-1.5 border-t border-white/10">
+                    <span className="font-bold text-on-surface-variant uppercase text-[10px]">Rechazado por</span>
+                    <span className="font-medium text-on-surface text-[11px]">
+                      {selectedDayDetail.record.approvedBy.includes("@") 
+                        ? (usersMap[selectedDayDetail.record.approvedBy.toLowerCase()] || selectedDayDetail.record.approvedBy)
+                        : selectedDayDetail.record.approvedBy}
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Comentarios del Supervisor */}
