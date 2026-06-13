@@ -437,14 +437,14 @@ export default function ApprovalsPage() {
             <Button 
               variant="outline" 
               onClick={() => setRejectingRecord(null)}
-              className="rounded-xl text-xs h-10 px-4"
+              className="border border-outline-variant/30 rounded-xl text-xs h-10 px-4 hover:bg-black/5 active:scale-95 transition-all cursor-pointer"
             >
               Cancelar
             </Button>
             <Button 
               onClick={handleConfirmReject} 
               disabled={actionLoading}
-              className="bg-error text-white hover:bg-error/90 rounded-xl text-xs h-10 px-4"
+              className="bg-[#ba1a1a] text-white hover:bg-[#a01616] hover:shadow-lg rounded-xl text-xs h-10 px-4 transition-all active:scale-95 cursor-pointer font-bold"
             >
               Confirmar Rechazo
             </Button>
