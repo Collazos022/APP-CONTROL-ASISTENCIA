@@ -122,10 +122,10 @@ export default function RecordsPage() {
     Object.values(dailyGroups).forEach(day => {
       if (day.checkIn && day.checkOut) {
         const diff = day.checkOut.getTime() - day.checkIn.getTime();
-        const eightHours = 8 * 60 * 60 * 1000;
-        totalMs += Math.min(diff, eightHours);
-        if (diff > eightHours) {
-          totalExtraMs += (diff - eightHours);
+        const tenHours = 10 * 60 * 60 * 1000;
+        totalMs += Math.min(diff, tenHours);
+        if (diff > tenHours) {
+          totalExtraMs += (diff - tenHours);
         }
       }
     });

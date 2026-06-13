@@ -86,13 +86,6 @@ export function DashboardSidebar() {
       <aside className="fixed inset-y-0 right-0 z-10 hidden w-16 flex-col border-l bg-surface-glass backdrop-blur-md border-white/20 shadow-lg lg:flex items-center py-5 justify-between">
         <TooltipProvider>
           <div className="flex flex-col items-center gap-6">
-            <Link
-              href="/dashboard"
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-white shadow-md active:scale-95 transition-all"
-            >
-              <span className="material-symbols-outlined text-[22px]">corporate_fare</span>
-            </Link>
-            
             <nav className="flex flex-col items-center gap-4">
               {accessibleNavItems.map((item) => {
                 const isActive = pathname === item.href || (pathname?.startsWith(item.href) && item.href !== '/dashboard' && item.href !== '/dashboard/admin');

@@ -75,9 +75,9 @@ export default function AdminDashboard({ role }: AdminDashboardProps) {
     Object.values(userDays).forEach(day => {
       if (day.checkIn && day.checkOut) {
         const durationMs = day.checkOut.getTime() - day.checkIn.getTime();
-        const eightHoursMs = 8 * 60 * 60 * 1000;
-        if (durationMs > eightHoursMs) {
-          totalExtraMs += (durationMs - eightHoursMs);
+        const tenHoursMs = 10 * 60 * 60 * 1000;
+        if (durationMs > tenHoursMs) {
+          totalExtraMs += (durationMs - tenHoursMs);
         }
       }
     });
@@ -286,8 +286,8 @@ export default function AdminDashboard({ role }: AdminDashboardProps) {
                         return (
                           <div className="bg-[#1e1e1e] p-3 rounded-lg shadow-lg border-none flex items-center gap-2">
                             <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: data.payload.color }}></div>
-                            <span className="text-white font-bold text-sm" style={{ color: 'white' }}>{data.name}</span>
-                            <span className="text-white font-bold text-sm ml-1" style={{ color: 'white' }}>{data.value}</span>
+                            <span className="text-white font-bold text-sm">{data.name}</span>
+                            <span className="text-white font-bold text-sm ml-1">{data.value}</span>
                           </div>
                         );
                       }
