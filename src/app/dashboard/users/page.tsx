@@ -60,7 +60,7 @@ export default function UsersPage() {
   }
 
   return (
-    <Card>
+    <Card className="w-full max-w-full overflow-hidden">
       <CardHeader>
         <CardTitle>Usuarios</CardTitle>
         <CardDescription>Lista de todos los usuarios registrados en el sistema.</CardDescription>
