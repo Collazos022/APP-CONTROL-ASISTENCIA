@@ -77,7 +77,7 @@ export function DashboardHeader() {
         className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
         onClick={() => router.push('/dashboard/profile')}
       >
-        <span className="text-body-sm font-medium text-on-surface hidden sm:inline-block select-none">
+        <span className="text-body-sm font-medium text-on-surface inline-block select-none">
           {shortName}
         </span>
         <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/20 hover:border-primary/50 transition-colors">
