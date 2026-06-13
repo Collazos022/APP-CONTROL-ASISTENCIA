@@ -323,11 +323,12 @@ function doPost(e) {
             if(firmaSalidaIdx !== -1) sheet.getRange(existingRowIdx + 1, firmaSalidaIdx + 1).setValue(signatureUrl);
             if(comentarioEmpleadoIdx !== -1 && params.employeeComments) sheet.getRange(existingRowIdx + 1, comentarioEmpleadoIdx + 1).setValue(params.employeeComments);
             
-            // Replicar fórmula usando copyTo puro desde la fila 2 de la tabla
+            // Replicar fórmula usando R1C1 de la fila 2 de la tabla para que se auto-incremente la fila
             try {
-              const sourceRange = sheet.getRange(2, horasTrabajadasIdx + 1, 1, 2);
-              const targetRange = sheet.getRange(existingRowIdx + 1, horasTrabajadasIdx + 1, 1, 2);
-              sourceRange.copyTo(targetRange, SpreadsheetApp.CopyPasteType.PASTE_FORMULA, false);
+              const formulaTrabajadas = sheet.getRange(2, horasTrabajadasIdx + 1).getFormulaR1C1();
+              const formulaExtra = sheet.getRange(2, horasExtraIdx + 1).getFormulaR1C1();
+              sheet.getRange(existingRowIdx + 1, horasTrabajadasIdx + 1).setFormulaR1C1(formulaTrabajadas);
+              sheet.getRange(existingRowIdx + 1, horasExtraIdx + 1).setFormulaR1C1(formulaExtra);
             } catch(e) {
               // Fallback
             }
@@ -361,13 +362,14 @@ function doPost(e) {
         });
         sheet.appendRow(newRow);
         
-        // Escribir fórmulas en la nueva fila creada copiando la fila 2 de la tabla
+        // Escribir fórmulas en la nueva fila creada copiando la fila 2 usando R1C1
         const lastRow = sheet.getLastRow();
         if (lastRow > 2) {
           try {
-            const sourceRange = sheet.getRange(2, horasTrabajadasIdx + 1, 1, 2);
-            const targetRange = sheet.getRange(lastRow, horasTrabajadasIdx + 1, 1, 2);
-            sourceRange.copyTo(targetRange, SpreadsheetApp.CopyPasteType.PASTE_FORMULA, false);
+            const formulaTrabajadas = sheet.getRange(2, horasTrabajadasIdx + 1).getFormulaR1C1();
+            const formulaExtra = sheet.getRange(2, horasExtraIdx + 1).getFormulaR1C1();
+            sheet.getRange(lastRow, horasTrabajadasIdx + 1).setFormulaR1C1(formulaTrabajadas);
+            sheet.getRange(lastRow, horasExtraIdx + 1).setFormulaR1C1(formulaExtra);
           } catch(e) {
             // Fallback
           }
@@ -424,11 +426,12 @@ function doPost(e) {
             sheet.getRange(i + 1, horaSalidaIdx + 1).setValue(params.checkOutTime);
           }
           
-          // Escribir Fórmulas copiando de la fila 2 de la tabla
+          // Escribir Fórmulas copiando de la fila 2 de la tabla usando R1C1
           try {
-            const sourceRange = sheet.getRange(2, horasTrabajadasIdx + 1, 1, 2);
-            const targetRange = sheet.getRange(i + 1, horasTrabajadasIdx + 1, 1, 2);
-            sourceRange.copyTo(targetRange, SpreadsheetApp.CopyPasteType.PASTE_FORMULA, false);
+            const formulaTrabajadas = sheet.getRange(2, horasTrabajadasIdx + 1).getFormulaR1C1();
+            const formulaExtra = sheet.getRange(2, horasExtraIdx + 1).getFormulaR1C1();
+            sheet.getRange(i + 1, horasTrabajadasIdx + 1).setFormulaR1C1(formulaTrabajadas);
+            sheet.getRange(i + 1, horasExtraIdx + 1).setFormulaR1C1(formulaExtra);
           } catch(e) {
             // Fallback
           }
