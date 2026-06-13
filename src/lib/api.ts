@@ -336,5 +336,20 @@ export const api = {
     });
     const data = await response.json();
     if (data.status !== "success") throw new Error(data.message || "Error al actualizar frentes");
+  },
+
+  async updatePermisos(permisos: { label: string; roles: string[] }[]): Promise<void> {
+    if (!this.isConfigured()) throw new Error("API not configured");
+    try {
+      const response = await fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify({ type: "update_permisos", permisos }),
+      });
+      const data = await response.json();
+      if (data.status !== "success") throw new Error(data.message || "Error al actualizar permisos");
+    } catch (error) {
+      console.error("Update permisos error:", error);
+      throw error;
+    }
   }
 };
