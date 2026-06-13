@@ -285,6 +285,12 @@ function doPost(e) {
       const firmaEntradaIdx = headers.indexOf("Firma_Entrada");
       const firmaSalidaIdx = headers.indexOf("Firma_Salida");
       const comentarioEmpleadoIdx = headers.indexOf("Comentarios");
+      const horasTrabajadasIdx = headers.indexOf("Horas_Trabajadas");
+      const horasExtraIdx = headers.indexOf("Horas_Extra");
+
+      if (horasTrabajadasIdx === -1 || horasExtraIdx === -1) {
+        throw new Error("Estructura de Registros_HT incorrecta (Faltan columnas requeridas: Horas_Trabajadas o Horas_Extra).");
+      }
 
       let existingRowIdx = -1;
       let newRecId = "rec-" + Utilities.getUuid().substring(0, 8);
@@ -313,13 +319,32 @@ function doPost(e) {
       if (existingRowIdx !== -1) {
         // Update existing row (Salida)
         if (!isCheckIn) {
-           if(horaSalidaIdx !== -1) sheet.getRange(existingRowIdx + 1, horaSalidaIdx + 1).setValue(timestampStr);
-           if(firmaSalidaIdx !== -1) sheet.getRange(existingRowIdx + 1, firmaSalidaIdx + 1).setValue(signatureUrl);
-           if(comentarioEmpleadoIdx !== -1 && params.employeeComments) sheet.getRange(existingRowIdx + 1, comentarioEmpleadoIdx + 1).setValue(params.employeeComments);
+            if(horaSalidaIdx !== -1) sheet.getRange(existingRowIdx + 1, horaSalidaIdx + 1).setValue(timestampStr);
+            if(firmaSalidaIdx !== -1) sheet.getRange(existingRowIdx + 1, firmaSalidaIdx + 1).setValue(signatureUrl);
+            if(comentarioEmpleadoIdx !== -1 && params.employeeComments) sheet.getRange(existingRowIdx + 1, comentarioEmpleadoIdx + 1).setValue(params.employeeComments);
+            
+            // Obtener fórmulas de la fila superior si existe, sino usar valores estructurados por defecto con redondeo a 2 decimales
+            let formulaTrabajadas = '=SI(O(ESBLANCO(Registro_HL[Hora_Entrada]); ESBLANCO(Registro_HL[Hora_Salida])); ""; REDONDEAR(RESIDUO(Registro_HL[Hora_Salida] - Registro_HL[Hora_Entrada]; 1) * 24; 2))';
+            let formulaExtra = '=SI(ESBLANCO(Registro_HL[Horas_Trabajadas]); ""; REDONDEAR(MAX(0; Registro_HL[Horas_Trabajadas] - 10); 2))';
+            
+            // Copiar la fórmula exacta de la celda de la fila inmediatamente superior (existingRowIdx)
+            if (existingRowIdx > 1) {
+              try {
+                const prevTrabajadas = sheet.getRange(existingRowIdx, horasTrabajadasIdx + 1).getFormula();
+                const prevExtra = sheet.getRange(existingRowIdx, horasExtraIdx + 1).getFormula();
+                if (prevTrabajadas) formulaTrabajadas = prevTrabajadas;
+                if (prevExtra) formulaExtra = prevExtra;
+              } catch(e) {
+                // Fallback
+              }
+            }
+            
+            sheet.getRange(existingRowIdx + 1, horasTrabajadasIdx + 1).setFormula(formulaTrabajadas);
+            sheet.getRange(existingRowIdx + 1, horasExtraIdx + 1).setFormula(formulaExtra);
         } else {
-           if(horaEntradaIdx !== -1) sheet.getRange(existingRowIdx + 1, horaEntradaIdx + 1).setValue(timestampStr);
-           if(firmaEntradaIdx !== -1) sheet.getRange(existingRowIdx + 1, firmaEntradaIdx + 1).setValue(signatureUrl);
-           if(comentarioEmpleadoIdx !== -1 && params.employeeComments) sheet.getRange(existingRowIdx + 1, comentarioEmpleadoIdx + 1).setValue(params.employeeComments);
+            if(horaEntradaIdx !== -1) sheet.getRange(existingRowIdx + 1, horaEntradaIdx + 1).setValue(timestampStr);
+            if(firmaEntradaIdx !== -1) sheet.getRange(existingRowIdx + 1, firmaEntradaIdx + 1).setValue(signatureUrl);
+            if(comentarioEmpleadoIdx !== -1 && params.employeeComments) sheet.getRange(existingRowIdx + 1, comentarioEmpleadoIdx + 1).setValue(params.employeeComments);
         }
       } else {
         // Create new row (Entrada)
@@ -337,12 +362,34 @@ function doPost(e) {
           else if (h === "Comentario") newRow.push("");
           else if (h === "Aprobador") newRow.push("");
           else if (h === "Comentarios") newRow.push(params.employeeComments || "");
+          else if (h === "Horas_Trabajadas") newRow.push(""); // Se llenará con fórmula abajo
+          else if (h === "Horas_Extra") newRow.push(""); // Se llenará con fórmula abajo
           // Si el usuario añade estas columnas, se llenarán:
           else if (h === "Latitud") newRow.push(params.latitude || ""); 
           else if (h === "Longitud") newRow.push(params.longitude || "");
           else newRow.push("");
         });
         sheet.appendRow(newRow);
+        
+        // Escribir fórmulas en la nueva fila creada
+        const lastRow = sheet.getLastRow();
+        let formulaTrabajadas = '=SI(O(ESBLANCO(Registro_HL[Hora_Entrada]); ESBLANCO(Registro_HL[Hora_Salida])); ""; REDONDEAR(RESIDUO(Registro_HL[Hora_Salida] - Registro_HL[Hora_Entrada]; 1) * 24; 2))';
+        let formulaExtra = '=SI(ESBLANCO(Registro_HL[Horas_Trabajadas]); ""; REDONDEAR(MAX(0; Registro_HL[Horas_Trabajadas] - 10); 2))';
+        
+        // Copiar fórmula de la fila superior si existe (el nuevo registro va en lastRow, copiamos de lastRow - 1)
+        if (lastRow > 2) {
+          try {
+            const prevTrabajadas = sheet.getRange(lastRow - 1, horasTrabajadasIdx + 1).getFormula();
+            const prevExtra = sheet.getRange(lastRow - 1, horasExtraIdx + 1).getFormula();
+            if (prevTrabajadas) formulaTrabajadas = prevTrabajadas;
+            if (prevExtra) formulaExtra = prevExtra;
+          } catch(e) {
+            // Fallback a fórmulas por defecto
+          }
+        }
+        
+        sheet.getRange(lastRow, horasTrabajadasIdx + 1).setFormula(formulaTrabajadas);
+        sheet.getRange(lastRow, horasExtraIdx + 1).setFormula(formulaExtra);
       }
 
       return ContentService.createTextOutput(JSON.stringify({
@@ -378,8 +425,10 @@ function doPost(e) {
       const statusIdx = headers.indexOf("Aprobacion");
       const horaEntradaIdx = headers.indexOf("Hora_Entrada");
       const horaSalidaIdx = headers.indexOf("Hora_Salida");
+      const horasTrabajadasIdx = headers.indexOf("Horas_Trabajadas");
+      const horasExtraIdx = headers.indexOf("Horas_Extra");
       
-      if (idIdx === -1 || empCommIdx === -1 || statusIdx === -1 || horaEntradaIdx === -1 || horaSalidaIdx === -1) {
+      if (idIdx === -1 || empCommIdx === -1 || statusIdx === -1 || horaEntradaIdx === -1 || horaSalidaIdx === -1 || horasTrabajadasIdx === -1 || horasExtraIdx === -1) {
         throw new Error("Estructura de Registros_HT incorrecta (Faltan columnas requeridas).");
       }
 
@@ -392,6 +441,24 @@ function doPost(e) {
           if (params.checkOutTime !== undefined) {
             sheet.getRange(i + 1, horaSalidaIdx + 1).setValue(params.checkOutTime);
           }
+          
+          // Escribir Fórmulas copiando de la fila superior si existe
+          let formulaTrabajadas = '=SI(O(ESBLANCO(Registro_HL[Hora_Entrada]); ESBLANCO(Registro_HL[Hora_Salida])); ""; REDONDEAR(RESIDUO(Registro_HL[Hora_Salida] - Registro_HL[Hora_Entrada]; 1) * 24; 2))';
+          let formulaExtra = '=SI(ESBLANCO(Registro_HL[Horas_Trabajadas]); ""; REDONDEAR(MAX(0; Registro_HL[Horas_Trabajadas] - 10); 2))';
+          
+          if (i > 1) { // i es el índice 0-indexed de la fila, que equivale a i+1 en getRange, si i > 1 significa que hay fila arriba (>= 2)
+            try {
+              const prevTrabajadas = sheet.getRange(i, horasTrabajadasIdx + 1).getFormula();
+              const prevExtra = sheet.getRange(i, horasExtraIdx + 1).getFormula();
+              if (prevTrabajadas) formulaTrabajadas = prevTrabajadas;
+              if (prevExtra) formulaExtra = prevExtra;
+            } catch(e) {
+              // Fallback
+            }
+          }
+          sheet.getRange(i + 1, horasTrabajadasIdx + 1).setFormula(formulaTrabajadas);
+          sheet.getRange(i + 1, horasExtraIdx + 1).setFormula(formulaExtra);
+
           if (data[i][statusIdx] === "Rechazado") {
             sheet.getRange(i + 1, statusIdx + 1).setValue("Pendiente");
           }

@@ -33,4 +33,6 @@ export interface CheckInRecord {
   employeeComments?: string; // Comentarios del empleado
   approvedBy?: string;
   userAvatar: string;
+  hoursWorked?: number;
+  hoursExtra?: number;
 }

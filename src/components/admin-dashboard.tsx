@@ -57,31 +57,13 @@ export default function AdminDashboard({ role }: AdminDashboardProps) {
 
   // Cálculo de horas extras a partir de marcas Entrada-Salida
   const calculateWeeklyExtraHours = (recordsList: CheckInRecord[]) => {
-    const userDays: { [key: string]: { checkIn?: Date; checkOut?: Date } } = {};
-    
-    // Agrupar por usuario y fecha
+    let totalExtraHours = 0;
     recordsList.forEach(r => {
-      if (r.status !== 'Aprobado') return; // Solo turnos aprobados cuentan para horas extra oficiales
-      const dayKey = `${r.userId}_${r.timestamp.toDateString()}`;
-      if (!userDays[dayKey]) userDays[dayKey] = {};
-      if (r.type === 'Entrada') {
-        userDays[dayKey].checkIn = r.timestamp;
-      } else if (r.type === 'Salida') {
-        userDays[dayKey].checkOut = r.timestamp;
+      if (r.status === 'Aprobado') {
+        totalExtraHours += r.hoursExtra || 0;
       }
     });
-
-    let totalExtraMs = 0;
-    Object.values(userDays).forEach(day => {
-      if (day.checkIn && day.checkOut) {
-        const durationMs = day.checkOut.getTime() - day.checkIn.getTime();
-        const tenHoursMs = 10 * 60 * 60 * 1000;
-        if (durationMs > tenHoursMs) {
-          totalExtraMs += (durationMs - tenHoursMs);
-        }
-      }
-    });
-    return Math.round(totalExtraMs / (1000 * 60 * 60));
+    return Math.round(totalExtraHours);
   };
 
   // Agrupar y preparar datos para el gráfico de barra semanal

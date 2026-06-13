@@ -115,31 +115,29 @@ export default function RecordsPage() {
       }
     });
 
-    let totalMs = 0;
-    let totalExtraMs = 0;
+    let totalHoursDecimal = 0;
+    let totalExtraDecimal = 0;
     const daysCount = Object.keys(dailyGroups).length;
 
-    Object.values(dailyGroups).forEach(day => {
-      if (day.checkIn && day.checkOut) {
-        const diff = day.checkOut.getTime() - day.checkIn.getTime();
-        const tenHours = 10 * 60 * 60 * 1000;
-        totalMs += Math.min(diff, tenHours);
-        if (diff > tenHours) {
-          totalExtraMs += (diff - tenHours);
-        }
+    records.forEach(r => {
+      if (r.timestamp.getMonth() === month && r.timestamp.getFullYear() === year) {
+        const total = r.hoursWorked || 0;
+        const extra = r.hoursExtra || 0;
+        totalHoursDecimal += (total - extra);
+        totalExtraDecimal += extra;
       }
     });
 
-    const formatHours = (ms: number) => {
-      const hours = Math.floor(ms / (1000 * 60 * 60));
-      const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+    const formatDecimalHours = (decimalVal: number) => {
+      const hours = Math.floor(decimalVal);
+      const minutes = Math.round((decimalVal - hours) * 60);
       return `${hours.toString().padStart(2, '0')}h ${minutes.toString().padStart(2, '0')}m`;
     };
 
     return {
-      hoursLaboradas: formatHours(totalMs),
+      hoursLaboradas: formatDecimalHours(totalHoursDecimal),
       daysLaborados: `${daysCount} día${daysCount !== 1 ? 's' : ''}`,
-      hoursExtra: formatHours(totalExtraMs)
+      hoursExtra: formatDecimalHours(totalExtraDecimal)
     };
   }, [records, month, year]);
 
