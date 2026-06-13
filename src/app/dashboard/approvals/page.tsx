@@ -201,7 +201,7 @@ export default function ApprovalsPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 pb-20">
+    <div className="w-full max-w-full sm:max-w-3xl mx-auto space-y-6 pb-20 min-w-0">
       {/* Title */}
       <section className="flex flex-col gap-1">
         <h1 className="text-2xl font-bold font-headline text-primary">Aprobaciones</h1>
@@ -254,13 +254,13 @@ export default function ApprovalsPage() {
 
       {/* Status Filter Tabs & Frente Selector */}
       <section className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center justify-between">
-        <div className="flex bg-surface-container-low p-1 rounded-2xl border border-outline-variant/30 flex-1 sm:max-w-md">
+        <div className="flex flex-wrap sm:flex-nowrap bg-surface-container-low p-1 rounded-2xl border border-outline-variant/30 flex-1 sm:max-w-md h-auto gap-1">
           {(["Pendientes", "Aprobados", "Rechazados", "Todos"] as const).map((status) => (
             <button
               key={status}
               type="button"
               onClick={() => setSelectedStatus(status)}
-              className={`flex-1 py-2 px-1 text-center text-xs font-bold rounded-xl transition-all ${
+              className={`flex-1 min-w-[80px] py-2 px-1 text-center text-xs font-bold rounded-xl transition-all ${
                 selectedStatus === status 
                   ? "bg-white shadow-sm text-primary" 
                   : "text-on-surface-variant hover:text-primary"

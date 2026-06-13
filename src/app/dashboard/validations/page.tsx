@@ -148,7 +148,7 @@ export default function ValidationsPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 pb-20">
+    <div className="w-full max-w-full sm:max-w-3xl mx-auto space-y-6 pb-20 min-w-0">
       {/* Title */}
       <section className="flex flex-col gap-1">
         <h1 className="text-2xl font-bold font-headline text-primary">Tablas de Validación</h1>
@@ -159,7 +159,7 @@ export default function ValidationsPage() {
 
       <div className="w-full">
         <Tabs defaultValue="cargos" className="w-full space-y-4">
-          <TabsList className="bg-surface-container-low p-1 rounded-2xl border border-outline-variant/30 w-full sm:w-auto">
+          <TabsList className="bg-surface-container-low p-1 rounded-2xl border border-outline-variant/30 w-full sm:w-auto h-auto flex-wrap">
             <TabsTrigger value="cargos" className="rounded-xl text-xs font-bold px-4 py-2">
               Cargos y Roles
             </TabsTrigger>

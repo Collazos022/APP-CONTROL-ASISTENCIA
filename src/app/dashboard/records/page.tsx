@@ -227,7 +227,7 @@ export default function RecordsPage() {
   }
 
   return (
-    <div className="max-w-md mx-auto space-y-6 pb-20">
+    <div className="w-full max-w-full sm:max-w-md mx-auto space-y-6 pb-20 min-w-0">
       {/* Title */}
       <section className="flex flex-col gap-1">
         <h1 className="text-2xl font-bold font-headline text-primary">Histórico de Turnos</h1>

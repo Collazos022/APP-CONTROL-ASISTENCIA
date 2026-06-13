@@ -216,7 +216,7 @@ export default function ProfilePage() {
   );
 
   return (
-    <div className="max-w-5xl mx-auto pb-20">
+    <div className="w-full max-w-full sm:max-w-5xl mx-auto pb-20 min-w-0">
       <div className="space-y-6">
         {/* Title */}
         <section className="flex flex-col gap-1">
