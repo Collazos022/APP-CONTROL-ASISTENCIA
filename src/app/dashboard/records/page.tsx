@@ -439,19 +439,9 @@ export default function RecordsPage() {
                 )}
               </div>
 
-              {/* Comentarios del Supervisor */}
-              {selectedDayDetail.record?.comments && (
-                <div className="bg-error-container/30 border border-error-container/50 p-3 rounded-xl text-xs space-y-1">
-                  <span className="font-bold text-error text-[10px] uppercase">Motivo del Supervisor:</span>
-                  <p className="text-on-surface-variant">
-                    {selectedDayDetail.record.comments}
-                  </p>
-                </div>
-              )}
-
-              {/* Comentario / Justificación del empleado */}
+              {/* Justificación / Comentarios */}
               <div className="space-y-1">
-                <span className="font-bold text-on-surface-variant uppercase text-[10px]">Justificación / Comentarios del Empleado</span>
+                <span className="font-bold text-on-surface-variant uppercase text-[10px]">Justificación / Comentarios</span>
                 {isEditingComment ? (
                   <Textarea
                     className="w-full bg-surface-container rounded-xl text-xs mt-1 min-h-[70px] border-none focus:ring-primary focus:ring-1"
@@ -462,7 +452,7 @@ export default function RecordsPage() {
                 ) : (
                   <div className="bg-surface-container/60 p-3 rounded-xl border border-white/10 min-h-[40px] text-xs">
                     <p className="text-on-surface italic">
-                      {selectedDayDetail.record?.employeeComments || "Sin justificación cargada."}
+                      {selectedDayDetail.record?.comments || "Sin comentarios."}
                     </p>
                   </div>
                 )}

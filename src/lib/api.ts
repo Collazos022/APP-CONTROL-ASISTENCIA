@@ -137,7 +137,7 @@ export const api = {
             comments: r.Comentarios || r.Comentario || r.comments || "",
             approvedBy: r.Aprobador || r.Email_Sup || r.approvedBy || "",
             userAvatar: uInfo.avatar,
-            employeeComments: r.Comentario_Empleado || r.employeeComments || ""
+            employeeComments: r.Comentarios || r.Comentario || r.comments || ""
           });
         });
 

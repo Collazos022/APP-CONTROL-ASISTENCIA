@@ -365,19 +365,13 @@ export default function ApprovalsPage() {
                   <div className="flex-1 flex items-start gap-2 overflow-hidden">
                     <span className="material-symbols-outlined text-on-surface-variant text-[18px] mt-0.5 shrink-0">chat</span>
                     <div className="text-xs text-on-surface-variant truncate">
-                      {record.employeeComments ? (
-                        <p className="italic">
-                          <span className="font-bold not-italic">Emp:</span> {record.employeeComments}
-                        </p>
-                      ) : null}
                       {record.comments ? (
-                        <p className={record.employeeComments ? "mt-0.5" : ""}>
-                          <span className="font-bold text-primary">Sup:</span> {record.comments}
+                        <p className="italic">
+                          {record.comments}
                         </p>
-                      ) : null}
-                      {!record.employeeComments && !record.comments ? (
+                      ) : (
                         <p className="italic text-on-surface-variant/50">Sin comentarios</p>
-                      ) : null}
+                      )}
                     </div>
                   </div>
 

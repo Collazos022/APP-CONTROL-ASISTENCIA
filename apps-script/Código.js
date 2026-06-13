@@ -374,16 +374,16 @@ function doPost(e) {
       const headers = data[0];
       
       const idIdx = headers.indexOf("ID_Registro");
-      const empCommIdx = headers.indexOf("Comentario_Empleado"); 
+      const empCommIdx = headers.indexOf("Comentarios"); 
       const statusIdx = headers.indexOf("Aprobacion");
       
-      if (idIdx === -1) throw new Error("Estructura de Registros_HT incorrecta (Falta ID_Registro).");
+      if (idIdx === -1 || empCommIdx === -1) {
+        throw new Error("Estructura de Registros_HT incorrecta (Faltan columnas requeridas).");
+      }
 
       for (let i = 1; i < data.length; i++) {
         if (data[i][idIdx] && data[i][idIdx].toString() === params.recordId.toString()) {
-          if (empCommIdx !== -1) {
-            sheet.getRange(i + 1, empCommIdx + 1).setValue(params.employeeComments || "");
-          }
+          sheet.getRange(i + 1, empCommIdx + 1).setValue(params.employeeComments || "");
           if (statusIdx !== -1 && data[i][statusIdx] === "Rechazado") {
             sheet.getRange(i + 1, statusIdx + 1).setValue("Pendiente");
           }
