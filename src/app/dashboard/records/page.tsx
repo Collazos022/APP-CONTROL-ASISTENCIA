@@ -37,6 +37,8 @@ export default function RecordsPage() {
   // Edición de justificación
   const [isEditingComment, setIsEditingComment] = React.useState(false);
   const [justificationText, setJustificationText] = React.useState("");
+  const [editCheckIn, setEditCheckIn] = React.useState("");
+  const [editCheckOut, setEditCheckOut] = React.useState("");
   const [actionLoading, setActionLoading] = React.useState(false);
 
   const loadRecords = React.useCallback(() => {
@@ -194,7 +196,17 @@ export default function RecordsPage() {
   const handleSelectDay = (day: ConsolidatedDay) => {
     if (!day.isCurrentMonth || !day.record) return;
     setSelectedDayDetail(day);
-    setJustificationText(day.record.employeeComments || "");
+    setJustificationText(day.record.comments || "");
+    
+    const formatTimeForInput = (date?: Date) => {
+      if (!date) return "";
+      const h = date.getHours().toString().padStart(2, '0');
+      const m = date.getMinutes().toString().padStart(2, '0');
+      return `${h}:${m}`;
+    };
+    setEditCheckIn(formatTimeForInput(day.record.timestampEntrada));
+    setEditCheckOut(formatTimeForInput(day.record.timestampSalida));
+    
     setIsEditingComment(false);
   };
 
@@ -206,10 +218,10 @@ export default function RecordsPage() {
 
     setActionLoading(true);
     try {
-      await api.updateEmployeeComment(recordId, justificationText);
+      await api.updateEmployeeComment(recordId, justificationText, editCheckIn || undefined, editCheckOut || undefined);
       toast({
-        title: "Justificación Enviada",
-        description: "Tu comentario ha sido guardado y el registro vuelve a estar Pendiente de aprobación.",
+        title: "Registro Actualizado",
+        description: "Tu justificación y horarios han sido guardados. El registro vuelve a estar Pendiente de aprobación.",
       });
       setIsEditingComment(false);
       setSelectedDayDetail(null);
@@ -382,11 +394,20 @@ export default function RecordsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-surface-container/60 p-3 rounded-xl border border-white/10">
                   <span className="text-[9px] font-bold text-on-surface-variant/70 uppercase">Entrada</span>
-                  <p className="text-sm font-bold text-on-surface mt-0.5">
-                    {selectedDayDetail.record?.timestampEntrada 
-                      ? selectedDayDetail.record.timestampEntrada.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }) 
-                      : "--:--"}
-                  </p>
+                  {isEditingComment ? (
+                    <input 
+                      type="time" 
+                      className="w-full bg-surface-container rounded-lg p-1 text-sm font-bold text-on-surface mt-1 border border-white/20 focus:outline-none focus:ring-1 focus:ring-primary"
+                      value={editCheckIn}
+                      onChange={(e) => setEditCheckIn(e.target.value)}
+                    />
+                  ) : (
+                    <p className="text-sm font-bold text-on-surface mt-0.5">
+                      {selectedDayDetail.record?.timestampEntrada 
+                        ? selectedDayDetail.record.timestampEntrada.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }) 
+                        : "--:--"}
+                    </p>
+                  )}
                   {selectedDayDetail.record?.distanceFromPost !== null && (
                     <p className="text-[9px] text-on-surface-variant mt-0.5">
                       Distancia: {selectedDayDetail.record?.distanceFromPost}m
@@ -395,11 +416,20 @@ export default function RecordsPage() {
                 </div>
                 <div className="bg-surface-container/60 p-3 rounded-xl border border-white/10">
                   <span className="text-[9px] font-bold text-on-surface-variant/70 uppercase">Salida</span>
-                  <p className="text-sm font-bold text-on-surface mt-0.5">
-                    {selectedDayDetail.record?.timestampSalida 
-                      ? selectedDayDetail.record.timestampSalida.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }) 
-                      : "--:--"}
-                  </p>
+                  {isEditingComment ? (
+                    <input 
+                      type="time" 
+                      className="w-full bg-surface-container rounded-lg p-1 text-sm font-bold text-on-surface mt-1 border border-white/20 focus:outline-none focus:ring-1 focus:ring-primary"
+                      value={editCheckOut}
+                      onChange={(e) => setEditCheckOut(e.target.value)}
+                    />
+                  ) : (
+                    <p className="text-sm font-bold text-on-surface mt-0.5">
+                      {selectedDayDetail.record?.timestampSalida 
+                        ? selectedDayDetail.record.timestampSalida.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }) 
+                        : "--:--"}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -491,7 +521,7 @@ export default function RecordsPage() {
                       disabled={actionLoading}
                       className="bg-primary text-white hover:opacity-90 rounded-xl text-xs h-10 px-4"
                     >
-                      Enviar Justificación
+                      Guardar Cambios
                     </Button>
                   </>
                 ) : (
@@ -507,7 +537,7 @@ export default function RecordsPage() {
                       onClick={() => setIsEditingComment(true)}
                       className="bg-warning text-white hover:opacity-90 rounded-xl text-xs h-10 px-4"
                     >
-                      Editar Comentario
+                      Editar Registro
                     </Button>
                   </>
                 )}

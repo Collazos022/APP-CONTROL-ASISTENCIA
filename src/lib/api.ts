@@ -264,17 +264,23 @@ export const api = {
     }
   },
 
-  async updateEmployeeComment(recordId: string, employeeComments: string): Promise<void> {
+  async updateEmployeeComment(recordId: string, employeeComments: string, checkInTime?: string, checkOutTime?: string): Promise<void> {
     if (!this.isConfigured()) throw new Error("API not configured");
     try {
       const realId = recordId;
       const response = await fetch(API_URL, {
         method: "POST",
-        body: JSON.stringify({ type: "update_employee_comment", recordId: realId, employeeComments }),
+        body: JSON.stringify({ 
+          type: "update_employee_comment", 
+          recordId: realId, 
+          employeeComments,
+          checkInTime,
+          checkOutTime
+        }),
       });
       const data = await response.json();
       if (data.status !== "success") {
-        throw new Error(data.message || "Error al actualizar comentario del empleado");
+        throw new Error(data.message || "Error al actualizar registro");
       }
     } catch (error) {
       console.error("Update employee comment error:", error);

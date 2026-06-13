@@ -376,15 +376,23 @@ function doPost(e) {
       const idIdx = headers.indexOf("ID_Registro");
       const empCommIdx = headers.indexOf("Comentarios"); 
       const statusIdx = headers.indexOf("Aprobacion");
+      const horaEntradaIdx = headers.indexOf("Hora_Entrada");
+      const horaSalidaIdx = headers.indexOf("Hora_Salida");
       
-      if (idIdx === -1 || empCommIdx === -1) {
+      if (idIdx === -1 || empCommIdx === -1 || statusIdx === -1 || horaEntradaIdx === -1 || horaSalidaIdx === -1) {
         throw new Error("Estructura de Registros_HT incorrecta (Faltan columnas requeridas).");
       }
 
       for (let i = 1; i < data.length; i++) {
         if (data[i][idIdx] && data[i][idIdx].toString() === params.recordId.toString()) {
           sheet.getRange(i + 1, empCommIdx + 1).setValue(params.employeeComments || "");
-          if (statusIdx !== -1 && data[i][statusIdx] === "Rechazado") {
+          if (params.checkInTime !== undefined) {
+            sheet.getRange(i + 1, horaEntradaIdx + 1).setValue(params.checkInTime);
+          }
+          if (params.checkOutTime !== undefined) {
+            sheet.getRange(i + 1, horaSalidaIdx + 1).setValue(params.checkOutTime);
+          }
+          if (data[i][statusIdx] === "Rechazado") {
             sheet.getRange(i + 1, statusIdx + 1).setValue("Pendiente");
           }
           return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
