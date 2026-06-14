@@ -323,36 +323,36 @@ function doPost(e) {
             if(firmaSalidaIdx !== -1) sheet.getRange(existingRowIdx + 1, firmaSalidaIdx + 1).setValue(signatureUrl);
             if(comentarioEmpleadoIdx !== -1 && params.employeeComments) sheet.getRange(existingRowIdx + 1, comentarioEmpleadoIdx + 1).setValue(params.employeeComments);
             
-            // Replicar fórmula usando getFormulaLocal/setFormulaLocal, con fallback a fórmulas en español limpias si la fila 2 está rota
-            const DEFAULT_FORMULA_TRABAJADAS = '=SI(O(ESBLANCO(Registro_HL[Hora_Entrada]); ESBLANCO(Registro_HL[Hora_Salida])); ""; REDONDEAR(RESIDUO(Registro_HL[Hora_Salida] - Registro_HL[Hora_Entrada]; 1) * 24; 2))';
-            const DEFAULT_FORMULA_EXTRA = '=SI(ESBLANCO(Registro_HL[Horas_Trabajadas]); ""; REDONDEAR(MAX(0; Registro_HL[Horas_Trabajadas] - 10); 2))';
+            // Replicar fórmula usando getFormula/setFormula, con fallback a fórmulas en inglés limpias si la fila 2 está rota
+            const DEFAULT_FORMULA_TRABAJADAS = '=IF(OR(ISBLANK(Registro_HL[Hora_Entrada]), ISBLANK(Registro_HL[Hora_Salida])), "", ROUND(MOD(Registro_HL[Hora_Salida] - Registro_HL[Hora_Entrada], 1) * 24, 2))';
+            const DEFAULT_FORMULA_EXTRA = '=IF(ISBLANK(Registro_HL[Horas_Trabajadas]), "", ROUND(MAX(0, Registro_HL[Horas_Trabajadas] - 10), 2))';
             
             let formulaTrabajadas = DEFAULT_FORMULA_TRABAJADAS;
             let formulaExtra = DEFAULT_FORMULA_EXTRA;
             
             try {
-              const prevTrabajadas = sheet.getRange(2, horasTrabajadasIdx + 1).getFormulaLocal();
-              const prevExtra = sheet.getRange(2, horasExtraIdx + 1).getFormulaLocal();
+              const prevTrabajadas = sheet.getRange(2, horasTrabajadasIdx + 1).getFormula();
+              const prevExtra = sheet.getRange(2, horasExtraIdx + 1).getFormula();
               
-              if (prevTrabajadas && prevTrabajadas.trim() !== "" && !prevTrabajadas.includes("#ERROR") && !prevTrabajadas.includes("RC5") && !prevTrabajadas.includes("RC7") && !prevTrabajadas.includes("RC[-")) {
+              if (prevTrabajadas && prevTrabajadas.trim() !== "" && !prevTrabajadas.includes("#ERROR") && !prevTrabajadas.includes("RC5") && !prevTrabajadas.includes("RC7") && !prevTrabajadas.includes("RC[-") && !prevTrabajadas.includes("RC9")) {
                 formulaTrabajadas = prevTrabajadas;
               } else {
                 // Si la fila 2 está rota, la reparamos con la fórmula correcta
-                sheet.getRange(2, horasTrabajadasIdx + 1).setFormulaLocal(DEFAULT_FORMULA_TRABAJADAS);
+                sheet.getRange(2, horasTrabajadasIdx + 1).setFormula(DEFAULT_FORMULA_TRABAJADAS);
               }
               
-              if (prevExtra && prevExtra.trim() !== "" && !prevExtra.includes("#ERROR") && !prevExtra.includes("RC9") && !prevExtra.includes("RC[-")) {
+              if (prevExtra && prevExtra.trim() !== "" && !prevExtra.includes("#ERROR") && !prevExtra.includes("RC5") && !prevExtra.includes("RC7") && !prevExtra.includes("RC[-") && !prevExtra.includes("RC9")) {
                 formulaExtra = prevExtra;
               } else {
                 // Si la fila 2 está rota, la reparamos con la fórmula correcta
-                sheet.getRange(2, horasExtraIdx + 1).setFormulaLocal(DEFAULT_FORMULA_EXTRA);
+                sheet.getRange(2, horasExtraIdx + 1).setFormula(DEFAULT_FORMULA_EXTRA);
               }
             } catch(e) {
               // Fallback
             }
             
-            sheet.getRange(existingRowIdx + 1, horasTrabajadasIdx + 1).setFormulaLocal(formulaTrabajadas);
-            sheet.getRange(existingRowIdx + 1, horasExtraIdx + 1).setFormulaLocal(formulaExtra);
+            sheet.getRange(existingRowIdx + 1, horasTrabajadasIdx + 1).setFormula(formulaTrabajadas);
+            sheet.getRange(existingRowIdx + 1, horasExtraIdx + 1).setFormula(formulaExtra);
         } else {
             if(horaEntradaIdx !== -1) sheet.getRange(existingRowIdx + 1, horaEntradaIdx + 1).setValue(timestampStr);
             if(firmaEntradaIdx !== -1) sheet.getRange(existingRowIdx + 1, firmaEntradaIdx + 1).setValue(signatureUrl);
@@ -383,36 +383,36 @@ function doPost(e) {
         });
         sheet.appendRow(newRow);
         
-        // Escribir fórmulas en la nueva fila creada copiando la fila 2 usando getFormulaLocal/setFormulaLocal, con fallback a fórmulas en español limpias si la fila 2 está rota
+        // Escribir fórmulas en la nueva fila creada copiando la fila 2 usando getFormula/setFormula, con fallback a fórmulas en inglés limpias si la fila 2 está rota
         const lastRow = sheet.getLastRow();
         if (lastRow > 2) {
-          const DEFAULT_FORMULA_TRABAJADAS = '=SI(O(ESBLANCO(Registro_HL[Hora_Entrada]); ESBLANCO(Registro_HL[Hora_Salida])); ""; REDONDEAR(RESIDUO(Registro_HL[Hora_Salida] - Registro_HL[Hora_Entrada]; 1) * 24; 2))';
-          const DEFAULT_FORMULA_EXTRA = '=SI(ESBLANCO(Registro_HL[Horas_Trabajadas]); ""; REDONDEAR(MAX(0; Registro_HL[Horas_Trabajadas] - 10); 2))';
+          const DEFAULT_FORMULA_TRABAJADAS = '=IF(OR(ISBLANK(Registro_HL[Hora_Entrada]), ISBLANK(Registro_HL[Hora_Salida])), "", ROUND(MOD(Registro_HL[Hora_Salida] - Registro_HL[Hora_Entrada], 1) * 24, 2))';
+          const DEFAULT_FORMULA_EXTRA = '=IF(ISBLANK(Registro_HL[Horas_Trabajadas]), "", ROUND(MAX(0, Registro_HL[Horas_Trabajadas] - 10), 2))';
           
           let formulaTrabajadas = DEFAULT_FORMULA_TRABAJADAS;
           let formulaExtra = DEFAULT_FORMULA_EXTRA;
           
           try {
-            const prevTrabajadas = sheet.getRange(2, horasTrabajadasIdx + 1).getFormulaLocal();
-            const prevExtra = sheet.getRange(2, horasExtraIdx + 1).getFormulaLocal();
+            const prevTrabajadas = sheet.getRange(2, horasTrabajadasIdx + 1).getFormula();
+            const prevExtra = sheet.getRange(2, horasExtraIdx + 1).getFormula();
             
-            if (prevTrabajadas && prevTrabajadas.trim() !== "" && !prevTrabajadas.includes("#ERROR") && !prevTrabajadas.includes("RC5") && !prevTrabajadas.includes("RC7") && !prevTrabajadas.includes("RC[-")) {
+            if (prevTrabajadas && prevTrabajadas.trim() !== "" && !prevTrabajadas.includes("#ERROR") && !prevTrabajadas.includes("RC5") && !prevTrabajadas.includes("RC7") && !prevTrabajadas.includes("RC[-") && !prevTrabajadas.includes("RC9")) {
               formulaTrabajadas = prevTrabajadas;
             } else {
-              sheet.getRange(2, horasTrabajadasIdx + 1).setFormulaLocal(DEFAULT_FORMULA_TRABAJADAS);
+              sheet.getRange(2, horasTrabajadasIdx + 1).setFormula(DEFAULT_FORMULA_TRABAJADAS);
             }
             
-            if (prevExtra && prevExtra.trim() !== "" && !prevExtra.includes("#ERROR") && !prevExtra.includes("RC9") && !prevExtra.includes("RC[-")) {
+            if (prevExtra && prevExtra.trim() !== "" && !prevExtra.includes("#ERROR") && !prevExtra.includes("RC5") && !prevExtra.includes("RC7") && !prevExtra.includes("RC[-") && !prevExtra.includes("RC9")) {
               formulaExtra = prevExtra;
             } else {
-              sheet.getRange(2, horasExtraIdx + 1).setFormulaLocal(DEFAULT_FORMULA_EXTRA);
+              sheet.getRange(2, horasExtraIdx + 1).setFormula(DEFAULT_FORMULA_EXTRA);
             }
           } catch(e) {
             // Fallback
           }
           
-          sheet.getRange(lastRow, horasTrabajadasIdx + 1).setFormulaLocal(formulaTrabajadas);
-          sheet.getRange(lastRow, horasExtraIdx + 1).setFormulaLocal(formulaExtra);
+          sheet.getRange(lastRow, horasTrabajadasIdx + 1).setFormula(formulaTrabajadas);
+          sheet.getRange(lastRow, horasExtraIdx + 1).setFormula(formulaExtra);
         }
       }
 
@@ -466,34 +466,34 @@ function doPost(e) {
             sheet.getRange(i + 1, horaSalidaIdx + 1).setValue(params.checkOutTime);
           }
           
-          // Escribir Fórmulas copiando de la fila 2 de la tabla usando getFormulaLocal/setFormulaLocal, con fallback a fórmulas en español limpias si la fila 2 está rota
-          const DEFAULT_FORMULA_TRABAJADAS = '=SI(O(ESBLANCO(Registro_HL[Hora_Entrada]); ESBLANCO(Registro_HL[Hora_Salida])); ""; REDONDEAR(RESIDUO(Registro_HL[Hora_Salida] - Registro_HL[Hora_Entrada]; 1) * 24; 2))';
-          const DEFAULT_FORMULA_EXTRA = '=SI(ESBLANCO(Registro_HL[Horas_Trabajadas]); ""; REDONDEAR(MAX(0; Registro_HL[Horas_Trabajadas] - 10); 2))';
+          // Escribir Fórmulas copiando de la fila 2 de la tabla usando getFormula/setFormula, con fallback a fórmulas en inglés limpias si la fila 2 está rota
+          const DEFAULT_FORMULA_TRABAJADAS = '=IF(OR(ISBLANK(Registro_HL[Hora_Entrada]), ISBLANK(Registro_HL[Hora_Salida])), "", ROUND(MOD(Registro_HL[Hora_Salida] - Registro_HL[Hora_Entrada], 1) * 24, 2))';
+          const DEFAULT_FORMULA_EXTRA = '=IF(ISBLANK(Registro_HL[Horas_Trabajadas]), "", ROUND(MAX(0, Registro_HL[Horas_Trabajadas] - 10), 2))';
           
           let formulaTrabajadas = DEFAULT_FORMULA_TRABAJADAS;
           let formulaExtra = DEFAULT_FORMULA_EXTRA;
           
           try {
-            const prevTrabajadas = sheet.getRange(2, horasTrabajadasIdx + 1).getFormulaLocal();
-            const prevExtra = sheet.getRange(2, horasExtraIdx + 1).getFormulaLocal();
+            const prevTrabajadas = sheet.getRange(2, horasTrabajadasIdx + 1).getFormula();
+            const prevExtra = sheet.getRange(2, horasExtraIdx + 1).getFormula();
             
-            if (prevTrabajadas && prevTrabajadas.trim() !== "" && !prevTrabajadas.includes("#ERROR") && !prevTrabajadas.includes("RC5") && !prevTrabajadas.includes("RC7") && !prevTrabajadas.includes("RC[-")) {
+            if (prevTrabajadas && prevTrabajadas.trim() !== "" && !prevTrabajadas.includes("#ERROR") && !prevTrabajadas.includes("RC5") && !prevTrabajadas.includes("RC7") && !prevTrabajadas.includes("RC[-") && !prevTrabajadas.includes("RC9")) {
               formulaTrabajadas = prevTrabajadas;
             } else {
-              sheet.getRange(2, horasTrabajadasIdx + 1).setFormulaLocal(DEFAULT_FORMULA_TRABAJADAS);
+              sheet.getRange(2, horasTrabajadasIdx + 1).setFormula(DEFAULT_FORMULA_TRABAJADAS);
             }
             
-            if (prevExtra && prevExtra.trim() !== "" && !prevExtra.includes("#ERROR") && !prevExtra.includes("RC9") && !prevExtra.includes("RC[-")) {
+            if (prevExtra && prevExtra.trim() !== "" && !prevExtra.includes("#ERROR") && !prevExtra.includes("RC5") && !prevExtra.includes("RC7") && !prevExtra.includes("RC[-") && !prevExtra.includes("RC9")) {
               formulaExtra = prevExtra;
             } else {
-              sheet.getRange(2, horasExtraIdx + 1).setFormulaLocal(DEFAULT_FORMULA_EXTRA);
+              sheet.getRange(2, horasExtraIdx + 1).setFormula(DEFAULT_FORMULA_EXTRA);
             }
           } catch(e) {
             // Fallback
           }
           
-          sheet.getRange(i + 1, horasTrabajadasIdx + 1).setFormulaLocal(formulaTrabajadas);
-          sheet.getRange(i + 1, horasExtraIdx + 1).setFormulaLocal(formulaExtra);
+          sheet.getRange(i + 1, horasTrabajadasIdx + 1).setFormula(formulaTrabajadas);
+          sheet.getRange(i + 1, horasExtraIdx + 1).setFormula(formulaExtra);
 
           if (data[i][statusIdx] === "Rechazado") {
             sheet.getRange(i + 1, statusIdx + 1).setValue("Pendiente");
