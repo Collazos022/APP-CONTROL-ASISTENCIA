@@ -70,8 +70,8 @@ export function DashboardHeader() {
             height={32} 
             className="h-8 w-auto object-contain"
           />
-          <span className="text-[10px] font-medium text-on-surface-variant/50 mb-0.5 select-none">
-            v1.2.0
+          <span className="text-[10px] font-medium text-neutral-400/50 mb-0.5 select-none">
+            v1.2.1
           </span>
         </div>
       </div>

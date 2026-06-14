@@ -48,8 +48,8 @@ export default function AuthenticationPage() {
                 alt="Logo Institucional ASSAM" 
                 className="w-full h-full object-contain"
               />
-              <span className="text-[10px] font-medium text-on-surface-variant/40 select-none absolute bottom-0 right-0">
-                v1.2.0
+              <span className="text-[10px] font-medium text-neutral-400/50 select-none absolute bottom-0 right-0">
+                v1.2.1
               </span>
             </div>
             <AuthForm />
