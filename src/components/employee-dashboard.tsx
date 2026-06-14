@@ -163,6 +163,7 @@ export default function EmployeeDashboard() {
     let nearest = null;
     
     frentes.forEach(frente => {
+      if (!frente.coords || typeof frente.coords !== 'string') return;
       const parts = frente.coords.split(",");
       const fLat = parseFloat(parts[0]);
       const fLon = parseFloat(parts[1]);
