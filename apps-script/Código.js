@@ -323,12 +323,12 @@ function doPost(e) {
             if(firmaSalidaIdx !== -1) sheet.getRange(existingRowIdx + 1, firmaSalidaIdx + 1).setValue(signatureUrl);
             if(comentarioEmpleadoIdx !== -1 && params.employeeComments) sheet.getRange(existingRowIdx + 1, comentarioEmpleadoIdx + 1).setValue(params.employeeComments);
             
-            // Replicar fórmula exacta usando getFormula/setFormula de la fila 2
+            // Replicar fórmula exacta en español usando getFormulaLocal/setFormulaLocal de la fila 2
             try {
-              const formulaTrabajadas = sheet.getRange(2, horasTrabajadasIdx + 1).getFormula();
-              const formulaExtra = sheet.getRange(2, horasExtraIdx + 1).getFormula();
-              sheet.getRange(existingRowIdx + 1, horasTrabajadasIdx + 1).setFormula(formulaTrabajadas);
-              sheet.getRange(existingRowIdx + 1, horasExtraIdx + 1).setFormula(formulaExtra);
+              const formulaTrabajadas = sheet.getRange(2, horasTrabajadasIdx + 1).getFormulaLocal();
+              const formulaExtra = sheet.getRange(2, horasExtraIdx + 1).getFormulaLocal();
+              sheet.getRange(existingRowIdx + 1, horasTrabajadasIdx + 1).setFormulaLocal(formulaTrabajadas);
+              sheet.getRange(existingRowIdx + 1, horasExtraIdx + 1).setFormulaLocal(formulaExtra);
             } catch(e) {
               // Fallback
             }
@@ -362,14 +362,14 @@ function doPost(e) {
         });
         sheet.appendRow(newRow);
         
-        // Escribir fórmulas en la nueva fila creada copiando la fila 2 usando getFormula/setFormula
+        // Escribir fórmulas en la nueva fila creada copiando la fila 2 usando getFormulaLocal/setFormulaLocal
         const lastRow = sheet.getLastRow();
         if (lastRow > 2) {
           try {
-            const formulaTrabajadas = sheet.getRange(2, horasTrabajadasIdx + 1).getFormula();
-            const formulaExtra = sheet.getRange(2, horasExtraIdx + 1).getFormula();
-            sheet.getRange(lastRow, horasTrabajadasIdx + 1).setFormula(formulaTrabajadas);
-            sheet.getRange(lastRow, horasExtraIdx + 1).setFormula(formulaExtra);
+            const formulaTrabajadas = sheet.getRange(2, horasTrabajadasIdx + 1).getFormulaLocal();
+            const formulaExtra = sheet.getRange(2, horasExtraIdx + 1).getFormulaLocal();
+            sheet.getRange(lastRow, horasTrabajadasIdx + 1).setFormulaLocal(formulaTrabajadas);
+            sheet.getRange(lastRow, horasExtraIdx + 1).setFormulaLocal(formulaExtra);
           } catch(e) {
             // Fallback
           }
@@ -426,12 +426,12 @@ function doPost(e) {
             sheet.getRange(i + 1, horaSalidaIdx + 1).setValue(params.checkOutTime);
           }
           
-          // Escribir Fórmulas copiando de la fila 2 de la tabla usando getFormula/setFormula
+          // Escribir Fórmulas copiando de la fila 2 de la tabla usando getFormulaLocal/setFormulaLocal
           try {
-            const formulaTrabajadas = sheet.getRange(2, horasTrabajadasIdx + 1).getFormula();
-            const formulaExtra = sheet.getRange(2, horasExtraIdx + 1).getFormula();
-            sheet.getRange(i + 1, horasTrabajadasIdx + 1).setFormula(formulaTrabajadas);
-            sheet.getRange(i + 1, horasExtraIdx + 1).setFormula(formulaExtra);
+            const formulaTrabajadas = sheet.getRange(2, horasTrabajadasIdx + 1).getFormulaLocal();
+            const formulaExtra = sheet.getRange(2, horasExtraIdx + 1).getFormulaLocal();
+            sheet.getRange(i + 1, horasTrabajadasIdx + 1).setFormulaLocal(formulaTrabajadas);
+            sheet.getRange(i + 1, horasExtraIdx + 1).setFormulaLocal(formulaExtra);
           } catch(e) {
             // Fallback
           }
