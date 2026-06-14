@@ -61,8 +61,8 @@ export function DashboardHeader() {
 
   return (
     <header className="sticky top-0 z-40 w-full bg-surface-glass backdrop-blur-md border-b border-white/20 shadow-sm flex items-center justify-between px-4 lg:px-6 h-16">
-      <div className="flex items-center gap-3 cursor-pointer" onClick={() => router.push('/dashboard')}>
-        <div className="h-8 w-auto flex items-center">
+      <div className="flex items-center gap-3 cursor-pointer select-none" onClick={() => router.push('/dashboard')}>
+        <div className="flex items-end gap-1">
           <Image 
             src="/logo.svg" 
             alt="Logo Institucional ASSAM" 
@@ -70,6 +70,9 @@ export function DashboardHeader() {
             height={32} 
             className="h-8 w-auto object-contain"
           />
+          <span className="text-[10px] font-medium text-on-surface-variant/50 mb-0.5 select-none">
+            v1.2.0
+          </span>
         </div>
       </div>
       

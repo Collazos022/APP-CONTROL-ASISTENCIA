@@ -42,12 +42,15 @@ export default function AuthenticationPage() {
 
           {/* Columna Derecha de Formularios */}
           <div className="w-full lg:w-1/2 p-6 md:p-12 flex flex-col justify-center bg-white/40 backdrop-blur-md">
-            <div className="flex justify-center mb-6">
+            <div className="flex items-end justify-center gap-1.5 mb-6">
               <img 
                 src="/logo.svg" 
                 alt="Logo Institucional ASSAM" 
                 className="h-20 w-auto object-contain"
               />
+              <span className="text-[10px] font-medium text-on-surface-variant/40 mb-1 select-none">
+                v1.2.0
+              </span>
             </div>
             <AuthForm />
           </div>
