@@ -345,27 +345,6 @@ export default function ApprovalsPage() {
                     <div>
                       <div className="flex items-center gap-2">
                         <h3 className="text-sm font-bold text-on-surface leading-tight">{record.userName}</h3>
-                        {/* Huella badges junto al nombre */}
-                        <div className="flex items-center gap-1">
-                          {record.timestampEntrada && (
-                            <span 
-                              className="material-symbols-outlined text-[16px] select-none"
-                              style={{ color: getFingerprintColor(record.huellaEntrada) }}
-                              title={`Entrada: ${getFingerprintTooltip(record.huellaEntrada)}`}
-                            >
-                              fingerprint
-                            </span>
-                          )}
-                          {record.timestampSalida && (
-                            <span 
-                              className="material-symbols-outlined text-[16px] select-none"
-                              style={{ color: getFingerprintColor(record.huellaSalida) }}
-                              title={`Salida: ${getFingerprintTooltip(record.huellaSalida)}`}
-                            >
-                              fingerprint
-                            </span>
-                          )}
-                        </div>
                       </div>
                       <div className="flex items-center gap-1 text-on-surface-variant mt-0.5">
                         <span className="material-symbols-outlined text-sm">location_on</span>
