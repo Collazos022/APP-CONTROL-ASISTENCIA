@@ -120,7 +120,8 @@ function doPost(e) {
                telefono: getVal("Telefono"),
                cargo: getVal("Cargo"),
                role: getVal("Rol_App") || "Empleado",
-               avatar: getVal("Foto") || getVal("Avatar") || "avatar-1"
+               avatar: getVal("Foto") || getVal("Avatar") || "avatar-1",
+               huella: getVal("Huella") || getVal("Huella_Registrada") || ""
             };
 
             return ContentService.createTextOutput(JSON.stringify({
@@ -184,6 +185,7 @@ function doPost(e) {
         else if (h === "Fecha_Ingreso") newRow.push(new Date().toISOString().split('T')[0]);
         else if (h === "Estado") newRow.push("Activo");
         else if (h === "Foto") newRow.push(defaultAvatar);
+        else if (h === "Huella" || h === "Huella_Registrada") newRow.push(params.huella || "");
         else newRow.push("");
       });
 
@@ -197,7 +199,8 @@ function doPost(e) {
           role: role, 
           cargo: params.cargo, 
           telefono: params.telefono, 
-          avatar: defaultAvatar 
+          avatar: defaultAvatar,
+          huella: params.huella || ""
         }
       })).setMimeType(ContentService.MimeType.JSON);
     }
@@ -292,6 +295,8 @@ function doPost(e) {
       const comentarioEmpleadoIdx = headers.indexOf("Comentarios");
       const horasTrabajadasIdx = headers.indexOf("Horas_Trabajadas");
       const horasExtraIdx = headers.indexOf("Horas_Extra");
+      const huellaEntradaIdx = headers.indexOf("Huella_Entrada");
+      const huellaSalidaIdx = headers.indexOf("Huella_Salida");
 
       if (horasTrabajadasIdx === -1 || horasExtraIdx === -1) {
         throw new Error("Estructura de Registros_HT incorrecta (Faltan columnas requeridas: Horas_Trabajadas o Horas_Extra).");
@@ -326,6 +331,7 @@ function doPost(e) {
         if (!isCheckIn) {
             if(horaSalidaIdx !== -1) sheet.getRange(existingRowIdx + 1, horaSalidaIdx + 1).setValue(timestampStr);
             if(firmaSalidaIdx !== -1) sheet.getRange(existingRowIdx + 1, firmaSalidaIdx + 1).setValue(signatureUrl);
+            if(huellaSalidaIdx !== -1 && params.huellaStatus) sheet.getRange(existingRowIdx + 1, huellaSalidaIdx + 1).setValue(params.huellaStatus);
             if(comentarioEmpleadoIdx !== -1 && params.employeeComments) sheet.getRange(existingRowIdx + 1, comentarioEmpleadoIdx + 1).setValue(params.employeeComments);
             
             // Validar y asegurar que la fila 2 tenga las fórmulas correctas para evitar propagar errores
@@ -357,6 +363,7 @@ function doPost(e) {
         } else {
             if(horaEntradaIdx !== -1) sheet.getRange(existingRowIdx + 1, horaEntradaIdx + 1).setValue(timestampStr);
             if(firmaEntradaIdx !== -1) sheet.getRange(existingRowIdx + 1, firmaEntradaIdx + 1).setValue(signatureUrl);
+            if(huellaEntradaIdx !== -1 && params.huellaStatus) sheet.getRange(existingRowIdx + 1, huellaEntradaIdx + 1).setValue(params.huellaStatus);
             if(comentarioEmpleadoIdx !== -1 && params.employeeComments) sheet.getRange(existingRowIdx + 1, comentarioEmpleadoIdx + 1).setValue(params.employeeComments);
         }
       } else {
@@ -380,6 +387,8 @@ function doPost(e) {
           // Si el usuario añade estas columnas, se llenarán:
           else if (h === "Latitud") newRow.push(params.latitude || ""); 
           else if (h === "Longitud") newRow.push(params.longitude || "");
+          else if (h === "Huella_Entrada") newRow.push(isCheckIn ? (params.huellaStatus || "SIN_HUELLA") : "");
+          else if (h === "Huella_Salida") newRow.push(!isCheckIn ? (params.huellaStatus || "SIN_HUELLA") : "");
           else newRow.push("");
         });
         sheet.appendRow(newRow);
@@ -429,7 +438,8 @@ function doPost(e) {
           signatureUrl: signatureUrl,
           status: "Pendiente",
           userAvatar: params.userAvatar || "avatar-1",
-          employeeComments: params.employeeComments || ""
+          employeeComments: params.employeeComments || "",
+          huellaStatus: params.huellaStatus || "SIN_HUELLA"
         }
       })).setMimeType(ContentService.MimeType.JSON);
     }
@@ -545,6 +555,7 @@ function doPost(e) {
       const passwordIdx = headers.indexOf("Credencial");
       
       const photoIdx = headers.indexOf("Foto");
+      const huellaIdx = headers.indexOf("Huella") !== -1 ? headers.indexOf("Huella") : headers.indexOf("Huella_Registrada");
       
       if (idIdx === -1 || nameIdx === -1 || phoneIdx === -1 || passwordIdx === -1) {
         throw new Error("Estructura de la tabla USUARIOS incorrecta.");
@@ -559,6 +570,9 @@ function doPost(e) {
           }
           if (photoIdx !== -1 && params.avatarUrl) {
             sheet.getRange(i + 1, photoIdx + 1).setValue(params.avatarUrl);
+          }
+          if (huellaIdx !== -1 && params.huella !== undefined) {
+            sheet.getRange(i + 1, huellaIdx + 1).setValue(params.huella);
           }
           return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
         }

@@ -11,6 +11,8 @@ import { api } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { placeholderImages } from "@/lib/placeholder-images";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { BiometricDialog } from "@/components/biometric-dialog";
+import { cn } from "@/lib/utils";
 
 const profileSchema = z.object({
   name: z.string().min(1, { message: "El nombre es obligatorio." }),
@@ -34,6 +36,11 @@ export default function ProfilePage() {
   const [currentAvatar, setCurrentAvatar] = React.useState("");
   const [newAvatarBase64, setNewAvatarBase64] = React.useState<string | null>(null);
   
+  // Modificación de Huella Digital
+  const [currentHuella, setCurrentHuella] = React.useState("");
+  const [newHuella, setNewHuella] = React.useState<string | null>(null);
+  const [biometricDialogOpen, setBiometricDialogOpen] = React.useState(false);
+
   const [isEditing, setIsEditing] = React.useState(false);
 
   const form = useForm<ProfileData>({
@@ -64,6 +71,7 @@ export default function ProfilePage() {
           password: "",
         });
         setCurrentAvatar(user.avatar || "");
+        setCurrentHuella(user.huella || "");
       }
     }).catch(err => {
       console.error("Error cargando perfil:", err);
@@ -156,6 +164,10 @@ export default function ProfilePage() {
         payload.avatarUrl = newAvatarBase64;
       }
 
+      if (newHuella !== null) {
+        payload.huella = newHuella;
+      }
+
       await api.updateProfile(payload);
       
       // Actualizar localStorage
@@ -164,6 +176,11 @@ export default function ProfilePage() {
         localStorage.setItem("userAvatar", newAvatarBase64);
         setCurrentAvatar(newAvatarBase64);
         setNewAvatarBase64(null);
+      }
+      
+      if (newHuella !== null) {
+        setCurrentHuella(newHuella);
+        setNewHuella(null);
       }
       
       toast({
@@ -284,6 +301,44 @@ export default function ProfilePage() {
                   Tus datos están sincronizados en tiempo real con Google Sheets. Para cambiar datos inactivos (ID o Cargo), ponte en contacto con Recursos Humanos.
                 </p>
               </div>
+            </div>
+
+            {/* Tarjeta de Huella Digital */}
+            <div className="glass-card rounded-3xl p-6 border border-white/20 shadow-sm space-y-4">
+              <div className="flex items-center gap-3">
+                <div className={cn(
+                  "p-2.5 rounded-xl shrink-0",
+                  (newHuella || currentHuella) ? "bg-green-600/10 text-green-600" : "bg-amber-500/10 text-amber-500"
+                )}>
+                  <span className="material-symbols-outlined text-[20px]">fingerprint</span>
+                </div>
+                <div className="text-left">
+                  <h4 className="font-bold text-xs text-on-surface uppercase tracking-wider">Huella Digital</h4>
+                  <p className="text-[11px] text-on-surface-variant leading-none mt-0.5 font-semibold">
+                    {(newHuella || currentHuella) ? "Estado: Registrada" : "Estado: Sin Registrar"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="text-[11px] text-on-surface-variant leading-normal">
+                {(newHuella || currentHuella) 
+                  ? "Su huella está enrolada para validar asistencia. Puede volver a registrarla si es necesario." 
+                  : "Por favor registre su huella digital para poder marcar Entrada y Salida con verificación biométrica."}
+              </div>
+
+              <Button
+                type="button"
+                onClick={() => setBiometricDialogOpen(true)}
+                className={cn(
+                  "w-full py-2.5 rounded-xl text-xs font-bold transition-all active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer",
+                  (newHuella || currentHuella)
+                    ? "bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200"
+                    : "bg-primary text-white hover:opacity-90 shadow-md shadow-primary/10"
+                )}
+              >
+                <span className="material-symbols-outlined text-[16px]">fingerprint</span>
+                {(newHuella || currentHuella) ? "Re-registrar Huella" : "Registrar Huella"}
+              </Button>
             </div>
           </div>
 
@@ -407,6 +462,21 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      <BiometricDialog
+        open={biometricDialogOpen}
+        onOpenChange={setBiometricDialogOpen}
+        mode="enroll"
+        onSuccess={(huellaToken) => {
+          setNewHuella(huellaToken);
+          setIsEditing(true);
+          toast({
+            title: "Huella capturada",
+            description: "Haz clic en 'Guardar Cambios' para actualizar tu perfil biométrico.",
+          });
+        }}
+        onCancel={() => {}}
+      />
     </div>
   );
 }

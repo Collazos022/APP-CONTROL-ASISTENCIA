@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { api } from "@/lib/api"
 import { cn } from "@/lib/utils"
+import { BiometricDialog } from "./biometric-dialog"
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Por favor, introduce un correo electrónico válido." }),
@@ -36,6 +37,8 @@ export function AuthForm() {
   const [isLoginLoading, setIsLoginLoading] = React.useState(false)
   const [isRegisterLoading, setIsRegisterLoading] = React.useState(false)
   const [cargos, setCargos] = React.useState<{name: string, role: string}[]>([])
+  const [enrolledHuella, setEnrolledHuella] = React.useState<string>("")
+  const [biometricDialogOpen, setBiometricDialogOpen] = React.useState(false)
 
   React.useEffect(() => {
     api.fetchAllData().then(data => {
@@ -97,12 +100,14 @@ export function AuthForm() {
         telefono: data.telefono,
         cargo: data.cargo,
         email: data.email,
-        password: data.password
+        password: data.password,
+        huella: enrolledHuella || undefined
       })
       toast({
         title: "Registro exitoso",
         description: "Tu solicitud ha sido registrada. Ahora puedes iniciar sesión.",
       })
+      setEnrolledHuella("")
       setActiveTab("login")
     } catch (error: any) {
       toast({
@@ -313,6 +318,36 @@ export function AuthForm() {
                 <p className="text-xs text-destructive mt-1 ml-1">{registerErrors.password.message}</p>
               )}
             </div>
+
+            {/* Registro de Huella Digital */}
+            <div className="md:col-span-2 space-y-1 mt-2">
+              <label className="text-xs font-semibold text-slate-500 ml-1 block">Huella Digital (Opcional)</label>
+              {enrolledHuella ? (
+                <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-xl">
+                  <div className="flex items-center gap-2 text-green-700 text-xs font-bold">
+                    <span className="material-symbols-outlined text-[18px]">check_circle</span>
+                    <span>✓ Huella Digital Enrolada Exitosamente</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setBiometricDialogOpen(true)}
+                    className="text-xs text-primary font-bold hover:underline"
+                  >
+                    Re-registrar
+                  </button>
+                </div>
+              ) : (
+                <Button
+                  type="button"
+                  onClick={() => setBiometricDialogOpen(true)}
+                  variant="outline"
+                  className="w-full py-3 h-auto border-dashed border-primary/40 hover:bg-primary/5 text-primary text-xs font-bold rounded-xl flex items-center justify-center gap-2"
+                >
+                  <span className="material-symbols-outlined text-[18px]">fingerprint</span>
+                  <span>Registrar Huella Digital ahora</span>
+                </Button>
+              )}
+            </div>
             
             <div className="md:col-span-2 pt-2">
               <Button 
@@ -333,6 +368,20 @@ export function AuthForm() {
           </form>
         </div>
       )}
+
+      <BiometricDialog
+        open={biometricDialogOpen}
+        onOpenChange={setBiometricDialogOpen}
+        mode="enroll"
+        onSuccess={(huellaToken) => {
+          setEnrolledHuella(huellaToken);
+          toast({
+            title: "Huella Enrolada",
+            description: "La huella digital ha sido capturada de forma exitosa.",
+          });
+        }}
+        onCancel={() => {}}
+      />
     </div>
   )
 }

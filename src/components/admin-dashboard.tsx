@@ -336,13 +336,14 @@ export default function AdminDashboard({ role }: AdminDashboardProps) {
                 'ID Registro': r.id,
                 'ID Empleado': r.userId,
                 'Nombre Empleado': r.userName,
-                'Tipo': r.type,
+                'Hora Entrada': r.timestampEntrada ? r.timestampEntrada.toLocaleTimeString('es-ES') : '',
+                'Hora Salida': r.timestampSalida ? r.timestampSalida.toLocaleTimeString('es-ES') : '',
                 'Fecha y Hora': r.timestamp.toLocaleString('es-ES'),
                 'Estado': r.status,
                 'Comentarios': r.comments || '',
                 'Aprobado Por': r.approvedBy || '',
-                'Latitud': r.location.lat,
-                'Longitud': r.location.lng,
+                'Latitud': r.location.latitude,
+                'Longitud': r.location.longitude,
               }));
               const ws = XLSX.utils.json_to_sheet(exportData);
               const wb = XLSX.utils.book_new();

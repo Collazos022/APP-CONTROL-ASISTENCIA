@@ -18,6 +18,7 @@ import { MapPin, Loader2, X } from "lucide-react";
 import { type CheckInType, type CheckInRecord } from "@/lib/types";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { BiometricDialog } from "./biometric-dialog";
 
 export default function EmployeeDashboard() {
   const { toast } = useToast();
@@ -36,6 +37,10 @@ export default function EmployeeDashboard() {
   const [userAvatar, setUserAvatar] = React.useState<string>("avatar-1");
   const [checkoutComment, setCheckoutComment] = React.useState<string>("");
 
+  const [userHuella, setUserHuella] = React.useState<string>("");
+  const [huellaStatus, setHuellaStatus] = React.useState<"CORRECTA" | "DISCREPANCIA" | "SIN_HUELLA">("SIN_HUELLA");
+  const [biometricDialogOpen, setBiometricDialogOpen] = React.useState(false);
+
   const loadDashboardData = React.useCallback(() => {
     const loggedInUserId = localStorage.getItem("userId") || "user-1";
     setUserId(loggedInUserId);
@@ -44,6 +49,10 @@ export default function EmployeeDashboard() {
 
     api.fetchAllData().then(data => {
       setFrentes(data.frentes);
+      const userObj = data.usuarios.find(u => u.id === loggedInUserId);
+      if (userObj) {
+        setUserHuella(userObj.huella || "");
+      }
       // Filtrar registros de hoy para este usuario
       const today = new Date().toDateString();
       const userTodayRecs = data.registros.filter(
@@ -91,9 +100,6 @@ export default function EmployeeDashboard() {
     setIsSubmitting(false);
     setLocation(null);
     setLocationError(null);
-    
-    // Abrir el modal inmediatamente para mostrar feedback visual de carga de GPS
-    setDialogOpen(true);
 
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
@@ -113,6 +119,17 @@ export default function EmployeeDashboard() {
     } else {
       setLocationError("Geolocalización no es soportada por este navegador.");
     }
+    
+    // Abrir primero el modal de huella biométrica
+    setBiometricDialogOpen(true);
+  };
+
+  const handleBiometricSuccess = (token: string, status: "CORRECTA" | "DISCREPANCIA" | "SIN_HUELLA") => {
+    setHuellaStatus(status);
+    setBiometricDialogOpen(false);
+    
+    // Ahora abrimos el modal de firma y comentarios para finalizar la marcación
+    setDialogOpen(true);
   };
 
   const handleSignatureSubmit = async (signature: string) => {
@@ -136,13 +153,14 @@ export default function EmployeeDashboard() {
         longitude: location.lon,
         signatureBase64: signature,
         userAvatar,
-        employeeComments: currentAction === "Salida" ? checkoutComment : undefined
+        employeeComments: currentAction === "Salida" ? checkoutComment : undefined,
+        huellaStatus: huellaStatus
       });
       
       setDialogOpen(false);
       toast({
         title: "Registro Exitoso",
-        description: `Se ha registrado su ${currentAction?.toLowerCase()} a las ${new Date().toLocaleTimeString()}.`,
+        description: `Se ha registrado su ${currentAction?.toLowerCase()} con huella (${huellaStatus.toLowerCase()}) a las ${new Date().toLocaleTimeString()}.`,
       });
       loadDashboardData(); // Recargar datos para actualizar las horas trabajadas
     } catch (err: any) {
@@ -159,8 +177,8 @@ export default function EmployeeDashboard() {
   // Calcular la distancia al frente más cercano
   const getNearestFront = () => {
     if (!location || frentes.length === 0) return null;
-    let minDistance = null;
-    let nearest = null;
+    let minDistance: number | null = null;
+    let nearest: { name: string; distance: number; inside: boolean } | null = null;
     
     frentes.forEach(frente => {
       if (!frente.coords || typeof frente.coords !== 'string') return;
@@ -384,6 +402,22 @@ export default function EmployeeDashboard() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <BiometricDialog
+        open={biometricDialogOpen}
+        onOpenChange={setBiometricDialogOpen}
+        mode="verify"
+        registeredHuella={userHuella}
+        userName={userName}
+        onSuccess={handleBiometricSuccess}
+        onCancel={() => {
+          toast({
+            variant: "destructive",
+            title: "Marcación cancelada",
+            description: "Se requiere verificar la identidad para marcar asistencia.",
+          });
+        }}
+      />
     </div>
   );
 }

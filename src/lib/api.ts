@@ -49,6 +49,7 @@ export interface AppData {
   usuarios: User[];
   cargos: { name: string; role: Role }[];
   frentes: { name: string; coords: string; radio: number }[];
+  permisos: { label: string; roles: Role[] }[];
 }
 
 export const api = {
@@ -68,7 +69,7 @@ export const api = {
       const cargos = getLocalStorageData<{ name: string; role: Role }[]>(STORAGE_KEYS.CARGOS, mockCargos);
       const frentes = getLocalStorageData<{ name: string; coords: string; radio: number }[]>(STORAGE_KEYS.FRENTES, mockFrentes);
       
-      return { registros: records, usuarios, cargos, frentes };
+      return { registros: records, usuarios, cargos, frentes, permisos: [] };
     }
 
     try {
@@ -91,7 +92,8 @@ export const api = {
             avatar: u[fotoKey] || u[avatarKey] || u.avatar || "avatar-1",
             identificacion: u.Identificacion || u.identificacion || "",
             telefono: u.Telefono || u.telefono || "",
-            cargo: u.Cargo || u.cargo || ""
+            cargo: u.Cargo || u.cargo || "",
+            huella: u.Huella || u.Huella_Registrada || ""
           };
         });
 
@@ -139,7 +141,9 @@ export const api = {
             userAvatar: uInfo.avatar,
             employeeComments: r.Comentarios || r.Comentario || r.comments || "",
             hoursWorked: parseFloat(r.Horas_Trabajadas) || 0,
-            hoursExtra: parseFloat(r.Horas_Extra) || 0
+            hoursExtra: parseFloat(r.Horas_Extra) || 0,
+            huellaEntrada: r.Huella_Entrada || "",
+            huellaSalida: r.Huella_Salida || ""
           });
         });
 
@@ -199,7 +203,7 @@ export const api = {
     }
   },
 
-  async register(params: { name: string; identificacion: string; telefono: string; cargo: string; email: string; password: string; avatarUrl?: string }): Promise<User> {
+  async register(params: { name: string; identificacion: string; telefono: string; cargo: string; email: string; password: string; avatarUrl?: string; huella?: string }): Promise<User> {
     if (!this.isConfigured()) throw new Error("API not configured");
     try {
       const response = await fetch(API_URL, {
@@ -213,7 +217,8 @@ export const api = {
           name: data.user.name,
           email: data.user.email,
           role: data.user.role as Role,
-          avatar: data.user.avatar
+          avatar: data.user.avatar,
+          huella: data.user.huella
         };
       }
       throw new Error(data.message || "Error en el registro");
@@ -223,7 +228,7 @@ export const api = {
     }
   },
 
-  async checkInOut(params: { userId: string; userName: string; typeAction: CheckInType; latitude: number; longitude: number; signatureBase64: string; userAvatar: string; employeeComments?: string }): Promise<CheckInRecord> {
+  async checkInOut(params: { userId: string; userName: string; typeAction: CheckInType; latitude: number; longitude: number; signatureBase64: string; userAvatar: string; employeeComments?: string; huellaStatus?: string }): Promise<CheckInRecord> {
     if (!this.isConfigured()) throw new Error("API not configured");
     try {
       const localNow = new Date();
@@ -256,7 +261,9 @@ export const api = {
           signatureUrlSalida: params.typeAction === 'Salida' ? data.record.signatureUrl : "",
           status: data.record.status as CheckInStatus,
           userAvatar: data.record.userAvatar,
-          employeeComments: data.record.employeeComments || ""
+          employeeComments: data.record.employeeComments || "",
+          huellaEntrada: params.typeAction === 'Entrada' ? data.record.huellaStatus : "",
+          huellaSalida: params.typeAction === 'Salida' ? data.record.huellaStatus : ""
         };
       }
       throw new Error(data.message || "Error al registrar asistencia");
@@ -309,7 +316,7 @@ export const api = {
     }
   },
 
-  async updateProfile(params: { userId: string; name: string; telefono: string; password?: string; avatarUrl?: string }): Promise<void> {
+  async updateProfile(params: { userId: string; name: string; telefono: string; password?: string; avatarUrl?: string; huella?: string }): Promise<void> {
     if (!this.isConfigured()) throw new Error("API not configured");
     try {
       const response = await fetch(API_URL, {

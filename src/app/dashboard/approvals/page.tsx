@@ -19,6 +19,20 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
+function getFingerprintColor(status?: string) {
+  const s = (status || "").trim().toUpperCase();
+  if (s === "CORRECTA") return "#22c55e"; // Verde
+  if (s === "DISCREPANCIA") return "#f97316"; // Naranja
+  return "#ef4444"; // Rojo para SIN_HUELLA / vacío
+}
+
+function getFingerprintTooltip(status?: string) {
+  const s = (status || "").trim().toUpperCase();
+  if (s === "CORRECTA") return "Huella Correcta (Verificada)";
+  if (s === "DISCREPANCIA") return "Huella Discrepante (Verificada con discrepancia)";
+  return "Sin Huella (No verificado por biometría)";
+}
+
 export default function ApprovalsPage() {
   const { toast } = useToast();
   const [records, setRecords] = React.useState<CheckInRecord[]>([]);
@@ -329,7 +343,30 @@ export default function ApprovalsPage() {
                   {/* Info */}
                   <div className="flex-1 flex flex-col justify-between py-0.5">
                     <div>
-                      <h3 className="text-sm font-bold text-on-surface leading-tight">{record.userName}</h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-sm font-bold text-on-surface leading-tight">{record.userName}</h3>
+                        {/* Huella badges junto al nombre */}
+                        <div className="flex items-center gap-1">
+                          {record.timestampEntrada && (
+                            <span 
+                              className="material-symbols-outlined text-[16px] select-none"
+                              style={{ color: getFingerprintColor(record.huellaEntrada) }}
+                              title={`Entrada: ${getFingerprintTooltip(record.huellaEntrada)}`}
+                            >
+                              fingerprint
+                            </span>
+                          )}
+                          {record.timestampSalida && (
+                            <span 
+                              className="material-symbols-outlined text-[16px] select-none"
+                              style={{ color: getFingerprintColor(record.huellaSalida) }}
+                              title={`Salida: ${getFingerprintTooltip(record.huellaSalida)}`}
+                            >
+                              fingerprint
+                            </span>
+                          )}
+                        </div>
+                      </div>
                       <div className="flex items-center gap-1 text-on-surface-variant mt-0.5">
                         <span className="material-symbols-outlined text-sm">location_on</span>
                         <span className="font-bold text-[10px] uppercase tracking-wider text-on-surface-variant/80">
@@ -345,14 +382,32 @@ export default function ApprovalsPage() {
                     <div className="grid grid-cols-2 gap-2 mt-2">
                       <div className="flex flex-col">
                         <span className="text-[8px] text-on-surface-variant uppercase font-bold tracking-wider">Entrada</span>
-                        <div className="bg-surface-container/70 border border-outline-variant/20 rounded-lg flex items-center justify-center py-1 text-xs font-bold text-on-surface mt-0.5">
-                          {record.timestampEntrada ? record.timestampEntrada.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }) : "--:--"}
+                        <div className="bg-surface-container/70 border border-outline-variant/20 rounded-lg flex items-center justify-center py-1 text-xs font-bold text-on-surface mt-0.5 gap-1.5">
+                          <span>{record.timestampEntrada ? record.timestampEntrada.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }) : "--:--"}</span>
+                          {record.timestampEntrada && (
+                            <span 
+                              className="material-symbols-outlined text-[13px] select-none"
+                              style={{ color: getFingerprintColor(record.huellaEntrada) }}
+                              title={`Huella Entrada: ${getFingerprintTooltip(record.huellaEntrada)}`}
+                            >
+                              fingerprint
+                            </span>
+                          )}
                         </div>
                       </div>
                       <div className="flex flex-col">
                         <span className="text-[8px] text-on-surface-variant uppercase font-bold tracking-wider">Salida</span>
-                        <div className="bg-surface-container/70 border border-outline-variant/20 rounded-lg flex items-center justify-center py-1 text-xs font-bold text-on-surface mt-0.5">
-                          {record.timestampSalida ? record.timestampSalida.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }) : "--:--"}
+                        <div className="bg-surface-container/70 border border-outline-variant/20 rounded-lg flex items-center justify-center py-1 text-xs font-bold text-on-surface mt-0.5 gap-1.5">
+                          <span>{record.timestampSalida ? record.timestampSalida.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }) : "--:--"}</span>
+                          {record.timestampSalida && (
+                            <span 
+                              className="material-symbols-outlined text-[13px] select-none"
+                              style={{ color: getFingerprintColor(record.huellaSalida) }}
+                              title={`Huella Salida: ${getFingerprintTooltip(record.huellaSalida)}`}
+                            >
+                              fingerprint
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>

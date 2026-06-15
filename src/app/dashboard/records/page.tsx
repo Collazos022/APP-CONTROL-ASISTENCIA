@@ -487,12 +487,12 @@ export default function RecordsPage() {
               </div>
 
               {/* Firmas registradas (visualización) */}
-              {(selectedDayDetail.entrada?.signatureUrl || selectedDayDetail.salida?.signatureUrl) && (
+              {(selectedDayDetail.record?.signatureUrlEntrada || selectedDayDetail.record?.signatureUrlSalida) && (
                 <div className="space-y-1">
                   <span className="font-bold text-on-surface-variant uppercase text-[10px]">Firma Digital</span>
                   <div className="h-24 w-full bg-white border border-outline-variant/30 rounded-xl overflow-hidden flex items-center justify-center p-2 relative shadow-inner">
                     <img 
-                      src={selectedDayDetail.entrada?.signatureUrl || selectedDayDetail.salida?.signatureUrl} 
+                      src={selectedDayDetail.record?.signatureUrlEntrada || selectedDayDetail.record?.signatureUrlSalida} 
                       alt="Firma"
                       className="h-full object-contain filter contrast-125 select-none pointer-events-none"
                     />

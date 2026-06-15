@@ -9,6 +9,7 @@ export interface User {
   identificacion?: string;
   telefono?: string;
   cargo?: string;
+  huella?: string;
 }
 
 export type CheckInStatus = "Pendiente" | "Aprobado" | "Rechazado";
@@ -35,4 +36,6 @@ export interface CheckInRecord {
   userAvatar: string;
   hoursWorked?: number;
   hoursExtra?: number;
+  huellaEntrada?: string;
+  huellaSalida?: string;
 }
