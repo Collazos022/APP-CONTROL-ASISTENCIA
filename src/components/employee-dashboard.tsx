@@ -41,6 +41,7 @@ export default function EmployeeDashboard() {
   
   // Nuevos estados para diálogo único y sincronización
   const [signatureBase64, setSignatureBase64] = React.useState<string>("");
+  const [showSignaturePad, setShowSignaturePad] = React.useState(false);
   const [isSyncing, setIsSyncing] = React.useState(false);
   const [isBiometricSupported, setIsBiometricSupported] = React.useState(false);
 
@@ -190,7 +191,10 @@ export default function EmployeeDashboard() {
       setCheckoutComment(""); // Restablecer comentario
       setBiometricWarningText(null);
       
-      if (userHuella && isBiometricSupported) {
+      const hasFingerprint = !!userHuella && isBiometricSupported;
+      setShowSignaturePad(!hasFingerprint); // Ocultar pad si hay huella compatible
+      
+      if (hasFingerprint) {
         setHuellaStatus("SIN_HUELLA"); // Por defecto si no completan
         setBiometricState("idle");
         const timer = setTimeout(() => {
@@ -587,21 +591,40 @@ export default function EmployeeDashboard() {
               </div>
             )}
 
+            {/* Botón alternativo para firmar si no puede usar el lector */}
+            {userHuella && isBiometricSupported && !showSignaturePad && (
+              <div className="text-center pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowSignaturePad(true);
+                    setHuellaStatus("SIN_HUELLA");
+                  }}
+                  className="text-xs text-primary font-bold hover:underline inline-flex items-center gap-1.5 transition-all py-2 px-4 bg-slate-50 border border-slate-200/80 rounded-xl hover:bg-slate-100/80 shadow-sm"
+                >
+                  <span className="material-symbols-outlined text-[16px]">edit_note</span>
+                  ¿No puede registrar huella? Firme dando clic aquí
+                </button>
+              </div>
+            )}
+
             {/* SECCIÓN DE FIRMA DIGITAL */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-600 block">
-                Firma Digital 
-                {(!userHuella || !isBiometricSupported || huellaStatus === "SIN_HUELLA") ? (
-                  <span className="text-red-500 font-semibold ml-1">(Obligatoria *)</span>
-                ) : (
-                  <span className="text-slate-400 font-medium ml-1">(Opcional)</span>
-                )}
-              </label>
-              <SignaturePad 
-                onChange={setSignatureBase64} 
-                disabled={isSubmitting || !location} 
-              />
-            </div>
+            {showSignaturePad && (
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-600 block">
+                  Firma Digital 
+                  {(!userHuella || !isBiometricSupported || huellaStatus === "SIN_HUELLA") ? (
+                    <span className="text-red-500 font-semibold ml-1">(Obligatoria *)</span>
+                  ) : (
+                    <span className="text-slate-400 font-medium ml-1">(Opcional)</span>
+                  )}
+                </label>
+                <SignaturePad 
+                  onChange={setSignatureBase64} 
+                  disabled={isSubmitting || !location} 
+                />
+              </div>
+            )}
 
             {/* Comentario exclusivo para la Salida */}
             {currentAction === "Salida" && (
