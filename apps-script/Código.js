@@ -143,11 +143,20 @@ function doPost(e) {
     else if (params.type === 'register') {
       const sheet = ss.getSheetByName("USUARIOS");
       if (!sheet) throw new Error("La pestaña USUARIOS no existe.");
-      const data = sheet.getDataRange().getValues();
-      const headers = data[0];
+      let data = sheet.getDataRange().getValues();
+      let headers = data[0];
       
       const emailIdx = headers.indexOf("Email_Usuario");
       if (emailIdx === -1) throw new Error("Estructura de la tabla USUARIOS incorrecta (falta Email_Usuario).");
+
+      // Autocreación de la columna Huella si no existe
+      let huellaIdx = headers.indexOf("Huella");
+      if (huellaIdx === -1) {
+        const lastCol = sheet.getLastColumn();
+        sheet.getRange(1, lastCol + 1).setValue("Huella");
+        data = sheet.getDataRange().getValues();
+        headers = data[0];
+      }
 
       for (let i = 1; i < data.length; i++) {
         if (data[i][emailIdx] && data[i][emailIdx].toString().toLowerCase() === params.email.toLowerCase()) {
@@ -546,16 +555,24 @@ function doPost(e) {
     else if (params.type === 'update_profile') {
       const sheet = ss.getSheetByName("USUARIOS");
       if (!sheet) throw new Error("La pestaña USUARIOS no existe.");
-      const data = sheet.getDataRange().getValues();
-      const headers = data[0];
+      let data = sheet.getDataRange().getValues();
+      let headers = data[0];
       
       const idIdx = headers.indexOf("Email_Usuario");
       const nameIdx = headers.indexOf("Nombre_Apellido");
       const phoneIdx = headers.indexOf("Telefono");
       const passwordIdx = headers.indexOf("Credencial");
-      
       const photoIdx = headers.indexOf("Foto");
-      const huellaIdx = headers.indexOf("Huella") !== -1 ? headers.indexOf("Huella") : headers.indexOf("Huella_Registrada");
+
+      // Autocreación de la columna Huella si no existe
+      let huellaIdx = headers.indexOf("Huella") !== -1 ? headers.indexOf("Huella") : headers.indexOf("Huella_Registrada");
+      if (huellaIdx === -1) {
+        const lastCol = sheet.getLastColumn();
+        sheet.getRange(1, lastCol + 1).setValue("Huella");
+        data = sheet.getDataRange().getValues();
+        headers = data[0];
+        huellaIdx = headers.indexOf("Huella");
+      }
       
       if (idIdx === -1 || nameIdx === -1 || phoneIdx === -1 || passwordIdx === -1) {
         throw new Error("Estructura de la tabla USUARIOS incorrecta.");
