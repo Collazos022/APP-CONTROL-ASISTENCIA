@@ -9,7 +9,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Fingerprint, CheckCircle2, AlertTriangle, XCircle, Info } from "lucide-react";
+import { Fingerprint, CheckCircle2, AlertTriangle, XCircle, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface BiometricDialogProps {
@@ -57,44 +57,12 @@ export function BiometricDialog({
   const [isNativeSupported, setIsNativeSupported] = React.useState(false);
 
   React.useEffect(() => {
-    // Verificar si el navegador soporta WebAuthn y estamos en un contexto seguro (HTTPS / localhost)
     const supported = typeof window !== "undefined" && 
                       !!navigator.credentials && 
                       !!navigator.credentials.create &&
                       window.isSecureContext;
     setIsNativeSupported(supported);
   }, []);
-
-  React.useEffect(() => {
-    if (open) {
-      setScanState("idle");
-      setWarningText(null);
-      
-      const supported = typeof window !== "undefined" && 
-                        !!navigator.credentials && 
-                        !!navigator.credentials.create &&
-                        window.isSecureContext;
-
-      if (mode === "enroll") {
-        setStatusMessage(
-          supported 
-            ? "Presione 'Usar Sensor del Dispositivo' para capturar su huella digital" 
-            : "Registro biométrico simulado (WebAuthn requiere HTTPS/conexión segura)"
-        );
-      } else {
-        if (!registeredHuella) {
-          setStatusMessage("No hay huella registrada para este usuario. Se marcará asistencia sin huella.");
-          setScanState("warning");
-        } else {
-          setStatusMessage(
-            supported
-              ? "Verifique su identidad utilizando el lector biométrico nativo"
-              : "Verificación simulada (WebAuthn requiere HTTPS/conexión segura)"
-          );
-        }
-      }
-    }
-  }, [open, mode, registeredHuella]);
 
   // Enrolamiento WebAuthn Real
   const handleNativeEnroll = async () => {
@@ -123,7 +91,7 @@ export function BiometricDialog({
             { type: "public-key", alg: -257 }  // RS256
           ],
           authenticatorSelection: {
-            authenticatorAttachment: "platform", // Fuerza lector del celular/computadora (huella, FaceID, PIN)
+            authenticatorAttachment: "platform", // Lector nativo
             userVerification: "required"
           },
           timeout: 60000
@@ -143,11 +111,8 @@ export function BiometricDialog({
       }, 1200);
     } catch (err: any) {
       console.error("WebAuthn Enroll Error:", err);
-      setScanState("warning");
-      setStatusMessage("Registro nativo cancelado");
-      setWarningText(
-        `No se pudo completar el registro biométrico nativo (${err.name}: ${err.message}).\n\n¿Desea completar el enrolamiento utilizando el simulador de pruebas?`
-      );
+      setScanState("error");
+      setStatusMessage(`Error de registro biométrico: ${err.message || err.name}`);
     }
   };
 
@@ -164,7 +129,7 @@ export function BiometricDialog({
       try {
         credentialId = base64ToUint8Array(registeredHuella);
       } catch (e) {
-        throw new Error("La huella registrada no tiene formato WebAuthn válido (es de simulación).");
+        throw new Error("La huella registrada no tiene formato WebAuthn válido.");
       }
       
       const options: CredentialRequestOptions = {
@@ -195,10 +160,6 @@ export function BiometricDialog({
       if (err.name === "NotAllowedError") {
         setScanState("error");
         setStatusMessage("Verificación cancelada por el usuario");
-        setTimeout(() => {
-          setScanState("idle");
-          setStatusMessage("Coloque su huella en el lector o use los controles de simulación");
-        }, 1500);
       } else {
         setScanState("warning");
         setStatusMessage("Error de concordancia biométrica");
@@ -209,52 +170,49 @@ export function BiometricDialog({
     }
   };
 
-  // Simulación de escaneo para pruebas
-  const startScanning = (simulationResult: "success" | "mismatch" | "no_fingerprint") => {
-    setScanState("scanning");
-    setStatusMessage("Escaneando huella... mantenga apoyado el dedo");
+  // Disparar escaneo automático al abrir si es compatible
+  React.useEffect(() => {
+    if (open) {
+      setScanState("idle");
+      setWarningText(null);
+      
+      const supported = typeof window !== "undefined" && 
+                        !!navigator.credentials && 
+                        !!navigator.credentials.create &&
+                        window.isSecureContext;
 
-    setTimeout(() => {
-      if (simulationResult === "success") {
-        setScanState("success");
-        setStatusMessage("¡Huella verificada correctamente!");
-        setTimeout(() => {
-          onSuccess(registeredHuella || `huella-mock-${Date.now()}`, "CORRECTA");
-          onOpenChange(false);
-        }, 1200);
-      } else if (simulationResult === "mismatch") {
-        setScanState("warning");
-        setStatusMessage("Error de concordancia");
-        setWarningText(
-          "⚠️ La huella escaneada no coincide con la registrada para este usuario.\n¿Desea registrar la marca de todas formas con una advertencia de discrepancia?"
-        );
+      if (mode === "enroll") {
+        if (supported) {
+          setStatusMessage("Iniciando sensor...");
+          const timer = setTimeout(() => {
+            handleNativeEnroll();
+          }, 400);
+          return () => clearTimeout(timer);
+        } else {
+          setScanState("error");
+          setStatusMessage("Lector biométrico no disponible en esta conexión/dispositivo. (Se requiere HTTPS o localhost)");
+        }
       } else {
-        setScanState("error");
-        setStatusMessage("Lector vacío / Cancelado");
-        setTimeout(() => {
-          onSuccess("", "SIN_HUELLA");
-          onOpenChange(false);
-        }, 1200);
+        if (!registeredHuella) {
+          setScanState("error");
+          setStatusMessage("No hay huella registrada para este usuario.");
+        } else if (supported) {
+          setStatusMessage("Iniciando sensor...");
+          const timer = setTimeout(() => {
+            handleNativeVerify();
+          }, 400);
+          return () => clearTimeout(timer);
+        } else {
+          setScanState("error");
+          setStatusMessage("Lector biométrico no disponible en este dispositivo.");
+        }
       }
-    }, 1500);
-  };
+    }
+  }, [open, mode, registeredHuella]);
 
   const handleProceedWithDiscrepancy = () => {
     onSuccess("DISCREPANTE_TOKEN", "DISCREPANCIA");
     onOpenChange(false);
-  };
-
-  const handleEnrollSuccess = () => {
-    setScanState("scanning");
-    setStatusMessage("Registrando huella biométrica simulada...");
-    setTimeout(() => {
-      setScanState("success");
-      setStatusMessage("¡Huella simulada guardada!");
-      setTimeout(() => {
-        onSuccess(`huella-mock-${Date.now()}`, "CORRECTA");
-        onOpenChange(false);
-      }, 1200);
-    }, 1500);
   };
 
   const handleClose = () => {
@@ -272,22 +230,13 @@ export function BiometricDialog({
           </DialogTitle>
           <DialogDescription className="text-xs text-slate-500">
             {mode === "enroll"
-              ? "Enrole su huella para habilitar la validación biométrica en sus marcas."
+              ? "Registre su huella física para habilitar la validación biométrica."
               : `Confirmando identidad para ${userName}`}
           </DialogDescription>
         </DialogHeader>
 
         <div className="py-4 flex flex-col items-center justify-center gap-6">
-          {/* Alerta de Conexión Insegura / Sin Soporte */}
-          {!isNativeSupported && scanState === "idle" && (
-            <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-start gap-2.5 max-w-sm mx-auto">
-              <Info className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
-              <p className="text-[10px] text-slate-600 leading-normal">
-                <strong>Simulación Activada:</strong> El dispositivo no soporta biometría nativa WebAuthn en esta conexión. Se requiere HTTPS o localhost para solicitar permisos al sensor físico.
-              </p>
-            </div>
-          )}
-
+          
           {/* Lector de huella digital visual */}
           <div className="relative flex items-center justify-center w-32 h-32">
             <div className={cn(
@@ -297,24 +246,13 @@ export function BiometricDialog({
             
             <div
               className={cn(
-                "w-24 h-24 rounded-full flex items-center justify-center transition-all duration-300 relative shadow-inner cursor-pointer select-none",
-                scanState === "idle" && "bg-slate-50 hover:bg-slate-100 text-slate-400 border border-slate-200/50",
+                "w-24 h-24 rounded-full flex items-center justify-center transition-all duration-300 relative shadow-inner select-none",
+                scanState === "idle" && "bg-slate-50 text-slate-400 border border-slate-200/50",
                 scanState === "scanning" && "bg-primary/10 text-primary border border-primary/20 scale-105",
                 scanState === "success" && "bg-green-50 text-green-600 border border-green-200",
                 scanState === "warning" && "bg-amber-50 text-amber-600 border border-amber-200",
                 scanState === "error" && "bg-red-50 text-red-600 border border-red-200"
               )}
-              onClick={() => {
-                if (scanState === "idle") {
-                  if (isNativeSupported) {
-                    if (mode === "enroll") handleNativeEnroll();
-                    else if (registeredHuella) handleNativeVerify();
-                  } else {
-                    if (mode === "enroll") handleEnrollSuccess();
-                    else if (registeredHuella) startScanning("success");
-                  }
-                }
-              }}
             >
               {scanState === "scanning" ? (
                 <>
@@ -328,7 +266,7 @@ export function BiometricDialog({
               ) : scanState === "error" ? (
                 <XCircle className="w-12 h-12 text-red-600" />
               ) : (
-                <Fingerprint className="w-12 h-12 hover:scale-105 transition-all duration-300 text-slate-500" />
+                <Fingerprint className="w-12 h-12 text-slate-500" />
               )}
             </div>
           </div>
@@ -336,7 +274,7 @@ export function BiometricDialog({
           {/* Mensaje de estado */}
           <div className="text-center px-4">
             <p className={cn(
-              "text-sm font-bold transition-all duration-300",
+              "text-xs font-bold transition-all duration-300 whitespace-pre-line leading-relaxed",
               scanState === "idle" && "text-slate-600",
               scanState === "scanning" && "text-primary animate-pulse",
               scanState === "success" && "text-green-600",
@@ -364,11 +302,7 @@ export function BiometricDialog({
                   onClick={() => {
                     setScanState("idle");
                     setWarningText(null);
-                    setStatusMessage(
-                      isNativeSupported 
-                        ? "Coloque su huella en el lector biométrico nativo" 
-                        : "Coloque su huella en el lector o use los controles de simulación"
-                    );
+                    handleNativeVerify();
                   }}
                   variant="outline"
                   className="flex-1 py-1.5 h-auto text-[11px] border-amber-300 text-amber-700 hover:bg-amber-100/50 font-bold rounded-lg"
@@ -379,78 +313,16 @@ export function BiometricDialog({
             </div>
           )}
 
-          {/* Acciones principales basadas en soporte nativo */}
-          {isNativeSupported && scanState === "idle" && (
-            <div className="w-full px-2 flex flex-col gap-2 mt-2">
-              <Button
-                onClick={mode === "enroll" ? handleNativeEnroll : handleNativeVerify}
-                className="w-full py-2.5 bg-primary text-white rounded-xl font-bold text-xs shadow-md shadow-primary/20 flex items-center justify-center gap-2"
-              >
-                <span className="material-symbols-outlined text-[16px]">touch_app</span>
-                {mode === "enroll" ? "Usar Sensor del Dispositivo" : "Validar con Sensor Nativo"}
-              </Button>
-            </div>
-          )}
-
-          {/* Controles de Simulación para desarrollo y pruebas */}
-          {scanState === "idle" && (
-            <div className="w-full border-t border-slate-100 pt-4 mt-2">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block text-center mb-2">
-                Controles de Simulación (Pruebas)
-              </span>
-              <div className="flex flex-col gap-2 w-full px-2">
-                {mode === "enroll" ? (
-                  <Button
-                    onClick={handleEnrollSuccess}
-                    variant="outline"
-                    className="w-full text-[11px] py-2 h-auto text-primary hover:bg-primary/5 border-primary/25 font-bold"
-                  >
-                    Simular Registro de Huella Exitoso
-                  </Button>
-                ) : (
-                  <>
-                    <Button
-                      onClick={() => startScanning("success")}
-                      variant="outline"
-                      className="w-full text-[11px] py-2 h-auto text-green-700 hover:bg-green-50 border-green-200 font-bold justify-start gap-2"
-                    >
-                      <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />
-                      Simular Huella Correcta (Mismo dedo)
-                    </Button>
-                    <Button
-                      onClick={() => startScanning("mismatch")}
-                      variant="outline"
-                      className="w-full text-[11px] py-2 h-auto text-amber-700 hover:bg-amber-50 border-amber-200 font-bold justify-start gap-2"
-                    >
-                      <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
-                      Simular Huella Diferente (Mismatch)
-                    </Button>
-                    <Button
-                      onClick={() => startScanning("no_fingerprint")}
-                      variant="outline"
-                      className="w-full text-[11px] py-2 h-auto text-red-700 hover:bg-red-50 border-red-200 font-bold justify-start gap-2"
-                    >
-                      <XCircle className="w-3.5 h-3.5 text-red-600" />
-                      Simular Cancelar / Sin Huella
-                    </Button>
-                  </>
-                )}
-              </div>
-            </div>
-          )}
-
-          {mode === "verify" && !registeredHuella && scanState === "idle" && (
-            <div className="w-full">
-              <Button
-                onClick={() => {
-                  onSuccess("", "SIN_HUELLA");
-                  onOpenChange(false);
-                }}
-                className="w-full py-2 bg-slate-700 hover:bg-slate-800 text-white rounded-xl font-bold text-xs"
-              >
-                Proceder sin Huella
-              </Button>
-            </div>
+          {/* Botón de reintento manual si el usuario canceló o hubo error */}
+          {scanState === "error" && isNativeSupported && (
+            <Button
+              onClick={mode === "enroll" ? handleNativeEnroll : handleNativeVerify}
+              variant="outline"
+              className="py-2 px-4 rounded-xl text-xs font-bold border border-slate-200 hover:bg-slate-50 flex items-center gap-1.5"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              Reintentar Escaneo
+            </Button>
           )}
         </div>
 

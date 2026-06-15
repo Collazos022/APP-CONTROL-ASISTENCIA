@@ -40,6 +40,15 @@ export default function ProfilePage() {
   const [currentHuella, setCurrentHuella] = React.useState("");
   const [newHuella, setNewHuella] = React.useState<string | null>(null);
   const [biometricDialogOpen, setBiometricDialogOpen] = React.useState(false);
+  const [isBiometricSupported, setIsBiometricSupported] = React.useState(false);
+
+  React.useEffect(() => {
+    const supported = typeof window !== "undefined" && 
+                      !!navigator.credentials && 
+                      !!navigator.credentials.create &&
+                      window.isSecureContext;
+    setIsBiometricSupported(supported);
+  }, []);
 
   const [isEditing, setIsEditing] = React.useState(false);
 
@@ -321,24 +330,28 @@ export default function ProfilePage() {
               </div>
 
               <div className="text-[11px] text-on-surface-variant leading-normal">
-                {(newHuella || currentHuella) 
+                {!isBiometricSupported ? (
+                  <span className="text-amber-600 font-semibold">Este dispositivo/navegador no soporta biometría nativa WebAuthn. Registrará asistencia utilizando su firma digital.</span>
+                ) : (newHuella || currentHuella) 
                   ? "Su huella está enrolada para validar asistencia. Puede volver a registrarla si es necesario." 
                   : "Por favor registre su huella digital para poder marcar Entrada y Salida con verificación biométrica."}
               </div>
 
-              <Button
-                type="button"
-                onClick={() => setBiometricDialogOpen(true)}
-                className={cn(
-                  "w-full py-2.5 rounded-xl text-xs font-bold transition-all active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer",
-                  (newHuella || currentHuella)
-                    ? "bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200"
-                    : "bg-primary text-white hover:opacity-90 shadow-md shadow-primary/10"
-                )}
-              >
-                <span className="material-symbols-outlined text-[16px]">fingerprint</span>
-                {(newHuella || currentHuella) ? "Re-registrar Huella" : "Registrar Huella"}
-              </Button>
+              {isBiometricSupported && (
+                <Button
+                  type="button"
+                  onClick={() => setBiometricDialogOpen(true)}
+                  className={cn(
+                    "w-full py-2.5 rounded-xl text-xs font-bold transition-all active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer",
+                    (newHuella || currentHuella)
+                      ? "bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200"
+                      : "bg-primary text-white hover:opacity-90 shadow-md shadow-primary/10"
+                  )}
+                >
+                  <span className="material-symbols-outlined text-[16px]">fingerprint</span>
+                  {(newHuella || currentHuella) ? "Re-registrar Huella" : "Registrar Huella"}
+                </Button>
+              )}
             </div>
           </div>
 
@@ -467,13 +480,31 @@ export default function ProfilePage() {
         open={biometricDialogOpen}
         onOpenChange={setBiometricDialogOpen}
         mode="enroll"
-        onSuccess={(huellaToken) => {
-          setNewHuella(huellaToken);
-          setIsEditing(true);
-          toast({
-            title: "Huella capturada",
-            description: "Haz clic en 'Guardar Cambios' para actualizar tu perfil biométrico.",
-          });
+        onSuccess={async (huellaToken) => {
+          setIsLoading(true);
+          try {
+            await api.updateProfile({
+              userId,
+              name: form.getValues("name"),
+              telefono: form.getValues("telefono"),
+              huella: huellaToken
+            });
+            setCurrentHuella(huellaToken);
+            setNewHuella(null);
+            toast({
+              title: "Huella Guardada",
+              description: "Tu huella digital ha sido registrada y guardada exitosamente.",
+            });
+            window.dispatchEvent(new Event("refresh-header"));
+          } catch (error: any) {
+            toast({
+              variant: "destructive",
+              title: "Error al guardar huella",
+              description: error.message || "No se pudo registrar la huella en el servidor.",
+            });
+          } finally {
+            setIsLoading(false);
+          }
         }}
         onCancel={() => {}}
       />

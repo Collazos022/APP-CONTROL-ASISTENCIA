@@ -2,14 +2,13 @@
 
 import * as React from "react";
 import { Button } from "./ui/button";
-import { Loader2 } from "lucide-react";
 
 interface SignaturePadProps {
-  onSave: (signature: string) => void;
+  onChange: (signature: string) => void;
   disabled?: boolean;
 }
 
-export function SignaturePad({ onSave, disabled }: SignaturePadProps) {
+export function SignaturePad({ onChange, disabled }: SignaturePadProps) {
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = React.useState(false);
 
@@ -18,7 +17,6 @@ export function SignaturePad({ onSave, disabled }: SignaturePadProps) {
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
     
-    // Calcular escala en caso de que el canvas se estire por CSS
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
 
@@ -65,6 +63,10 @@ export function SignaturePad({ onSave, disabled }: SignaturePadProps) {
     if (!context) return;
     context.closePath();
     setIsDrawing(false);
+    
+    // Exportar base64 al levantar el dedo/mouse
+    const dataUrl = canvasRef.current.toDataURL("image/png");
+    onChange(dataUrl);
   };
 
   const clearCanvas = () => {
@@ -74,6 +76,7 @@ export function SignaturePad({ onSave, disabled }: SignaturePadProps) {
     if (context) {
       context.clearRect(0, 0, canvas.width, canvas.height);
     }
+    onChange(""); // Vaciar la firma
   };
   
   React.useEffect(() => {
@@ -87,12 +90,10 @@ export function SignaturePad({ onSave, disabled }: SignaturePadProps) {
         context.lineJoin = "round";
       }
       
-      // Ajustar dimensiones del canvas para que coincida con su tamaño real
       const rect = canvas.getBoundingClientRect();
       canvas.width = rect.width;
       canvas.height = rect.height;
       
-      // Volver a configurar el contexto después de cambiar ancho/alto
       const ctx = canvas.getContext("2d");
       if (ctx) {
         ctx.strokeStyle = "#171c1f";
@@ -102,17 +103,9 @@ export function SignaturePad({ onSave, disabled }: SignaturePadProps) {
     }
   }, []);
 
-  const handleSave = () => {
-    if (canvasRef.current) {
-      const dataUrl = canvasRef.current.toDataURL("image/png");
-      onSave(dataUrl);
-    }
-  };
-
   return (
-    <div className="space-y-4">
-      {/* Contenedor del Canvas con Estilo Google Stitch */}
-      <div className="canvas-container w-full bg-white rounded-2xl border-2 border-dashed border-outline-variant h-64 relative overflow-hidden">
+    <div className="space-y-2">
+      <div className="canvas-container w-full bg-white rounded-2xl border-2 border-dashed border-outline-variant h-40 relative overflow-hidden">
         <canvas
           ref={canvasRef}
           className="w-full h-full cursor-crosshair"
@@ -125,32 +118,19 @@ export function SignaturePad({ onSave, disabled }: SignaturePadProps) {
           onTouchEnd={stopDrawing}
         />
         <div className="absolute bottom-2 right-4 pointer-events-none text-slate-400 italic text-xs select-none">
-          Firma Digital
+          Dibuje su firma aquí (Opcional)
         </div>
       </div>
       
-      {/* Botones de acción unificados */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="flex justify-end">
         <Button
-          variant="outline"
+          variant="ghost"
           onClick={clearCanvas}
           type="button"
-          className="py-3 px-6 h-12 rounded-xl border border-slate-300 text-on-surface font-semibold hover:bg-slate-100 transition-colors"
+          className="py-1 px-3 h-8 rounded-lg text-xs font-bold border border-slate-200 text-slate-500 hover:bg-slate-100 transition-colors"
           disabled={disabled}
         >
-          Limpiar
-        </Button>
-        <Button 
-          onClick={handleSave} 
-          type="button" 
-          className="py-3 px-6 h-12 rounded-xl bg-primary text-white font-semibold shadow-lg hover:bg-primary/95 active:scale-95 transition-all flex items-center justify-center gap-2" 
-          disabled={disabled}
-        >
-          {disabled ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <span>Confirmar</span>
-          )}
+          Limpiar Firma
         </Button>
       </div>
     </div>

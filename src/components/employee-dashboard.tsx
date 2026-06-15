@@ -14,11 +14,10 @@ import {
 } from "@/components/ui/dialog";
 import { SignaturePad } from "@/components/signature-pad";
 import { useToast } from "@/hooks/use-toast";
-import { MapPin, Loader2, X } from "lucide-react";
+import { MapPin, Loader2, X, Fingerprint } from "lucide-react";
 import { type CheckInType, type CheckInRecord } from "@/lib/types";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import { BiometricDialog } from "./biometric-dialog";
 
 export default function EmployeeDashboard() {
   const { toast } = useToast();
@@ -37,9 +36,29 @@ export default function EmployeeDashboard() {
   const [userAvatar, setUserAvatar] = React.useState<string>("avatar-1");
   const [checkoutComment, setCheckoutComment] = React.useState<string>("");
 
-  const [userHuella, setUserHuella] = React.useState<string>("");
+  const [userHuella, setUserHuella] = React.useState<string>("" );
   const [huellaStatus, setHuellaStatus] = React.useState<"CORRECTA" | "DISCREPANCIA" | "SIN_HUELLA">("SIN_HUELLA");
-  const [biometricDialogOpen, setBiometricDialogOpen] = React.useState(false);
+  
+  // Nuevos estados para diálogo único y sincronización
+  const [signatureBase64, setSignatureBase64] = React.useState<string>("");
+  const [isSyncing, setIsSyncing] = React.useState(false);
+  const [isBiometricSupported, setIsBiometricSupported] = React.useState(false);
+
+  // Estados para validación biométrica nativa embebida
+  const [biometricState, setBiometricState] = React.useState<"idle" | "scanning" | "success" | "warning" | "error">("idle");
+  const [biometricMessage, setBiometricMessage] = React.useState("");
+  const [biometricWarningText, setBiometricWarningText] = React.useState<string | null>(null);
+
+  // Helper para decodificación de huella
+  const base64ToUint8Array = (base64: string): Uint8Array => {
+    const binary = window.atob(base64);
+    const len = binary.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes;
+  };
 
   const loadDashboardData = React.useCallback(() => {
     const loggedInUserId = localStorage.getItem("userId") || "user-1";
@@ -47,7 +66,7 @@ export default function EmployeeDashboard() {
     setUserName(localStorage.getItem("userName") || "");
     setUserAvatar(localStorage.getItem("userAvatar") || "avatar-1");
 
-    api.fetchAllData().then(data => {
+    return api.fetchAllData().then(data => {
       setFrentes(data.frentes);
       const userObj = data.usuarios.find(u => u.id === loggedInUserId);
       if (userObj) {
@@ -93,6 +112,99 @@ export default function EmployeeDashboard() {
     }
   }, []);
 
+  // Detectar soporte para biometría al montar el componente
+  React.useEffect(() => {
+    const supported = typeof window !== "undefined" && 
+                      !!navigator.credentials && 
+                      !!navigator.credentials.create &&
+                      window.isSecureContext;
+    setIsBiometricSupported(supported);
+  }, []);
+
+  // Escaneo biométrico nativo en Entrada/Salida
+  const triggerBiometricVerification = async () => {
+    if (!userHuella) return;
+    setBiometricState("scanning");
+    setBiometricMessage("Active el sensor de huella de su dispositivo...");
+    setBiometricWarningText(null);
+
+    try {
+      const challenge = new Uint8Array(32);
+      window.crypto.getRandomValues(challenge);
+      
+      let credentialId: Uint8Array;
+      try {
+        credentialId = base64ToUint8Array(userHuella);
+      } catch (e) {
+        throw new Error("Formato WebAuthn no válido.");
+      }
+      
+      const options: CredentialRequestOptions = {
+        publicKey: {
+          challenge: challenge,
+          rpId: window.location.hostname,
+          allowCredentials: [{
+            id: credentialId,
+            type: "public-key"
+          }],
+          userVerification: "required",
+          timeout: 60000
+        }
+      };
+      
+      const assertion = await navigator.credentials.get(options) as PublicKeyCredential;
+      if (!assertion) throw new Error("Verificación fallida");
+      
+      setBiometricState("success");
+      setBiometricMessage("¡Huella digital verificada ✓!");
+      setHuellaStatus("CORRECTA");
+    } catch (err: any) {
+      console.error("WebAuthn Verify Error:", err);
+      
+      if (err.name === "NotAllowedError") {
+        setBiometricState("error");
+        setBiometricMessage("Verificación cancelada por el usuario.");
+        setHuellaStatus("SIN_HUELLA");
+      } else {
+        setBiometricState("warning");
+        setBiometricMessage("Error de concordancia");
+        setBiometricWarningText(
+          `⚠️ La verificación falló (${err.message}). Puede reintentar o marcar usando su firma.`
+        );
+        setHuellaStatus("DISCREPANCIA");
+      }
+    }
+  };
+
+  const handleProceedWithDiscrepancy = () => {
+    setHuellaStatus("DISCREPANCIA");
+    setBiometricState("warning");
+    setBiometricMessage("Huella discrepante aceptada.");
+    setBiometricWarningText(null);
+  };
+
+  // Activar verificación automática al abrir diálogo
+  React.useEffect(() => {
+    if (dialogOpen) {
+      setSignatureBase64(""); // Limpiar firma anterior
+      setCheckoutComment(""); // Restablecer comentario
+      setBiometricWarningText(null);
+      
+      if (userHuella && isBiometricSupported) {
+        setHuellaStatus("SIN_HUELLA"); // Por defecto si no completan
+        setBiometricState("idle");
+        const timer = setTimeout(() => {
+          triggerBiometricVerification();
+        }, 500);
+        return () => clearTimeout(timer);
+      } else {
+        setHuellaStatus("SIN_HUELLA");
+        setBiometricState("idle");
+        setBiometricMessage("");
+      }
+    }
+  }, [dialogOpen, userHuella, isBiometricSupported]);
+
   // Capturar geolocalización al hacer clic en los botones de Entrada/Salida
   const handleActionClick = (action: CheckInType) => {
     setCurrentAction(action);
@@ -120,30 +232,34 @@ export default function EmployeeDashboard() {
       setLocationError("Geolocalización no es soportada por este navegador.");
     }
     
-    // Abrir primero el modal de huella biométrica
-    setBiometricDialogOpen(true);
-  };
-
-  const handleBiometricSuccess = (token: string, status: "CORRECTA" | "DISCREPANCIA" | "SIN_HUELLA") => {
-    setHuellaStatus(status);
-    setBiometricDialogOpen(false);
-    
-    // Ahora abrimos el modal de firma y comentarios para finalizar la marcación
+    // Abrir el modal unificado directamente
     setDialogOpen(true);
   };
 
-  const handleSignatureSubmit = async (signature: string) => {
+  const handleMarkSubmit = async () => {
     if (!location) {
-        toast({
-            variant: "destructive",
-            title: "Ubicación Requerida",
-            description: "No se puede marcar asistencia sin coordenadas GPS válidas. Por favor espere a que se obtenga la señal.",
-        });
-        return;
+      toast({
+        variant: "destructive",
+        title: "Ubicación Requerida",
+        description: "No se puede marcar asistencia sin coordenadas GPS válidas. Por favor espere a que se obtenga la señal.",
+      });
+      return;
+    }
+
+    // Si no se validó por huella (sin huella registrada o no soportado o cancelado), la firma es obligatoria
+    const isSignatureRequired = !userHuella || !isBiometricSupported || huellaStatus === "SIN_HUELLA";
+    if (isSignatureRequired && !signatureBase64) {
+      toast({
+        variant: "destructive",
+        title: "Firma Requerida",
+        description: "Dado que no se validó con huella digital, debe ingresar su firma para continuar.",
+      });
+      return;
     }
 
     setIsSubmitting(true);
-    
+    setIsSyncing(true); // Activar máscara bloqueante
+
     try {
       await api.checkInOut({
         userId,
@@ -151,18 +267,20 @@ export default function EmployeeDashboard() {
         typeAction: currentAction!,
         latitude: location.lat,
         longitude: location.lon,
-        signatureBase64: signature,
+        signatureBase64: signatureBase64,
         userAvatar,
         employeeComments: currentAction === "Salida" ? checkoutComment : undefined,
         huellaStatus: huellaStatus
       });
-      
+
+      // Recargar datos y esperar a que termine para actualizar el Turno
+      await loadDashboardData();
+
       setDialogOpen(false);
       toast({
         title: "Registro Exitoso",
-        description: `Se ha registrado su ${currentAction?.toLowerCase()} con huella (${huellaStatus.toLowerCase()}) a las ${new Date().toLocaleTimeString()}.`,
+        description: `Se ha registrado su ${currentAction?.toLowerCase()} correctamente.`,
       });
-      loadDashboardData(); // Recargar datos para actualizar las horas trabajadas
     } catch (err: any) {
       toast({
         variant: "destructive",
@@ -171,6 +289,7 @@ export default function EmployeeDashboard() {
       });
     } finally {
       setIsSubmitting(false);
+      setIsSyncing(false); // Apagar máscara
     }
   };
 
@@ -341,34 +460,39 @@ export default function EmployeeDashboard() {
 
       </div>
 
-      {/* Modal de Firma y Comentarios */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-[425px] rounded-t-3xl sm:rounded-2xl p-6 bg-white max-h-[90vh] overflow-y-auto">
-          <DialogHeader className="flex flex-row items-center justify-between">
-            <div>
-              <DialogTitle className="text-xl font-bold font-headline text-slate-800">
+      {/* Modal de Marcación Unificado */}
+      <Dialog open={dialogOpen} onOpenChange={(val) => { if (!val && !isSubmitting) setDialogOpen(false); }}>
+        <DialogContent className="sm:max-w-[450px] rounded-3xl p-6 bg-white max-h-[95vh] overflow-y-auto border border-slate-100 shadow-2xl">
+          <DialogHeader className="flex flex-row items-start justify-between">
+            <div className="text-left">
+              <DialogTitle className="text-xl font-bold font-headline text-slate-800 flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary">
+                  {currentAction === "Entrada" ? "login" : "logout"}
+                </span>
                 Confirmar {currentAction}
               </DialogTitle>
               <p className="text-xs text-slate-500 mt-1">
-                Firme y complete la información para registrar la marca.
+                Complete la verificación para registrar su marca de asistencia.
               </p>
             </div>
-            <button className="text-slate-400 hover:text-slate-600" onClick={() => setDialogOpen(false)}>
-              <X className="h-5 w-5" />
-            </button>
+            {!isSubmitting && (
+              <button className="text-slate-400 hover:text-slate-600 transition-colors" onClick={() => setDialogOpen(false)}>
+                <X className="h-5 w-5" />
+              </button>
+            )}
           </DialogHeader>
           
-          <div className="py-4 space-y-4">
+          <div className="py-4 space-y-5 text-left">
             {/* Feedback del GPS */}
-            <div className="space-y-1">
-              <div className="flex items-center text-xs font-semibold text-slate-500">
+            <div className="bg-slate-50/80 rounded-2xl p-3 border border-slate-100/50 space-y-1">
+              <div className="flex items-center text-xs font-semibold text-slate-600">
                 <MapPin className={cn("h-4 w-4 mr-2", location ? "text-green-500" : "text-amber-500 animate-pulse")} />
                 <span>
-                  {location ? "Ubicación satelital establecida." : "Buscando coordenadas GPS..."}
+                  {location ? "Ubicación satelital establecida" : "Buscando coordenadas GPS..."}
                 </span>
               </div>
               {location && nearest && (
-                <div className={`text-xs font-bold pl-6 ${nearest.inside ? "text-green-600" : "text-amber-600"}`}>
+                <div className={`text-[11px] font-bold pl-6 ${nearest.inside ? "text-green-600" : "text-amber-600"}`}>
                   {nearest.inside ? (
                     <span>✓ En geocerca: {nearest.name}</span>
                   ) : (
@@ -378,46 +502,166 @@ export default function EmployeeDashboard() {
               )}
             </div>
 
+            {/* SECCIÓN DE HUELLA DIGITAL (Solo si está registrada y soportada) */}
+            {userHuella && isBiometricSupported && (
+              <div className="bg-slate-50/50 border border-slate-100 rounded-2xl p-4 flex flex-col items-center gap-4">
+                <div className="flex items-center gap-2 self-start">
+                  <span className="material-symbols-outlined text-[18px] text-slate-500">fingerprint</span>
+                  <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">Validación por Lector</span>
+                </div>
+
+                <div className="flex items-center gap-4 w-full">
+                  {/* Icono de Huella Animado */}
+                  <div className={cn(
+                    "w-14 h-14 rounded-full flex items-center justify-center shrink-0 border transition-all duration-300 relative",
+                    biometricState === "idle" && "bg-slate-100 text-slate-400 border-slate-200",
+                    biometricState === "scanning" && "bg-primary/10 text-primary border-primary/20 scale-105",
+                    biometricState === "success" && "bg-green-50 text-green-600 border-green-200",
+                    biometricState === "warning" && "bg-amber-50 text-amber-600 border-amber-200",
+                    biometricState === "error" && "bg-red-50 text-red-600 border-red-200"
+                  )}>
+                    <Fingerprint className={cn("w-7 h-7", biometricState === "scanning" && "animate-pulse")} />
+                    {biometricState === "scanning" && (
+                      <div className="absolute left-0 right-0 h-0.5 bg-primary/80 shadow-md top-1 animate-bounce" />
+                    )}
+                  </div>
+
+                  {/* Mensajes de Estado */}
+                  <div className="flex-1 min-w-0">
+                    <p className={cn(
+                      "text-xs font-bold transition-all duration-300 truncate",
+                      biometricState === "idle" && "text-slate-500",
+                      biometricState === "scanning" && "text-primary animate-pulse",
+                      biometricState === "success" && "text-green-600",
+                      biometricState === "warning" && "text-amber-600",
+                      biometricState === "error" && "text-red-500"
+                    )}>
+                      {biometricMessage}
+                    </p>
+                    {biometricState === "success" ? (
+                      <span className="text-[10px] text-slate-400 block font-medium mt-0.5">Firma opcional habilitada</span>
+                    ) : (
+                      <span className="text-[10px] text-slate-400 block font-medium mt-0.5">Se requiere firma si no valida con sensor</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Advertencia de Discrepancia */}
+                {biometricWarningText && (
+                  <div className="bg-amber-50/80 border border-amber-200 rounded-xl p-3 text-left w-full space-y-2">
+                    <p className="text-[10px] text-amber-800 leading-normal font-medium">
+                      {biometricWarningText}
+                    </p>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        onClick={handleProceedWithDiscrepancy}
+                        className="flex-1 py-1.5 h-auto text-[10px] bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg shadow-sm"
+                      >
+                        Proceder con Discrepancia
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={triggerBiometricVerification}
+                        variant="outline"
+                        className="flex-1 py-1.5 h-auto text-[10px] border-amber-300 text-amber-700 hover:bg-amber-100/50 font-bold rounded-lg"
+                      >
+                        Reintentar Lector
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Botón de reintento manual */}
+                {biometricState === "error" && (
+                  <Button
+                    type="button"
+                    onClick={triggerBiometricVerification}
+                    variant="outline"
+                    className="w-full text-[11px] py-1.5 h-auto border-slate-200 text-slate-700 hover:bg-slate-100 flex items-center justify-center gap-1.5 font-bold rounded-xl"
+                  >
+                    <span className="material-symbols-outlined text-[14px]">refresh</span>
+                    Reintentar Sensor Físico
+                  </Button>
+                )}
+              </div>
+            )}
+
+            {/* SECCIÓN DE FIRMA DIGITAL */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-600 block">
+                Firma Digital 
+                {(!userHuella || !isBiometricSupported || huellaStatus === "SIN_HUELLA") ? (
+                  <span className="text-red-500 font-semibold ml-1">(Obligatoria *)</span>
+                ) : (
+                  <span className="text-slate-400 font-medium ml-1">(Opcional)</span>
+                )}
+              </label>
+              <SignaturePad 
+                onChange={setSignatureBase64} 
+                disabled={isSubmitting || !location} 
+              />
+            </div>
+
             {/* Comentario exclusivo para la Salida */}
             {currentAction === "Salida" && (
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-500 block">Observaciones / Comentario de Salida</label>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-600 block">Observaciones / Comentario de Salida</label>
                 <textarea
                   value={checkoutComment}
                   onChange={(e) => setCheckoutComment(e.target.value)}
-                  placeholder="Escriba comentarios sobre las actividades de su turno (obligatorio si requiere justificación)..."
-                  className="w-full min-h-[70px] p-3 border rounded-xl text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all resize-none"
+                  placeholder="Escriba comentarios sobre las actividades de su turno..."
+                  className="w-full min-h-[70px] p-3 border border-slate-200 rounded-2xl text-xs focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all resize-none text-slate-800"
                 />
               </div>
             )}
 
-            {/* Firma digital */}
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-500 block mb-1">Firma Digital</label>
-              <SignaturePad 
-                onSave={handleSignatureSubmit} 
-                disabled={isSubmitting || !location} 
-              />
+            {/* Botones de acción principales */}
+            <div className="pt-2 flex gap-3">
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={isSubmitting}
+                onClick={() => setDialogOpen(false)}
+                className="flex-1 py-2.5 h-auto rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-100 transition-all"
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="button"
+                onClick={handleMarkSubmit}
+                disabled={isSubmitting || !location || ((!userHuella || !isBiometricSupported || huellaStatus === "SIN_HUELLA") && !signatureBase64)}
+                className="flex-1 py-2.5 h-auto bg-primary hover:opacity-90 text-white rounded-xl text-xs font-bold shadow-md shadow-primary/10 transition-all active:scale-95 flex items-center justify-center gap-1.5"
+              >
+                {isSubmitting ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <span className="material-symbols-outlined text-[16px]">check_circle</span>
+                )}
+                Registrar {currentAction}
+              </Button>
             </div>
           </div>
         </DialogContent>
       </Dialog>
 
-      <BiometricDialog
-        open={biometricDialogOpen}
-        onOpenChange={setBiometricDialogOpen}
-        mode="verify"
-        registeredHuella={userHuella}
-        userName={userName}
-        onSuccess={handleBiometricSuccess}
-        onCancel={() => {
-          toast({
-            variant: "destructive",
-            title: "Marcación cancelada",
-            description: "Se requiere verificar la identidad para marcar asistencia.",
-          });
-        }}
-      />
+      {/* Máscara de Sincronización bloqueante */}
+      {isSyncing && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] flex flex-col items-center justify-center gap-4 select-none">
+          <div className="bg-white p-6 rounded-3xl shadow-2xl flex flex-col items-center gap-4 max-w-xs text-center border border-slate-100 animate-in fade-in zoom-in-95 duration-200">
+            <div className="relative flex items-center justify-center">
+              <Loader2 className="h-10 w-10 text-primary animate-spin" />
+              <span className="material-symbols-outlined text-[20px] text-primary absolute animate-pulse">sync</span>
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-slate-800">Actualizando datos...</h3>
+              <p className="text-[10px] text-slate-400 mt-1 leading-normal">
+                Sincronizando marca de asistencia con Google Sheets. Espere por favor.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
