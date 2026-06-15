@@ -44,6 +44,11 @@ export default function EmployeeDashboard() {
   const [showSignaturePad, setShowSignaturePad] = React.useState(false);
   const [isSyncing, setIsSyncing] = React.useState(false);
   const [isBiometricSupported, setIsBiometricSupported] = React.useState(false);
+  const locationRef = React.useRef<{ lat: number; lon: number } | null>(null);
+
+  React.useEffect(() => {
+    locationRef.current = location;
+  }, [location]);
 
   // Estados para validación biométrica nativa embebida
   const [biometricState, setBiometricState] = React.useState<"idle" | "scanning" | "success" | "warning" | "error">("idle");
@@ -123,8 +128,8 @@ export default function EmployeeDashboard() {
   }, []);
 
   // Escaneo biométrico nativo en Entrada/Salida
-  const triggerBiometricVerification = async () => {
-    if (!userHuella) return;
+  const triggerBiometricVerification = async (): Promise<boolean> => {
+    if (!userHuella) return false;
     setBiometricState("scanning");
     setBiometricMessage("Active el sensor de huella de su dispositivo...");
     setBiometricWarningText(null);
@@ -159,6 +164,7 @@ export default function EmployeeDashboard() {
       setBiometricState("success");
       setBiometricMessage("¡Huella digital verificada ✓!");
       setHuellaStatus("CORRECTA");
+      return true;
     } catch (err: any) {
       console.error("WebAuthn Verify Error:", err);
       
@@ -174,6 +180,7 @@ export default function EmployeeDashboard() {
         );
         setHuellaStatus("DISCREPANCIA");
       }
+      return false;
     }
   };
 
@@ -184,39 +191,17 @@ export default function EmployeeDashboard() {
     setBiometricWarningText(null);
   };
 
-  // Activar verificación automática al abrir diálogo
-  React.useEffect(() => {
-    if (dialogOpen) {
-      setSignatureBase64(""); // Limpiar firma anterior
-      setCheckoutComment(""); // Restablecer comentario
-      setBiometricWarningText(null);
-      
-      const hasFingerprint = !!userHuella && isBiometricSupported;
-      setShowSignaturePad(!hasFingerprint); // Ocultar pad si hay huella compatible
-      
-      if (hasFingerprint) {
-        setHuellaStatus("SIN_HUELLA"); // Por defecto si no completan
-        setBiometricState("idle");
-        const timer = setTimeout(() => {
-          triggerBiometricVerification();
-        }, 500);
-        return () => clearTimeout(timer);
-      } else {
-        setHuellaStatus("SIN_HUELLA");
-        setBiometricState("idle");
-        setBiometricMessage("");
-      }
-    }
-  }, [dialogOpen, userHuella, isBiometricSupported]);
-
   // Capturar geolocalización al hacer clic en los botones de Entrada/Salida
-  const handleActionClick = (action: CheckInType) => {
+  const handleActionClick = async (action: CheckInType) => {
     setCurrentAction(action);
     setCheckoutComment(""); // Restablecer comentario
     setIsSubmitting(false);
-    setLocation(null);
-    setLocationError(null);
+    setBiometricWarningText(null);
+    setSignatureBase64("");
+    setBiometricState("idle");
+    setBiometricMessage("");
 
+    // Obtener GPS en segundo plano sin bloquear el hilo principal (manteniendo valor previo si existe)
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -228,16 +213,92 @@ export default function EmployeeDashboard() {
         },
         (error) => {
           console.error("GPS Error:", error);
-          setLocationError(`Error de GPS: ${error.message}. Asegúrese de tener el GPS activado.`);
+          if (!locationRef.current) {
+            setLocationError(`Error de GPS: ${error.message}. Asegúrese de tener el GPS activado.`);
+          }
         },
         { enableHighAccuracy: true, timeout: 10000 }
       );
-    } else {
+    } else if (!locationRef.current) {
       setLocationError("Geolocalización no es soportada por este navegador.");
     }
     
-    // Abrir el modal unificado directamente
-    setDialogOpen(true);
+    const hasFingerprint = !!userHuella && isBiometricSupported;
+    if (hasFingerprint) {
+      // Iniciar el lector de huella inmediatamente antes de mostrar cualquier modal
+      const success = await triggerBiometricVerification();
+      if (success) {
+        if (action === "Entrada") {
+          // Si es Entrada, auto-registrar de inmediato sin abrir el modal unificado
+          // Esperamos hasta 3 segundos si la geolocalización aún no está lista
+          let currentLoc = locationRef.current;
+          if (!currentLoc) {
+            setIsSyncing(true);
+            for (let i = 0; i < 15; i++) {
+              await new Promise((resolve) => setTimeout(resolve, 200));
+              if (locationRef.current) {
+                currentLoc = locationRef.current;
+                break;
+              }
+            }
+            setIsSyncing(false);
+          }
+
+          if (currentLoc) {
+            setIsSubmitting(true);
+            setIsSyncing(true);
+            try {
+              await api.checkInOut({
+                userId: localStorage.getItem("userId") || "user-1",
+                userName: localStorage.getItem("userName") || "",
+                typeAction: "Entrada",
+                latitude: currentLoc.lat,
+                longitude: currentLoc.lon,
+                signatureBase64: "",
+                userAvatar: localStorage.getItem("userAvatar") || "avatar-1",
+                huellaStatus: "CORRECTA"
+              });
+              await loadDashboardData();
+              toast({
+                title: "Registro Exitoso",
+                description: "Se ha registrado su entrada correctamente mediante huella digital.",
+              });
+            } catch (err: any) {
+              toast({
+                variant: "destructive",
+                title: "Error al registrar asistencia",
+                description: err.message || "No se pudo conectar con el servidor.",
+              });
+              // Si falla el registro, abrir el diálogo para reintentar o firmar
+              setShowSignaturePad(false);
+              setDialogOpen(true);
+            } finally {
+              setIsSubmitting(false);
+              setIsSyncing(false);
+            }
+          } else {
+            // Si el GPS falla, abrir el modal unificado para que vea el error
+            setShowSignaturePad(false);
+            setDialogOpen(true);
+          }
+        } else {
+          // Si es Salida, sí necesitamos comentarios, abrimos el modal
+          setHuellaStatus("CORRECTA");
+          setShowSignaturePad(false);
+          setDialogOpen(true);
+        }
+      } else {
+        // Si falló o canceló la verificación biométrica, abrimos el modal con firma obligatoria
+        setHuellaStatus("SIN_HUELLA");
+        setShowSignaturePad(true);
+        setDialogOpen(true);
+      }
+    } else {
+      // Sin huella registrada/soportada: ir directo al modal con firma obligatoria
+      setHuellaStatus("SIN_HUELLA");
+      setShowSignaturePad(true);
+      setDialogOpen(true);
+    }
   };
 
   const handleMarkSubmit = async () => {
@@ -479,11 +540,6 @@ export default function EmployeeDashboard() {
                 Complete la verificación para registrar su marca de asistencia.
               </p>
             </div>
-            {!isSubmitting && (
-              <button className="text-slate-400 hover:text-slate-600 transition-colors" onClick={() => setDialogOpen(false)}>
-                <X className="h-5 w-5" />
-              </button>
-            )}
           </DialogHeader>
           
           <div className="py-4 space-y-5 text-left">
