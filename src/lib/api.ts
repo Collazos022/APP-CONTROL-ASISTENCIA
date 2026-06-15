@@ -93,7 +93,7 @@ export const api = {
             identificacion: u.Identificacion || u.identificacion || "",
             telefono: u.Telefono || u.telefono || "",
             cargo: u.Cargo || u.cargo || "",
-            huella: u.Huella || u.Huella_Registrada || ""
+            huella: u.Huella_ID_Credencial || ""
           };
         });
 

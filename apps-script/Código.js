@@ -121,7 +121,7 @@ function doPost(e) {
                cargo: getVal("Cargo"),
                role: getVal("Rol_App") || "Empleado",
                avatar: getVal("Foto") || getVal("Avatar") || "avatar-1",
-               huella: getVal("Huella") || getVal("Huella_Registrada") || ""
+               huella: getVal("Huella_ID_Credencial") || ""
             };
 
             return ContentService.createTextOutput(JSON.stringify({
@@ -148,15 +148,6 @@ function doPost(e) {
       
       const emailIdx = headers.indexOf("Email_Usuario");
       if (emailIdx === -1) throw new Error("Estructura de la tabla USUARIOS incorrecta (falta Email_Usuario).");
-
-      // Autocreación de la columna Huella si no existe
-      let huellaIdx = headers.indexOf("Huella");
-      if (huellaIdx === -1) {
-        const lastCol = sheet.getLastColumn();
-        sheet.getRange(1, lastCol + 1).setValue("Huella");
-        data = sheet.getDataRange().getValues();
-        headers = data[0];
-      }
 
       for (let i = 1; i < data.length; i++) {
         if (data[i][emailIdx] && data[i][emailIdx].toString().toLowerCase() === params.email.toLowerCase()) {
@@ -194,7 +185,9 @@ function doPost(e) {
         else if (h === "Fecha_Ingreso") newRow.push(new Date().toISOString().split('T')[0]);
         else if (h === "Estado") newRow.push("Activo");
         else if (h === "Foto") newRow.push(defaultAvatar);
-        else if (h === "Huella" || h === "Huella_Registrada") newRow.push(params.huella || "");
+        else if (h === "Huella_Registrada") newRow.push(params.huella ? "SI" : "NO");
+        else if (h === "Huella_ID_Credencial") newRow.push(params.huella || "");
+        else if (h === "Huella_Llave_Publica") newRow.push(params.huella ? "PUBLIC_KEY_SIMULATED" : "");
         else newRow.push("");
       });
 
@@ -564,15 +557,9 @@ function doPost(e) {
       const passwordIdx = headers.indexOf("Credencial");
       const photoIdx = headers.indexOf("Foto");
 
-      // Autocreación de la columna Huella si no existe
-      let huellaIdx = headers.indexOf("Huella") !== -1 ? headers.indexOf("Huella") : headers.indexOf("Huella_Registrada");
-      if (huellaIdx === -1) {
-        const lastCol = sheet.getLastColumn();
-        sheet.getRange(1, lastCol + 1).setValue("Huella");
-        data = sheet.getDataRange().getValues();
-        headers = data[0];
-        huellaIdx = headers.indexOf("Huella");
-      }
+      const registeredIdx = headers.indexOf("Huella_Registrada");
+      const credIdIdx = headers.indexOf("Huella_ID_Credencial");
+      const pubKeyIdx = headers.indexOf("Huella_Llave_Publica");
       
       if (idIdx === -1 || nameIdx === -1 || phoneIdx === -1 || passwordIdx === -1) {
         throw new Error("Estructura de la tabla USUARIOS incorrecta.");
@@ -588,8 +575,10 @@ function doPost(e) {
           if (photoIdx !== -1 && params.avatarUrl) {
             sheet.getRange(i + 1, photoIdx + 1).setValue(params.avatarUrl);
           }
-          if (huellaIdx !== -1 && params.huella !== undefined) {
-            sheet.getRange(i + 1, huellaIdx + 1).setValue(params.huella);
+          if (params.huella !== undefined) {
+            if (registeredIdx !== -1) sheet.getRange(i + 1, registeredIdx + 1).setValue(params.huella ? "SI" : "NO");
+            if (credIdIdx !== -1) sheet.getRange(i + 1, credIdIdx + 1).setValue(params.huella || "");
+            if (pubKeyIdx !== -1) sheet.getRange(i + 1, pubKeyIdx + 1).setValue(params.huella ? "PUBLIC_KEY_SIMULATED" : "");
           }
           return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
         }
