@@ -110,7 +110,8 @@ export function BiometricDialog({
         publicKey: {
           challenge: challenge,
           rp: {
-            name: "ASSAM Control Asistencia"
+            name: "ASSAM Control Asistencia",
+            id: window.location.hostname
           },
           user: {
             id: userId,
@@ -169,6 +170,7 @@ export function BiometricDialog({
       const options: CredentialRequestOptions = {
         publicKey: {
           challenge: challenge,
+          rpId: window.location.hostname,
           allowCredentials: [{
             id: credentialId,
             type: "public-key"
