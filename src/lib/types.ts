@@ -10,6 +10,8 @@ export interface User {
   telefono?: string;
   cargo?: string;
   huella?: string;
+  huellaRegistrada?: string;
+  estado?: string;
 }
 
 export type CheckInStatus = "Pendiente" | "Aprobado" | "Rechazado";

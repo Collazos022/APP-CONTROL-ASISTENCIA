@@ -33,7 +33,7 @@ function saveLocalStorageData<T>(key: string, val: T) {
 
 // Inicializar datos mock en localStorage si no existen
 const mockUsers = [
-  { id: 'user-1', name: 'Carlos Ramirez', email: 'carlos@example.com', role: 'Empleado' as Role, avatar: 'avatar-1' },
+  { id: 'carlos@example.com', name: 'Carlos Ramirez', email: 'carlos@example.com', role: 'Empleado' as Role, avatar: 'avatar-1', cargo: 'Gerente', huellaRegistrada: 'SI', estado: 'Activo' },
 ];
 
 const mockCargos = [
@@ -93,7 +93,9 @@ export const api = {
             identificacion: u.Identificacion || u.identificacion || "",
             telefono: u.Telefono || u.telefono || "",
             cargo: u.Cargo || u.cargo || "",
-            huella: u.Huella_ID_Credencial || ""
+            huella: u.Huella_ID_Credencial || "",
+            huellaRegistrada: u.Huella_Registrada || "NO",
+            estado: u.Estado || "Activo"
           };
         });
 
@@ -329,6 +331,32 @@ export const api = {
       }
     } catch (error) {
       console.error("Update profile error:", error);
+      throw error;
+    }
+  },
+
+  async updateUsers(updatedUsers: { id: string; cargo: string; role: Role; estado: string }[]): Promise<void> {
+    if (!this.isConfigured()) {
+      console.warn("API_URL de Google Sheets no configurada. Actualizando en memoria local.");
+      const usuarios = getLocalStorageData<User[]>(STORAGE_KEYS.USERS, mockUsers);
+      const updated = usuarios.map(u => {
+        const update = updatedUsers.find(uu => uu.id === u.email || uu.id === u.id);
+        return update ? { ...u, ...update } : u;
+      });
+      saveLocalStorageData(STORAGE_KEYS.USERS, updated);
+      return;
+    }
+    try {
+      const response = await fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify({ type: "update_users", usuarios: updatedUsers })
+      });
+      const data = await response.json();
+      if (data.status !== "success") {
+        throw new Error(data.message || "Error al actualizar usuarios");
+      }
+    } catch (error) {
+      console.error("Update users error:", error);
       throw error;
     }
   },

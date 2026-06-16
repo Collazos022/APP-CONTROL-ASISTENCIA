@@ -585,6 +585,41 @@ function doPost(e) {
       }
       return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "Usuario no encontrado." })).setMimeType(ContentService.MimeType.JSON);
       
+    } else if (params.type === 'update_users') {
+      const sheet = ss.getSheetByName("USUARIOS");
+      if (!sheet) throw new Error("La pestaña USUARIOS no existe.");
+      let data = sheet.getDataRange().getValues();
+      let headers = data[0];
+      
+      const idIdx = headers.indexOf("Email_Usuario");
+      const cargoIdx = headers.indexOf("Cargo");
+      const roleIdx = headers.indexOf("Rol_App");
+      const estadoIdx = headers.indexOf("Estado");
+      
+      if (idIdx === -1) {
+        throw new Error("Estructura de la tabla USUARIOS incorrecta.");
+      }
+
+      if (params.usuarios && Array.isArray(params.usuarios)) {
+        params.usuarios.forEach(userUpdate => {
+          for (let i = 1; i < data.length; i++) {
+            if (data[i][idIdx] && data[i][idIdx].toString().toLowerCase() === userUpdate.id.toString().toLowerCase()) {
+              if (cargoIdx !== -1 && userUpdate.cargo !== undefined) {
+                sheet.getRange(i + 1, cargoIdx + 1).setValue(userUpdate.cargo);
+              }
+              if (roleIdx !== -1 && userUpdate.role !== undefined) {
+                sheet.getRange(i + 1, roleIdx + 1).setValue(userUpdate.role);
+              }
+              if (estadoIdx !== -1 && userUpdate.estado !== undefined) {
+                sheet.getRange(i + 1, estadoIdx + 1).setValue(userUpdate.estado);
+              }
+              break;
+            }
+          }
+        });
+      }
+      return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
+
     } else if (params.type === 'update_cargos') {
       const sheet = ss.getSheetByName("Validacion");
       if (!sheet) throw new Error("La pestaña Validacion no existe.");
