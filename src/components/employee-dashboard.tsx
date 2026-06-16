@@ -643,7 +643,7 @@ export default function EmployeeDashboard() {
                     {biometricState === "success" ? (
                       <span className="text-xs text-slate-500 block mt-1">Firma opcional habilitada</span>
                     ) : (
-                      <span className="text-xs text-slate-500 block mt-1">Se requiere firma si no valida con sensor</span>
+                      <span className="text-xs text-slate-500 block mt-1">Se requiere firma si no valida con Huella</span>
                     )}
                   </div>
                 </div>
@@ -683,7 +683,7 @@ export default function EmployeeDashboard() {
                     className="w-full text-[11px] py-1.5 h-auto border-slate-200 text-slate-700 hover:bg-slate-100 flex items-center justify-center gap-1.5 font-bold rounded-xl"
                   >
                     <span className="material-symbols-outlined text-[14px]">refresh</span>
-                    Reintentar Sensor Físico
+                    Reintentar Sensor de Huellas
                   </Button>
                 )}
 
@@ -717,7 +717,7 @@ export default function EmployeeDashboard() {
                         className="w-full py-3 px-4 border border-slate-200 hover:border-primary/50 rounded-2xl text-xs font-bold text-slate-600 hover:text-primary transition-all bg-slate-50 hover:bg-slate-100/30 flex items-center justify-center gap-2"
                       >
                         <span className="material-symbols-outlined text-[18px]">edit_note</span>
-                        Haga clic aquí para registrar firma
+                        Registrar Firma Manual
                       </button>
                     )}
                   </div>
@@ -739,7 +739,7 @@ export default function EmployeeDashboard() {
                   className="text-xs text-primary font-bold hover:underline inline-flex items-center gap-1.5 transition-all py-2 px-4 bg-slate-50 border border-slate-200/80 rounded-xl hover:bg-slate-100/80 shadow-sm"
                 >
                   <span className="material-symbols-outlined text-[16px]">edit_note</span>
-                  ¿No puede registrar huella? Firme dando clic aquí
+                  ¿No puede registrar huella? Registrar Firma Manual
                 </button>
               </div>
             )}
@@ -774,7 +774,7 @@ export default function EmployeeDashboard() {
                     className="w-full py-3 px-4 border border-slate-200 hover:border-primary/50 rounded-2xl text-xs font-bold text-slate-600 hover:text-primary transition-all bg-slate-50 hover:bg-slate-100/30 flex items-center justify-center gap-2"
                   >
                     <span className="material-symbols-outlined text-[18px]">edit_note</span>
-                    Haga clic aquí para registrar firma
+                    Registrar Firma Manual
                   </button>
                 )}
               </div>
@@ -847,6 +847,7 @@ export default function EmployeeDashboard() {
           
           <div className="py-2 space-y-4">
             <SignaturePad 
+              key={signatureDialogOpen ? "open" : "closed"}
               onChange={setSignatureBase64} 
               disabled={isSubmitting} 
             />
@@ -857,6 +858,7 @@ export default function EmployeeDashboard() {
                 variant="outline"
                 onClick={() => {
                   isSignatureAcceptedRef.current = false;
+                  setSignatureBase64(""); // Limpiar explícitamente al hacer clic en Cancelar
                   setSignatureDialogOpen(false);
                 }}
                 className="flex-1 py-2 h-auto text-xs font-bold rounded-xl text-slate-500"
