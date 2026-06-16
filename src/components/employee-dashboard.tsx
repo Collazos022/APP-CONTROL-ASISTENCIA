@@ -15,6 +15,7 @@ import {
 import { SignaturePad } from "@/components/signature-pad";
 import { useToast } from "@/hooks/use-toast";
 import { MapPin, Loader2, X, Fingerprint } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { type CheckInType, type CheckInRecord } from "@/lib/types";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -43,6 +44,7 @@ export default function EmployeeDashboard() {
   const [signatureBase64, setSignatureBase64] = React.useState<string>("");
   const [showSignaturePad, setShowSignaturePad] = React.useState(false);
   const [isSyncing, setIsSyncing] = React.useState(false);
+  const [loading, setLoading] = React.useState(true);
   const [isBiometricSupported, setIsBiometricSupported] = React.useState(false);
   const locationRef = React.useRef<{ lat: number; lon: number } | null>(null);
 
@@ -67,6 +69,7 @@ export default function EmployeeDashboard() {
   };
 
   const loadDashboardData = React.useCallback(() => {
+    setLoading(true);
     const loggedInUserId = localStorage.getItem("userId") || "user-1";
     setUserId(loggedInUserId);
     setUserName(localStorage.getItem("userName") || "");
@@ -86,6 +89,8 @@ export default function EmployeeDashboard() {
       setTodayRecords(userTodayRecs);
     }).catch(err => {
       console.error("Error cargando datos del dashboard:", err);
+    }).finally(() => {
+      setLoading(false);
     });
   }, []);
 
@@ -432,6 +437,45 @@ export default function EmployeeDashboard() {
     day: "numeric",
   }) : "";
   const formattedDate = rawDateStr ? rawDateStr.charAt(0).toUpperCase() + rawDateStr.slice(1) : "Cargando...";
+
+  if (loading) {
+    return (
+      <div className="max-w-lg mx-auto flex flex-col gap-6 pt-4">
+        {/* Reloj y Fecha digital */}
+        <section className="text-center py-2 space-y-2">
+          <Skeleton className="h-12 w-48 mx-auto rounded-xl bg-slate-100/80" />
+          <Skeleton className="h-4 w-36 mx-auto rounded-lg bg-slate-100/80" />
+        </section>
+
+        {/* Tarjeta de Estado GPS */}
+        <section className="glass-card rounded-2xl p-5 flex items-start gap-4 shadow-sm border border-slate-100/50 bg-white/50">
+          <Skeleton className="w-12 h-12 rounded-xl shrink-0 bg-slate-100/80" />
+          <div className="flex flex-col gap-2 w-full">
+            <Skeleton className="h-3 w-24 bg-slate-100/80 rounded" />
+            <Skeleton className="h-4.5 w-48 bg-slate-100/80 rounded" />
+          </div>
+        </section>
+
+        {/* Horas en turno y Acciones */}
+        <div className="flex flex-col sm:flex-row gap-4 items-stretch">
+          
+          {/* Bento: Horas trabajadas */}
+          <div className="glass-card rounded-2xl p-5 flex flex-col justify-between h-32 flex-1 gap-2 border border-slate-100/50 bg-white/50">
+            <Skeleton className="h-3 w-28 bg-slate-100/80 rounded" />
+            <Skeleton className="h-8 w-36 bg-slate-100/80 rounded" />
+            <Skeleton className="h-2 w-full rounded-full bg-slate-100/80" />
+          </div>
+
+          {/* Botones de marcas verticales */}
+          <div className="flex flex-col gap-3 flex-1 justify-center">
+            <Skeleton className="h-14 w-full rounded-xl bg-slate-100/80" />
+            <Skeleton className="h-14 w-full rounded-xl bg-slate-100/80" />
+          </div>
+
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-lg mx-auto flex flex-col gap-6 pt-4">
