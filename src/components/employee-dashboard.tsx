@@ -43,6 +43,7 @@ export default function EmployeeDashboard() {
   // Nuevos estados para diálogo único y sincronización
   const [signatureBase64, setSignatureBase64] = React.useState<string>("");
   const [showSignaturePad, setShowSignaturePad] = React.useState(false);
+  const [signatureDialogOpen, setSignatureDialogOpen] = React.useState(false);
   const [isSyncing, setIsSyncing] = React.useState(false);
   const [loading, setLoading] = React.useState(true);
   const [isBiometricSupported, setIsBiometricSupported] = React.useState(false);
@@ -608,11 +609,7 @@ export default function EmployeeDashboard() {
 
             {/* SECCIÓN DE HUELLA DIGITAL (Solo si está registrada y soportada) */}
             {userHuella && isBiometricSupported && (
-              <div className="bg-slate-50/50 border border-slate-100 rounded-2xl p-4 flex flex-col items-center gap-4">
-                <div className="flex items-center gap-2 self-start">
-                  <span className="material-symbols-outlined text-[18px] text-slate-500">fingerprint</span>
-                  <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">Validación por Lector</span>
-                </div>
+              <div className="bg-slate-50/50 border border-slate-100 rounded-2xl p-4 flex flex-col items-center gap-4 w-full">
 
                 <div className="flex items-center gap-4 w-full">
                   {/* Icono de Huella Animado */}
@@ -699,6 +696,7 @@ export default function EmployeeDashboard() {
                   onClick={() => {
                     setShowSignaturePad(true);
                     setHuellaStatus("SIN_HUELLA");
+                    setSignatureDialogOpen(true);
                   }}
                   className="text-xs text-primary font-bold hover:underline inline-flex items-center gap-1.5 transition-all py-2 px-4 bg-slate-50 border border-slate-200/80 rounded-xl hover:bg-slate-100/80 shadow-sm"
                 >
@@ -719,10 +717,33 @@ export default function EmployeeDashboard() {
                     <span className="text-slate-400 font-medium ml-1">(Opcional)</span>
                   )}
                 </label>
-                <SignaturePad 
-                  onChange={setSignatureBase64} 
-                  disabled={isSubmitting || !location} 
-                />
+                
+                {signatureBase64 ? (
+                  <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-2xl p-3">
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-green-600 text-[18px]">check_circle</span>
+                      <span className="text-xs font-bold text-green-700">Firma registrada ✓</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setSignatureDialogOpen(true)}
+                      className="text-xs text-primary hover:underline font-bold"
+                    >
+                      Modificar
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSignatureDialogOpen(true);
+                    }}
+                    className="w-full py-3 px-4 border border-slate-200 hover:border-primary/50 rounded-2xl text-xs font-bold text-slate-600 hover:text-primary transition-all bg-slate-50 hover:bg-slate-100/30 flex items-center justify-center gap-2"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">edit_note</span>
+                    Haga clic aquí para registrar firma
+                  </button>
+                )}
               </div>
             )}
 
@@ -762,6 +783,49 @@ export default function EmployeeDashboard() {
                   <span className="material-symbols-outlined text-[16px]">check_circle</span>
                 )}
                 Registrar {currentAction}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Diálogo exclusivo para Firma Digital (Evita interferencia con scroll) */}
+      <Dialog open={signatureDialogOpen} onOpenChange={setSignatureDialogOpen}>
+        <DialogContent className="sm:max-w-[420px] rounded-3xl p-6 bg-white border border-slate-100 shadow-2xl">
+          <DialogHeader className="text-left">
+            <DialogTitle className="text-lg font-bold text-slate-800 flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-primary">draw</span>
+              Registrar Firma Digital
+            </DialogTitle>
+            <p className="text-[11px] text-slate-500">
+              Dibuje su firma en el recuadro a continuación y presione "Aceptar".
+            </p>
+          </DialogHeader>
+          
+          <div className="py-2 space-y-4">
+            <SignaturePad 
+              onChange={setSignatureBase64} 
+              disabled={isSubmitting} 
+            />
+            
+            <div className="flex gap-3 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setSignatureDialogOpen(false);
+                }}
+                className="flex-1 py-2 h-auto text-xs font-bold rounded-xl text-slate-500"
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="button"
+                onClick={() => setSignatureDialogOpen(false)}
+                disabled={!signatureBase64}
+                className="flex-1 py-2 h-auto bg-primary hover:opacity-90 text-white text-xs font-bold rounded-xl shadow-md"
+              >
+                Aceptar
               </Button>
             </div>
           </div>
