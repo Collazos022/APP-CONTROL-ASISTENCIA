@@ -112,6 +112,14 @@ function doPost(e) {
               return idx !== -1 ? data[i][idx] : "";
             };
 
+            const estado = getVal("Estado") || "Activo";
+            if (estado.toString().toLowerCase() === "inactivo") {
+              return ContentService.createTextOutput(JSON.stringify({
+                status: "inactive",
+                message: "Usuario inactivo. Por favor, póngase en contacto con Recursos Humanos (RRHH)."
+              })).setMimeType(ContentService.MimeType.JSON);
+            }
+
             const userObj = {
                id: getVal("Email_Usuario"), // Use email as unique identifier
                name: getVal("Nombre_Apellido"),
@@ -121,7 +129,8 @@ function doPost(e) {
                cargo: getVal("Cargo"),
                role: getVal("Rol_App") || "Empleado",
                avatar: getVal("Foto") || getVal("Avatar") || "avatar-1",
-               huella: getVal("Huella_ID_Credencial") || ""
+               huella: getVal("Huella_ID_Credencial") || "",
+               estado: estado
             };
 
             return ContentService.createTextOutput(JSON.stringify({

@@ -5,13 +5,20 @@ import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Controller, useForm } from "react-hook-form"
 import * as z from "zod"
-import { Loader2 } from "lucide-react"
+import { Loader2, ShieldAlert } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { api } from "@/lib/api"
 import { cn } from "@/lib/utils"
 import { BiometricDialog } from "./biometric-dialog"
+import { CameraCaptureDialog } from "./camera-capture-dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Por favor, introduce un correo electrónico válido." }),
@@ -39,6 +46,9 @@ export function AuthForm() {
   const [cargos, setCargos] = React.useState<{name: string, role: string}[]>([])
   const [enrolledHuella, setEnrolledHuella] = React.useState<string>("")
   const [biometricDialogOpen, setBiometricDialogOpen] = React.useState(false)
+  const [registeredPhoto, setRegisteredPhoto] = React.useState<string>("")
+  const [cameraDialogOpen, setCameraDialogOpen] = React.useState(false)
+  const [inactiveUserDialogOpen, setInactiveUserDialogOpen] = React.useState(false)
 
   React.useEffect(() => {
     api.fetchAllData().then(data => {
@@ -81,11 +91,15 @@ export function AuthForm() {
       })
       router.push("/dashboard")
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error de inicio de sesión",
-        description: error.message || "Credenciales incorrectas o problema de conexión.",
-      })
+      if (error.message === "INACTIVE_USER") {
+        setInactiveUserDialogOpen(true)
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error de inicio de sesión",
+          description: error.message || "Credenciales incorrectas o problema de conexión.",
+        })
+      }
     } finally {
       setIsLoginLoading(false)
     }
@@ -101,13 +115,15 @@ export function AuthForm() {
         cargo: data.cargo,
         email: data.email,
         password: data.password,
-        huella: enrolledHuella || undefined
+        huella: enrolledHuella || undefined,
+        avatarUrl: registeredPhoto || undefined
       })
       toast({
         title: "Registro exitoso",
         description: "Tu solicitud ha sido registrada. Ahora puedes iniciar sesión.",
       })
       setEnrolledHuella("")
+      setRegisteredPhoto("")
       setActiveTab("login")
     } catch (error: any) {
       toast({
@@ -227,6 +243,31 @@ export function AuthForm() {
           </div>
           
           <form onSubmit={handleRegisterSubmit(onRegister)} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Foto de Perfil */}
+            <div className="md:col-span-2 flex flex-col items-center justify-center space-y-2 pb-2">
+              <div className="relative group">
+                <div className="w-24 h-24 rounded-full border-2 border-slate-100 shadow-md overflow-hidden bg-slate-50 flex items-center justify-center">
+                  {registeredPhoto ? (
+                    <img 
+                      src={registeredPhoto} 
+                      alt="Foto de Registro" 
+                      className="w-full h-full object-cover" 
+                    />
+                  ) : (
+                    <span className="material-symbols-outlined text-[36px] text-slate-400">person</span>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setCameraDialogOpen(true)}
+                  className="absolute bottom-0 right-0 w-8 h-8 bg-primary text-white rounded-full shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center justify-center border border-white cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[14px]">photo_camera</span>
+                </button>
+              </div>
+              <span className="text-[11px] font-semibold text-slate-400">Foto de Perfil (Opcional)</span>
+            </div>
+
             <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-500 ml-1">Nombre Completo</label>
               <input
@@ -382,6 +423,43 @@ export function AuthForm() {
         }}
         onCancel={() => {}}
       />
+
+      <CameraCaptureDialog
+        open={cameraDialogOpen}
+        onOpenChange={setCameraDialogOpen}
+        onCapture={(base64) => {
+          setRegisteredPhoto(base64);
+          toast({
+            title: "Foto capturada",
+            description: "Tu foto de perfil se ha añadido al registro.",
+          });
+        }}
+      />
+
+      {/* Modal de Advertencia para Usuario Inactivo */}
+      <Dialog open={inactiveUserDialogOpen} onOpenChange={setInactiveUserDialogOpen}>
+        <DialogContent className="max-w-md w-[90%] sm:max-w-sm rounded-3xl p-6 border-white/20 shadow-xl overflow-hidden bg-white">
+          <DialogHeader className="flex flex-col items-center space-y-3">
+            <div className="p-3 bg-red-50 text-red-600 rounded-full">
+              <ShieldAlert className="h-10 w-10 animate-bounce" />
+            </div>
+            <DialogTitle className="text-center font-headline text-lg text-red-600 font-bold">
+              Acceso Denegado
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 text-center">
+            <p className="text-xs text-slate-600 font-medium leading-relaxed">
+              Tu cuenta se encuentra actualmente desactivada. Para reactivar tu acceso, por favor ponte en contacto con Recursos Humanos (RRHH).
+            </p>
+            <Button
+              onClick={() => setInactiveUserDialogOpen(false)}
+              className="w-full py-5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold text-xs"
+            >
+              Entendido
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

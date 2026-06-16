@@ -165,7 +165,6 @@ export default function UsersPage() {
                 <TableHead>Teléfono</TableHead>
                 <TableHead>Huella</TableHead>
                 <TableHead className="w-[180px]">Cargo</TableHead>
-                <TableHead>Rol</TableHead>
                 <TableHead className="w-[120px]">Estado</TableHead>
               </TableRow>
             </TableHeader>
@@ -219,11 +218,6 @@ export default function UsersPage() {
                           ))}
                         </SelectContent>
                       </Select>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={user.role === 'Administrador' ? 'default' : 'secondary'} className="rounded-full font-bold">
-                        {user.role}
-                      </Badge>
                     </TableCell>
                     <TableCell>
                       <Select

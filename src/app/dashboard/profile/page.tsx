@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { placeholderImages } from "@/lib/placeholder-images";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { BiometricDialog } from "@/components/biometric-dialog";
+import { CameraCaptureDialog } from "@/components/camera-capture-dialog";
 import { cn } from "@/lib/utils";
 
 const profileSchema = z.object({
@@ -35,6 +36,7 @@ export default function ProfilePage() {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [currentAvatar, setCurrentAvatar] = React.useState("");
   const [newAvatarBase64, setNewAvatarBase64] = React.useState<string | null>(null);
+  const [cameraDialogOpen, setCameraDialogOpen] = React.useState(false);
   
   // Modificación de Huella Digital
   const [currentHuella, setCurrentHuella] = React.useState("");
@@ -276,18 +278,11 @@ export default function ProfilePage() {
                 {/* Floating camera button */}
                 <button
                   type="button"
-                  onClick={() => fileInputRef.current?.click()}
+                  onClick={() => setCameraDialogOpen(true)}
                   className="absolute bottom-0 right-0 w-10 h-10 bg-primary text-white rounded-full shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center justify-center border-2 border-white cursor-pointer"
                 >
                   <span className="material-symbols-outlined text-[18px]">photo_camera</span>
                 </button>
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handlePhotoChange}
-                  accept="image/*"
-                  className="hidden"
-                />
               </div>
 
               <div className="mt-5 space-y-1">
@@ -507,6 +502,19 @@ export default function ProfilePage() {
           }
         }}
         onCancel={() => {}}
+      />
+
+      <CameraCaptureDialog
+        open={cameraDialogOpen}
+        onOpenChange={setCameraDialogOpen}
+        onCapture={(base64) => {
+          setNewAvatarBase64(base64);
+          setIsEditing(true);
+          toast({
+            title: "Foto cargada",
+            description: "Haz clic en 'Guardar Cambios' para actualizar tu perfil.",
+          });
+        }}
       />
     </div>
   );

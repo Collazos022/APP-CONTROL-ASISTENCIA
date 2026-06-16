@@ -182,7 +182,17 @@ export const api = {
   },
 
   async login(email: string, password: string): Promise<User> {
-    if (!this.isConfigured()) throw new Error("API not configured");
+    if (!this.isConfigured()) {
+      const usuarios = getLocalStorageData<User[]>(STORAGE_KEYS.USERS, mockUsers);
+      const user = usuarios.find(u => u.email.toLowerCase() === email.toLowerCase());
+      if (user) {
+        if (user.estado?.toLowerCase() === "inactivo") {
+          throw new Error("INACTIVE_USER");
+        }
+        return user;
+      }
+      throw new Error("Correo o contraseña incorrectos.");
+    }
     try {
       const response = await fetch(API_URL, {
         method: "POST",
@@ -196,7 +206,10 @@ export const api = {
           email: data.user.email || data.user.Email_Usuario,
           role: (data.user.role || data.user.Rol_App || "Empleado") as Role,
           avatar: data.user.avatar || "avatar-1",
+          estado: data.user.estado || "Activo"
         } as User;
+      } else if (data.status === "inactive") {
+        throw new Error("INACTIVE_USER");
       }
       throw new Error(data.message || "Error de inicio de sesión");
     } catch (error) {
