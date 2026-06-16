@@ -708,17 +708,18 @@ export default function EmployeeDashboard() {
                         </button>
                       </div>
                     ) : (
-                      <button
+                      <Button
                         type="button"
+                        variant="outline"
                         onClick={() => {
                           isSignatureAcceptedRef.current = false;
                           setSignatureDialogOpen(true);
                         }}
-                        className="w-full text-[11px] py-1.5 h-auto border border-slate-200 hover:border-primary/50 text-slate-700 hover:text-primary transition-all bg-slate-50 hover:bg-slate-100/80 flex items-center justify-center gap-1.5 font-bold rounded-xl"
+                        className="w-full text-[11px] py-1.5 h-auto border-slate-200 text-slate-700 hover:bg-slate-100 flex items-center justify-center gap-1.5 font-bold rounded-xl"
                       >
                         <span className="material-symbols-outlined text-[14px]">edit_note</span>
                         Registrar Firma Manual
-                      </button>
+                      </Button>
                     )}
                   </div>
                 )}
