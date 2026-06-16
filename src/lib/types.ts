@@ -40,4 +40,5 @@ export interface CheckInRecord {
   hoursExtra?: number;
   huellaEntrada?: string;
   huellaSalida?: string;
+  frenteTrabajo?: string;
 }

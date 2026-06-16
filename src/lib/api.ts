@@ -145,7 +145,8 @@ export const api = {
             hoursWorked: parseFloat(r.Horas_Trabajadas) || 0,
             hoursExtra: parseFloat(r.Horas_Extra) || 0,
             huellaEntrada: r.Huella_Entrada || "",
-            huellaSalida: r.Huella_Salida || ""
+            huellaSalida: r.Huella_Salida || "",
+            frenteTrabajo: r.Frente_de_Trabajo || ""
           });
         });
 
@@ -278,7 +279,8 @@ export const api = {
           userAvatar: data.record.userAvatar,
           employeeComments: data.record.employeeComments || "",
           huellaEntrada: params.typeAction === 'Entrada' ? data.record.huellaStatus : "",
-          huellaSalida: params.typeAction === 'Salida' ? data.record.huellaStatus : ""
+          huellaSalida: params.typeAction === 'Salida' ? data.record.huellaStatus : "",
+          frenteTrabajo: data.record.frenteTrabajo || ""
         };
       }
       throw new Error(data.message || "Error al registrar asistencia");

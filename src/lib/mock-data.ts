@@ -31,7 +31,8 @@ export const MOCK_RECORDS: CheckInRecord[] = [
     approvedBy: 'Maria Rodriguez',
     userAvatar: 'avatar-1',
     huellaEntrada: 'CORRECTA',
-    huellaSalida: 'CORRECTA'
+    huellaSalida: 'CORRECTA',
+    frenteTrabajo: 'Frente A'
   },
   {
     id: 'rec-2',
@@ -44,7 +45,8 @@ export const MOCK_RECORDS: CheckInRecord[] = [
     signatureUrlEntrada: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="30"><path d="M 10,15 C 30,10 50,20 90,15" fill="none" stroke="black"/></svg>',
     status: 'Pendiente',
     userAvatar: 'avatar-2',
-    huellaEntrada: 'CORRECTA'
+    huellaEntrada: 'CORRECTA',
+    frenteTrabajo: 'Frente B'
   },
   {
     id: 'rec-3',
@@ -61,7 +63,8 @@ export const MOCK_RECORDS: CheckInRecord[] = [
     approvedBy: 'Maria Rodriguez',
     userAvatar: 'avatar-3',
     huellaEntrada: 'SIN_HUELLA',
-    huellaSalida: 'SIN_HUELLA'
+    huellaSalida: 'SIN_HUELLA',
+    frenteTrabajo: 'Frente A'
   },
   {
     id: 'rec-4',
@@ -78,7 +81,8 @@ export const MOCK_RECORDS: CheckInRecord[] = [
     approvedBy: 'Maria Rodriguez',
     userAvatar: 'avatar-1',
     huellaEntrada: 'CORRECTA',
-    huellaSalida: 'DISCREPANCIA'
+    huellaSalida: 'DISCREPANCIA',
+    frenteTrabajo: 'Frente B'
   },
   {
     id: 'rec-5',
@@ -96,7 +100,8 @@ export const MOCK_RECORDS: CheckInRecord[] = [
     approvedBy: 'Maria Rodriguez',
     userAvatar: 'avatar-2',
     huellaEntrada: 'SIN_HUELLA',
-    huellaSalida: 'SIN_HUELLA'
+    huellaSalida: 'SIN_HUELLA',
+    frenteTrabajo: 'Frente A'
   },
   {
     id: 'rec-6',
@@ -109,6 +114,7 @@ export const MOCK_RECORDS: CheckInRecord[] = [
     signatureUrlEntrada: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="30"><path d="M 10,15 C 30,10 50,20 90,15" fill="none" stroke="black"/></svg>',
     status: 'Pendiente',
     userAvatar: 'avatar-3',
-    huellaEntrada: 'CORRECTA'
+    huellaEntrada: 'CORRECTA',
+    frenteTrabajo: 'Frente B'
   },
 ];

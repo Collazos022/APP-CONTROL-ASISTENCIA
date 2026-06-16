@@ -97,20 +97,7 @@ export default function ApprovalsPage() {
 
       // 3. Filtro por Frente de Trabajo
       if (selectedFrente !== "Todos") {
-        // En base a la distancia u ubicación del registro, determinamos el frente
-        // En nuestro Apps Script, guardamos la menor distancia. Si está fuera de rango, no se asocia.
-        // Pero para el filtrado, vamos a verificar si el empleado marcó en este frente.
-        // O si no, podemos usar un mock de cercanía o asociar basándonos en la distancia reportada.
-        // Como el API del Apps Script nos devuelve registros, podemos buscar el frente más cercano.
-        // Pero para simplificar, usaremos frentes predefinidos del registro.
-        // Vamos a asumir que si distanceFromPost !== null y está dentro del radio, está en ese frente.
-        // En la práctica, el API reporta distanceFromPost.
-        // Haremos una estimación o filtro:
-        // Como MOCK_RECORDS y sheet tienen coordenadas, podemos hacer match simple o dejar pasar si es Todos.
-        // Si queremos ser precisos, podemos ver si el registro coincide con el nombre de geocerca más cercano.
-        // Vamos a resolver el frente más cercano para el registro:
-        // (Podemos usar un algoritmo simple basado en la menor distancia).
-        // Para simplificar, si no podemos determinarlo, mostramos la geocerca.
+        if (r.frenteTrabajo !== selectedFrente) return false;
       }
 
       return true;
@@ -286,8 +273,8 @@ export default function ApprovalsPage() {
           ))}
         </div>
 
-        <div className="flex flex-col items-end gap-1 shrink-0">
-          <span className="text-[9px] font-bold text-on-surface-variant/70 uppercase">Frente</span>
+        <div className="flex flex-row items-center gap-2 shrink-0">
+          <span className="text-[10px] font-bold text-on-surface-variant/70 uppercase">Frente</span>
           <Select value={selectedFrente} onValueChange={setSelectedFrente}>
             <SelectTrigger className="w-[150px] bg-white border-white/20 rounded-xl shadow-sm text-xs h-9">
               <SelectValue placeholder="Frente de trabajo" />
@@ -354,7 +341,7 @@ export default function ApprovalsPage() {
                             ? `DENTRO DE RANGO (${record.distanceFromPost}m)` 
                             : record.distanceFromPost !== null 
                               ? `FUERA DE RANGO (${record.distanceFromPost}m)`
-                              : "UBICACIÓN REGISTRADA"}
+                              : (record.frenteTrabajo || "UBICACIÓN SIN REGISTRAR")}
                         </span>
                       </div>
                     </div>
