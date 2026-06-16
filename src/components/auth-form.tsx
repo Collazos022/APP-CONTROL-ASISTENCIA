@@ -370,7 +370,7 @@ export function AuthForm() {
 
             {/* Registro de Huella Digital */}
             <div className="md:col-span-2 space-y-1 mt-2">
-              <label className="text-xs font-semibold text-slate-500 ml-1 block">Huella Digital (Opcional)</label>
+              <label className="text-xs font-semibold text-slate-500 ml-1 block">Registra tu Huella Digital</label>
               {enrolledHuella ? (
                 <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-xl">
                   <div className="flex items-center gap-2 text-green-700 text-xs font-bold">
