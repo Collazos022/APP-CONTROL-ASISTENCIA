@@ -73,6 +73,14 @@ export function AuthForm() {
     formState: { errors: registerErrors },
   } = useForm<RegisterData>({
     resolver: zodResolver(registerSchema),
+    defaultValues: {
+      name: "",
+      identificacion: "",
+      telefono: "",
+      cargo: "",
+      email: "",
+      password: "",
+    }
   })
 
   const onLogin = async (data: LoginData) => {
