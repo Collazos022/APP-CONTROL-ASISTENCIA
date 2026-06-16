@@ -714,9 +714,9 @@ export default function EmployeeDashboard() {
                           isSignatureAcceptedRef.current = false;
                           setSignatureDialogOpen(true);
                         }}
-                        className="w-full py-3 px-4 border border-slate-200 hover:border-primary/50 rounded-2xl text-xs font-bold text-slate-600 hover:text-primary transition-all bg-slate-50 hover:bg-slate-100/30 flex items-center justify-center gap-2"
+                        className="w-full text-[11px] py-1.5 h-auto border border-slate-200 hover:border-primary/50 text-slate-700 hover:text-primary transition-all bg-slate-50 hover:bg-slate-100/80 flex items-center justify-center gap-1.5 font-bold rounded-xl"
                       >
-                        <span className="material-symbols-outlined text-[18px]">edit_note</span>
+                        <span className="material-symbols-outlined text-[14px]">edit_note</span>
                         Registrar Firma Manual
                       </button>
                     )}
