@@ -494,7 +494,7 @@ export default function EmployeeDashboard() {
       {/* Tarjeta de Estado GPS */}
       <section className="glass-card rounded-2xl p-5 flex items-start gap-4 shadow-sm">
         <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary flex-shrink-0">
-          <span className="material-symbols-outlined text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+          <span className="material-symbols-outlined text-[24px] fill-icon">
             location_on
           </span>
         </div>

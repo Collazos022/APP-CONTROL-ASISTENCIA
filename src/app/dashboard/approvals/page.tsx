@@ -19,11 +19,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-function getFingerprintColor(status?: string) {
+function getFingerprintColorClass(status?: string) {
   const s = (status || "").trim().toUpperCase();
-  if (s === "CORRECTA") return "#22c55e"; // Verde
-  if (s === "DISCREPANCIA") return "#f97316"; // Naranja
-  return "#ef4444"; // Rojo para SIN_HUELLA / vacío
+  if (s === "CORRECTA") return "text-[#22c55e]"; // Verde
+  if (s === "DISCREPANCIA") return "text-[#f97316]"; // Naranja
+  return "text-[#ef4444]"; // Rojo para SIN_HUELLA / vacío
 }
 
 function getFingerprintTooltip(status?: string) {
@@ -303,10 +303,10 @@ export default function ApprovalsPage() {
               ? record.userAvatar
               : placeholderImages.find(p => p.id === record.userAvatar)?.imageUrl;
 
-            // Determinar color de borde lateral
-            let borderStyle = { borderLeft: "6px solid #ea8635" }; // Pendiente
-            if (record.status === "Aprobado") borderStyle = { borderLeft: "6px solid #326e46" };
-            if (record.status === "Rechazado") borderStyle = { borderLeft: "6px solid #ba1a1a" };
+            // Determinar clase de borde lateral (usando colores del DESIGN.md de Tailwind config)
+            let borderStatusClass = "border-l-[6px] border-l-warning"; // Pendiente
+            if (record.status === "Aprobado") borderStatusClass = "border-l-[6px] border-l-success";
+            if (record.status === "Rechazado") borderStatusClass = "border-l-[6px] border-l-error";
 
             // Formatear hora de marca
             const recordTime = record.timestamp.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
@@ -314,8 +314,7 @@ export default function ApprovalsPage() {
             return (
               <div 
                 key={record.id} 
-                className="glass-card rounded-2xl p-4 flex flex-col gap-3 transition-all border border-white/20 shadow-sm"
-                style={borderStyle}
+                className={`glass-card rounded-2xl p-4 flex flex-col gap-3 transition-all border border-white/20 shadow-sm ${borderStatusClass}`}
               >
                 <div className="flex gap-4">
                   {/* Avatar */}
@@ -353,8 +352,7 @@ export default function ApprovalsPage() {
                           <span>{record.timestampEntrada ? record.timestampEntrada.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }) : "--:--"}</span>
                           {record.timestampEntrada && (
                             <span 
-                              className="material-symbols-outlined text-[13px] select-none"
-                              style={{ color: getFingerprintColor(record.huellaEntrada) }}
+                              className={`material-symbols-outlined text-[13px] select-none ${getFingerprintColorClass(record.huellaEntrada)}`}
                               title={`Huella Entrada: ${getFingerprintTooltip(record.huellaEntrada)}`}
                             >
                               fingerprint
@@ -368,8 +366,7 @@ export default function ApprovalsPage() {
                           <span>{record.timestampSalida ? record.timestampSalida.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }) : "--:--"}</span>
                           {record.timestampSalida && (
                             <span 
-                              className="material-symbols-outlined text-[13px] select-none"
-                              style={{ color: getFingerprintColor(record.huellaSalida) }}
+                              className={`material-symbols-outlined text-[13px] select-none ${getFingerprintColorClass(record.huellaSalida)}`}
                               title={`Huella Salida: ${getFingerprintTooltip(record.huellaSalida)}`}
                             >
                               fingerprint

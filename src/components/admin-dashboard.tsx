@@ -198,7 +198,7 @@ export default function AdminDashboard({ role }: AdminDashboardProps) {
       {/* Summary Grid (Bento Style) */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Metric Card 1 */}
-        <div className="glass-card border-l-6 border-l-primary p-5 rounded-2xl flex items-center justify-between transition-all hover:-translate-y-0.5 shadow-sm">
+        <div className="glass-card border-l-[6px] border-l-primary p-5 rounded-2xl flex items-center justify-between transition-all hover:-translate-y-0.5 shadow-sm">
           <div>
             <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">TOTAL EMPLEADOS</p>
             <p className="text-3xl font-bold text-primary mt-1">{employeesCount || 128}</p>
@@ -209,7 +209,7 @@ export default function AdminDashboard({ role }: AdminDashboardProps) {
         </div>
 
         {/* Metric Card 2 */}
-        <div className="glass-card border-l-6 border-l-[#323c64] p-5 rounded-2xl flex items-center justify-between transition-all hover:-translate-y-0.5 shadow-sm">
+        <div className="glass-card border-l-[6px] border-l-[#323c64] p-5 rounded-2xl flex items-center justify-between transition-all hover:-translate-y-0.5 shadow-sm">
           <div>
             <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">EMPLEADOS EN TURNO HOY</p>
             <p className="text-3xl font-bold text-secondary mt-1">{activeToday || 12}</p>
@@ -220,13 +220,13 @@ export default function AdminDashboard({ role }: AdminDashboardProps) {
         </div>
 
         {/* Metric Card 3 */}
-        <div className="glass-card border-l-6 border-l-warning p-5 rounded-2xl flex items-center justify-between transition-all hover:-translate-y-0.5 shadow-sm">
+        <div className="glass-card border-l-[6px] border-l-warning p-5 rounded-2xl flex items-center justify-between transition-all hover:-translate-y-0.5 shadow-sm">
           <div>
             <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">TOTAL HORAS EXTRAS</p>
             <p className="text-3xl font-bold text-warning mt-1">{extraHours || 0}h</p>
           </div>
           <div className="bg-tertiary-fixed/30 p-3 rounded-full text-warning">
-            <span className="material-symbols-outlined text-[32px]" style={{ fontVariationSettings: "'FILL' 1" }}>history</span>
+            <span className="material-symbols-outlined text-[32px] fill-icon">history</span>
           </div>
         </div>
       </section>

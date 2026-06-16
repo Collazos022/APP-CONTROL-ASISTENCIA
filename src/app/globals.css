@@ -127,4 +127,13 @@ body {
     -ms-overflow-style: none; 
     scrollbar-width: none; 
   }
+
+  .fill-icon {
+    font-variation-settings: 'FILL' 1;
+  }
+
+  .bg-dots {
+    background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0);
+    background-size: 24px 24px;
+  }
 }

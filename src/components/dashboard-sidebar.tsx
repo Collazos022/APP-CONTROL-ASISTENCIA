@@ -103,8 +103,8 @@ export function DashboardSidebar() {
                       >
                         <span className={cn(
                           "material-symbols-outlined text-[24px]",
-                          isActive && "filled-icon"
-                        )} style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}>
+                          isActive && "fill-icon"
+                        )}>
                           {item.icon}
                         </span>
                       </Link>
@@ -147,7 +147,7 @@ export function DashboardSidebar() {
                   : 'text-on-surface-variant hover:text-primary'
               )}
             >
-              <span className="material-symbols-outlined text-[24px]" style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}>
+              <span className={cn("material-symbols-outlined text-[24px]", isActive && "fill-icon")}>
                 {item.icon}
               </span>
             </Link>

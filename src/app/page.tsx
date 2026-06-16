@@ -8,13 +8,7 @@ export default function AuthenticationPage() {
           
           {/* Columna Visual Izquierda (Solo Escritorio) */}
           <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-primary items-center justify-center p-12">
-            <div 
-              className="absolute inset-0 opacity-20" 
-              style={{ 
-                backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', 
-                backgroundSize: '24px 24px' 
-              }} 
-            />
+            <div className="absolute inset-0 opacity-20 bg-dots" />
             <div className="relative z-10 text-white space-y-6">
               <h2 className="text-3xl font-bold leading-tight font-headline">
                 Control Eficiente de Personal en Campo
