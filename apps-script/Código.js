@@ -182,6 +182,11 @@ function doPost(e) {
       // Foto de un soldador por defecto de Unsplash
       const defaultAvatar = "https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?q=80&w=150&auto=format&fit=crop";
 
+      let defaultEstado = "Activo";
+      if (role === "Administrador" || role === "Aprobador" || role === "Editor") {
+        defaultEstado = "Inactivo";
+      }
+
       let newRow = [];
       headers.forEach(h => {
         if (h === "Nombre_Apellido") newRow.push(params.name);
@@ -192,7 +197,7 @@ function doPost(e) {
         else if (h === "Credencial") newRow.push(params.password);
         else if (h === "Rol_App") newRow.push(role);
         else if (h === "Fecha_Ingreso") newRow.push(new Date().toISOString().split('T')[0]);
-        else if (h === "Estado") newRow.push("Activo");
+        else if (h === "Estado") newRow.push(defaultEstado);
         else if (h === "Foto") newRow.push(defaultAvatar);
         else if (h === "Huella_Registrada") newRow.push(params.huella ? "SI" : "NO");
         else if (h === "Huella_ID_Credencial") newRow.push(params.huella || "");
