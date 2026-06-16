@@ -49,6 +49,7 @@ export function AuthForm() {
   const [registeredPhoto, setRegisteredPhoto] = React.useState<string>("")
   const [cameraDialogOpen, setCameraDialogOpen] = React.useState(false)
   const [inactiveUserDialogOpen, setInactiveUserDialogOpen] = React.useState(false)
+  const [rememberMe, setRememberMe] = React.useState(false)
 
   React.useEffect(() => {
     api.fetchAllData().then(data => {
@@ -61,10 +62,24 @@ export function AuthForm() {
   const {
     register: registerLogin,
     handleSubmit: handleLoginSubmit,
+    setValue: setLoginValue,
     formState: { errors: loginErrors },
   } = useForm<LoginData>({
     resolver: zodResolver(loginSchema),
   })
+
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedRemember = localStorage.getItem("assam_remember_me") === "true";
+      setRememberMe(savedRemember);
+      if (savedRemember) {
+        const savedEmail = localStorage.getItem("assam_remembered_email") || "";
+        const savedPassword = localStorage.getItem("assam_remembered_password") || "";
+        setLoginValue("email", savedEmail);
+        setLoginValue("password", savedPassword);
+      }
+    }
+  }, [setLoginValue]);
 
   const {
     register: registerRegister,
@@ -92,6 +107,16 @@ export function AuthForm() {
       localStorage.setItem("userId", user.id)
       localStorage.setItem("userEmail", user.email || "")
       localStorage.setItem("userAvatar", user.avatar || "avatar-1")
+
+      if (rememberMe) {
+        localStorage.setItem("assam_remember_me", "true")
+        localStorage.setItem("assam_remembered_email", data.email)
+        localStorage.setItem("assam_remembered_password", data.password)
+      } else {
+        localStorage.removeItem("assam_remember_me")
+        localStorage.removeItem("assam_remembered_email")
+        localStorage.removeItem("assam_remembered_password")
+      }
 
       toast({
         title: "Inicio de sesión exitoso",
@@ -215,6 +240,8 @@ export function AuthForm() {
               <label className="flex items-center gap-2 cursor-pointer select-none">
                 <input 
                   type="checkbox" 
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
                   className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary" 
                 />
                 <span className="text-xs font-semibold text-slate-500">Recordarme</span>
