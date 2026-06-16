@@ -179,8 +179,8 @@ function doPost(e) {
         }
       }
 
-      // Foto de un soldador por defecto de Unsplash
-      const defaultAvatar = "https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?q=80&w=150&auto=format&fit=crop";
+      // Foto de un soldador por defecto de Unsplash (ahora SVG de emoji de soldador)
+      const defaultAvatar = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%231e293b'/><path d='M35 30 C35 22, 65 22, 65 30 L67 60 C67 68, 62 74, 50 74 C38 74, 33 68, 33 60 Z' fill='%230f172a' stroke='%2338bdf8' stroke-width='2'/><rect x='41' y='36' width='18' height='10' rx='2' fill='%230ea5e9' stroke='%23bae6fd' stroke-width='1.5'/><rect x='44' y='39' width='12' height='4' rx='1' fill='%23bae6fd' opacity='0.7'/><path d='M25 65 L20 70 M25 70 L22 75 M75 65 L80 70 M75 70 L78 75' stroke='%23f59e0b' stroke-width='2' stroke-linecap='round'/></svg>";
 
       let defaultEstado = "Activo";
       if (role === "Administrador" || role === "Aprobador" || role === "Editor") {
@@ -198,7 +198,7 @@ function doPost(e) {
         else if (h === "Rol_App") newRow.push(role);
         else if (h === "Fecha_Ingreso") newRow.push(new Date().toISOString().split('T')[0]);
         else if (h === "Estado") newRow.push(defaultEstado);
-        else if (h === "Foto") newRow.push(defaultAvatar);
+        else if (h === "Foto") newRow.push(params.avatarUrl || defaultAvatar);
         else if (h === "Huella_Registrada") newRow.push(params.huella ? "SI" : "NO");
         else if (h === "Huella_ID_Credencial") newRow.push(params.huella || "");
         else if (h === "Huella_Llave_Publica") newRow.push(params.huella ? "PUBLIC_KEY_SIMULATED" : "");
@@ -215,7 +215,7 @@ function doPost(e) {
           role: role, 
           cargo: params.cargo, 
           telefono: params.telefono, 
-          avatar: defaultAvatar,
+          avatar: params.avatarUrl || defaultAvatar,
           huella: params.huella || ""
         }
       })).setMimeType(ContentService.MimeType.JSON);
