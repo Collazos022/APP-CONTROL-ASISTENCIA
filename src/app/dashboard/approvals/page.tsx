@@ -293,8 +293,8 @@ export default function ApprovalsPage() {
         {filteredRecords.length === 0 ? (
           <div className="text-center py-10 glass-card rounded-2xl border border-white/20">
             <span className="material-symbols-outlined text-4xl text-on-surface-variant/50">info</span>
-            <p className="text-sm font-semibold text-on-surface-variant mt-2">
-              No hay marcas en estado {selectedStatus}s para esta fecha.
+            <p className="text-sm font-normal text-on-surface-variant/70 mt-2">
+              No hay marcas en estado {selectedStatus} para esta fecha.
             </p>
           </div>
         ) : (
