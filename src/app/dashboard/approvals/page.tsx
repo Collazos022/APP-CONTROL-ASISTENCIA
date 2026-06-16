@@ -47,16 +47,17 @@ export default function ApprovalsPage() {
   const [rejectionComment, setRejectionComment] = React.useState("");
   const [actionLoading, setActionLoading] = React.useState(false);
 
-  const loadData = React.useCallback(() => {
-    api.fetchAllData().then(data => {
+  const loadData = React.useCallback(async () => {
+    try {
+      const data = await api.fetchAllData();
       setRecords(data.registros);
       const frenteNames = ["Todos", ...data.frentes.map(f => f.name)];
       setFrentes(frenteNames);
-    }).catch(err => {
+    } catch (err) {
       console.error("Error loading approvals:", err);
-    }).finally(() => {
+    } finally {
       setLoading(false);
-    });
+    }
   }, []);
 
   React.useEffect(() => {
@@ -127,11 +128,11 @@ export default function ApprovalsPage() {
         approvedBy: supervisorName,
         comments: "Aprobado sin novedades."
       });
+      await loadData();
       toast({
         title: "Registro Aprobado",
         description: `La asistencia de ${record.userName} ha sido aprobada.`,
       });
-      loadData();
     } catch (err: any) {
       toast({
         variant: "destructive",
@@ -170,12 +171,12 @@ export default function ApprovalsPage() {
         approvedBy: supervisorName,
         comments: rejectionComment
       });
+      await loadData();
       toast({
         title: "Registro Rechazado",
         description: `Se ha rechazado la asistencia de ${rejectingRecord.userName}.`
       });
       setRejectingRecord(null);
-      loadData();
     } catch (err: any) {
       toast({
         variant: "destructive",
