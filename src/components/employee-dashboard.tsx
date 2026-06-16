@@ -409,7 +409,18 @@ export default function EmployeeDashboard() {
     if (!todayRec.timestampEntrada) return { hours: 0, minutes: 0, formatted: "00h 00m", percent: 0 };
 
     const end = todayRec.timestampSalida ? todayRec.timestampSalida : new Date();
-    const diffMs = end.getTime() - todayRec.timestampEntrada.getTime();
+
+    // Descontar la hora de almuerzo (12:00 a 13:00) del mismo día si se solapa con el turno
+    const lunchStart = new Date(todayRec.timestampEntrada);
+    lunchStart.setHours(12, 0, 0, 0);
+    const lunchEnd = new Date(todayRec.timestampEntrada);
+    lunchEnd.setHours(13, 0, 0, 0);
+
+    const overlapStart = Math.max(todayRec.timestampEntrada.getTime(), lunchStart.getTime());
+    const overlapEnd = Math.min(end.getTime(), lunchEnd.getTime());
+    const overlapMs = overlapEnd > overlapStart ? overlapEnd - overlapStart : 0;
+
+    const diffMs = end.getTime() - todayRec.timestampEntrada.getTime() - overlapMs;
     
     const diffMins = Math.max(0, Math.floor(diffMs / (1000 * 60)));
     const hours = Math.floor(diffMins / 60);
