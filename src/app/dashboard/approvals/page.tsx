@@ -46,6 +46,7 @@ export default function ApprovalsPage() {
   const [rejectingRecord, setRejectingRecord] = React.useState<CheckInRecord | null>(null);
   const [rejectionComment, setRejectionComment] = React.useState("");
   const [actionLoading, setActionLoading] = React.useState(false);
+  const [processingRecordId, setProcessingRecordId] = React.useState<string | null>(null);
 
   const loadData = React.useCallback(async () => {
     try {
@@ -107,6 +108,7 @@ export default function ApprovalsPage() {
   // Operación: Aprobar Marca
   const handleApprove = async (record: CheckInRecord) => {
     setActionLoading(true);
+    setProcessingRecordId(record.id);
     const supervisorName = localStorage.getItem("userName") || "Supervisor";
     try {
       await api.validateRecord({
@@ -128,6 +130,7 @@ export default function ApprovalsPage() {
       });
     } finally {
       setActionLoading(false);
+      setProcessingRecordId(null);
     }
   };
 
@@ -150,6 +153,7 @@ export default function ApprovalsPage() {
     }
     
     setActionLoading(true);
+    setProcessingRecordId(rejectingRecord.id);
     const supervisorName = localStorage.getItem("userName") || "Supervisor";
     try {
       await api.validateRecord({
@@ -172,6 +176,7 @@ export default function ApprovalsPage() {
       });
     } finally {
       setActionLoading(false);
+      setProcessingRecordId(null);
     }
   };
 
@@ -314,8 +319,14 @@ export default function ApprovalsPage() {
             return (
               <div 
                 key={record.id} 
-                className={`glass-card rounded-2xl p-4 flex flex-col gap-3 transition-all border border-white/20 shadow-sm ${borderStatusClass}`}
+                className={`glass-card rounded-2xl p-4 flex flex-col gap-3 transition-all border border-white/20 shadow-sm relative overflow-hidden ${borderStatusClass}`}
               >
+                {processingRecordId === record.id && (
+                  <div className="absolute inset-0 bg-white/70 backdrop-blur-[1px] rounded-2xl flex flex-col items-center justify-center z-10 animate-in fade-in duration-200">
+                    <span className="material-symbols-outlined text-primary text-3xl animate-spin">sync</span>
+                    <span className="text-[10px] font-bold text-primary uppercase tracking-wider mt-1.5">Procesando...</span>
+                  </div>
+                )}
                 <div className="flex gap-4">
                   {/* Avatar */}
                   <div className="w-20 h-20 rounded-xl overflow-hidden shadow-inner border border-white/50 shrink-0 bg-surface-container">
