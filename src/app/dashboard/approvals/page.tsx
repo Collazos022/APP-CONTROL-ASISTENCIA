@@ -115,7 +115,7 @@ export default function ApprovalsPage() {
         recordId: record.id,
         status: "Aprobado",
         approvedBy: supervisorName,
-        comments: "Aprobado sin novedades."
+        comments: record.comments && record.comments.trim() !== "" ? record.comments : "Aprobado sin novedades"
       });
       await loadData();
       toast({

@@ -548,7 +548,23 @@ function doPost(e) {
       for (let i = 1; i < data.length; i++) {
         if (data[i][idIdx] && data[i][idIdx].toString() === params.recordId.toString()) {
           sheet.getRange(i + 1, statusIdx + 1).setValue(params.status);
-          sheet.getRange(i + 1, commentsIdx + 1).setValue(params.comments || "");
+          
+          let finalComments = params.comments;
+          if (params.status === "Aprobado") {
+            const existingComments = data[i][commentsIdx] ? data[i][commentsIdx].toString().trim() : "";
+            if (existingComments !== "") {
+              // Si ya tiene comentarios, no los modificamos
+              finalComments = existingComments;
+            } else {
+              // Si no tiene comentarios, ponemos "Aprobado sin novedades"
+              finalComments = (params.comments && params.comments.trim() !== "") ? params.comments : "Aprobado sin novedades";
+            }
+          } else {
+            // Para Rechazado u otros, usar el enviado
+            finalComments = params.comments || "";
+          }
+          
+          sheet.getRange(i + 1, commentsIdx + 1).setValue(finalComments);
           sheet.getRange(i + 1, approvedByIdx + 1).setValue(params.approvedBy || "");
           return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
         }

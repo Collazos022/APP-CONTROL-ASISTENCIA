@@ -104,7 +104,8 @@ export const columns: ColumnDef<CheckInRecord>[] = [
           await api.validateRecord({
             recordId: record.id,
             status: "Aprobado",
-            approvedBy
+            approvedBy,
+            comments: record.comments && record.comments.trim() !== "" ? record.comments : "Aprobado sin novedades"
           });
           window.dispatchEvent(new CustomEvent("refresh-records"));
         } catch (error: any) {
