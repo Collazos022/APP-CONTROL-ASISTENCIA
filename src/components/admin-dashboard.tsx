@@ -362,6 +362,12 @@ export default function AdminDashboard({ role }: AdminDashboardProps) {
                 employeeRows[empName][day].extra += r.hoursExtra || 0;
               });
 
+              // Construir cabeceras en el orden correcto
+              const headers = ["Nombre_Apellido"];
+              for (let d = 1; d <= numDays; d++) {
+                headers.push(String(d));
+              }
+
               // Construir las filas del reporte
               const exportData = Object.keys(employeeRows).map(empName => {
                 const row: Record<string, any> = { "Nombre_Apellido": empName };
@@ -377,7 +383,16 @@ export default function AdminDashboard({ role }: AdminDashboardProps) {
                 return row;
               });
 
-              const ws = XLSX.utils.json_to_sheet(exportData);
+              // Pasar las cabeceras para fijar el orden de las columnas en SheetJS
+              const ws = XLSX.utils.json_to_sheet(exportData, { header: headers });
+
+              // Configurar anchos de columnas (Nombre_Apellido ancho: 25, días angostos: 4)
+              const cols = [{ wch: 25 }];
+              for (let d = 1; d <= numDays; d++) {
+                cols.push({ wch: 4 });
+              }
+              ws['!cols'] = cols;
+
               const wb = XLSX.utils.book_new();
               XLSX.utils.book_append_sheet(wb, ws, "Asistencia");
               const monthName = exportDateObj.toLocaleString('es-ES', { month: 'long' });
