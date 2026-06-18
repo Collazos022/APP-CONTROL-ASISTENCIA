@@ -302,11 +302,7 @@ function doPost(e) {
       const todayStr = params.clientDate || (params.clientTime ? new Date().toISOString().split('T')[0] : timestampStr.split('T')[0]);
 
       const data = sheet.getDataRange().getValues();
-      let emailIdx = headers.indexOf("Email_Usuario");
-      if (emailIdx === -1) {
-        // Fallback: si se renombró el encabezado accidentalmente (ej: jeffersonarmijos973@gmail.com), asumimos columna B (índice 1)
-        emailIdx = 1;
-      }
+      const emailIdx = headers.indexOf("Email_Usuario");
       const fechaIdx = headers.indexOf("Fecha");
       const horaEntradaIdx = headers.indexOf("Hora_Entrada");
       const horaSalidaIdx = headers.indexOf("Hora_Salida");
@@ -389,9 +385,9 @@ function doPost(e) {
       } else {
         // Create new row (Entrada)
         let newRow = [];
-        headers.forEach((h, idx) => {
+        headers.forEach(h => {
           if (h === "ID_Registro") newRow.push(newRecId);
-          else if (h === "Email_Usuario" || idx === emailIdx) newRow.push(params.userId); // el userId del frontend es el email
+          else if (h === "Email_Usuario") newRow.push(params.userId); // el userId del frontend es el email
           else if (h === "Fecha") newRow.push(todayStr);
           else if (h === "Frente_de_Trabajo") newRow.push(nearestFront);
           else if (h === "Hora_Entrada") newRow.push(isCheckIn ? timestampStr : "");
