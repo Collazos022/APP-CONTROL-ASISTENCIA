@@ -332,23 +332,56 @@ export default function AdminDashboard({ role }: AdminDashboardProps) {
         <div className="flex items-center gap-3 w-full sm:w-auto justify-center sm:justify-end">
           <button 
             onClick={() => {
-              const exportData = records.map(r => ({
-                'ID Registro': r.id,
-                'ID Empleado': r.userId,
-                'Nombre Empleado': r.userName,
-                'Hora Entrada': r.timestampEntrada ? r.timestampEntrada.toLocaleTimeString('es-ES') : '',
-                'Hora Salida': r.timestampSalida ? r.timestampSalida.toLocaleTimeString('es-ES') : '',
-                'Fecha y Hora': r.timestamp.toLocaleString('es-ES'),
-                'Estado': r.status,
-                'Comentarios': r.comments || '',
-                'Aprobado Por': r.approvedBy || '',
-                'Latitud': r.location.latitude,
-                'Longitud': r.location.longitude,
-              }));
+              // Determinar el mes y año para la exportación (basado en el primer registro o el mes actual)
+              const exportDateObj = records.length > 0 ? records[0].timestamp : new Date();
+              const year = exportDateObj.getFullYear();
+              const month = exportDateObj.getMonth();
+              const numDays = new Date(year, month + 1, 0).getDate();
+
+              // Agrupar los registros aprobados de ese mes/año por empleado y día del mes
+              const employeeRows: Record<string, Record<number, { normal: number; extra: number }>> = {};
+
+              records.forEach(r => {
+                if (r.status !== "Aprobado") return;
+                const rDate = r.timestamp;
+                if (rDate.getFullYear() !== year || rDate.getMonth() !== month) return;
+
+                const day = rDate.getDate();
+                const empName = r.userName;
+
+                if (!employeeRows[empName]) {
+                  employeeRows[empName] = {};
+                }
+                if (!employeeRows[empName][day]) {
+                  employeeRows[empName][day] = { normal: 0, extra: 0 };
+                }
+
+                // Un día en horario normal cuenta como 1
+                employeeRows[empName][day].normal = 1;
+                // Sumar horas extras
+                employeeRows[empName][day].extra += r.hoursExtra || 0;
+              });
+
+              // Construir las filas del reporte
+              const exportData = Object.keys(employeeRows).map(empName => {
+                const row: Record<string, any> = { "Nombre_Apellido": empName };
+                for (let d = 1; d <= numDays; d++) {
+                  const dayData = employeeRows[empName][d];
+                  if (dayData) {
+                    const val = dayData.normal + (dayData.extra * 0.1);
+                    row[String(d)] = parseFloat(val.toFixed(2));
+                  } else {
+                    row[String(d)] = "";
+                  }
+                }
+                return row;
+              });
+
               const ws = XLSX.utils.json_to_sheet(exportData);
               const wb = XLSX.utils.book_new();
-              XLSX.utils.book_append_sheet(wb, ws, "Registros");
-              XLSX.writeFile(wb, `registros_asistencia_${new Date().getTime()}.xlsx`);
+              XLSX.utils.book_append_sheet(wb, ws, "Asistencia");
+              const monthName = exportDateObj.toLocaleString('es-ES', { month: 'long' });
+              XLSX.writeFile(wb, `reporte_asistencia_${monthName}_${year}.xlsx`);
             }}
             className="w-full sm:w-auto bg-primary text-white font-bold text-xs px-5 py-2.5 rounded-xl hover:opacity-90 active:scale-95 transition-all shadow-md shadow-primary/20 flex items-center justify-center gap-2 shrink-0"
           >
