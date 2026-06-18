@@ -101,13 +101,18 @@ export const api = {
 
         // Construir diccionario rápido de usuarios para nombre y avatar
         const usersDict: Record<string, any> = {};
-        usuarios.forEach((u: any) => { usersDict[u.id] = u; });
+        usuarios.forEach((u: any) => { 
+          if (u.id) usersDict[u.id.toLowerCase().trim()] = u; 
+        });
+
+        const emailHeaderKey = data.headers?.REGISTROS?.[1] || "Email_Usuario";
 
         // Mapear Registros_HT (Virtualizar en Entrada y Salida)
         const registros: CheckInRecord[] = [];
         (data.registros || []).forEach((r: any) => {
-          const uEmail = r.Email_Usuario || r.userId;
-          const uInfo = usersDict[uEmail] || { name: uEmail, avatar: "avatar-1" };
+          const uEmailRaw = r.Email_Usuario || r[emailHeaderKey] || r.userId || "";
+          const uEmail = uEmailRaw.toString().trim().toLowerCase();
+          const uInfo = usersDict[uEmail] || { name: uEmailRaw, avatar: "avatar-1" };
           const baseId = r.ID_Registro || r.id;
 
           const hasEntrada = !!r.Hora_Entrada;
@@ -202,9 +207,9 @@ export const api = {
       const data = await response.json();
       if (data.status === "success") {
         return {
-          id: data.user.id || data.user.Email_Usuario,
+          id: (data.user.id || data.user.Email_Usuario || "").toString().trim().toLowerCase(),
           name: data.user.name || data.user.Nombre_Apellido,
-          email: data.user.email || data.user.Email_Usuario,
+          email: (data.user.email || data.user.Email_Usuario || "").toString().trim().toLowerCase(),
           role: (data.user.role || data.user.Rol_App || "Empleado") as Role,
           avatar: data.user.avatar || "avatar-1",
           estado: data.user.estado || "Activo"
@@ -218,7 +223,7 @@ export const api = {
       throw error;
     }
   },
-
+ 
   async register(params: { name: string; identificacion: string; telefono: string; cargo: string; email: string; password: string; avatarUrl?: string; huella?: string }): Promise<User> {
     if (!this.isConfigured()) throw new Error("API not configured");
     try {
@@ -229,9 +234,9 @@ export const api = {
       const data = await response.json();
       if (data.status === "success") {
         return {
-          id: data.user.id,
+          id: (data.user.id || "").toString().trim().toLowerCase(),
           name: data.user.name,
-          email: data.user.email,
+          email: (data.user.email || "").toString().trim().toLowerCase(),
           role: data.user.role as Role,
           avatar: data.user.avatar,
           huella: data.user.huella
